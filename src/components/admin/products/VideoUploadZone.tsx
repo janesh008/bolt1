@@ -196,7 +196,7 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
           )}
         >
           <input {...getInputProps()} />
-          <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <VideoIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <div className="space-y-2">
             <p className="text-lg font-medium text-gray-700">
               {isDragActive ? 'Drop videos here' : 'Upload Product Videos'}
@@ -225,13 +225,22 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
               )}
             >
               {/* Video */}
-              <video
-                src={video.url}
-                className="w-full h-full object-cover"
-                controls={!video.isUploading}
-                muted
-                playsInline
-              />
+              {!video.isUploading && (
+                <video
+                  src={video.url}
+                  className="w-full h-full object-cover"
+                  controls
+                  muted
+                  playsInline
+                />
+              )}
+
+              {/* Video Placeholder for Uploading */}
+              {video.isUploading && (
+                <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                  <VideoIcon className="h-12 w-12 text-gray-400" />
+                </div>
+              )}
 
               {/* Upload Progress Overlay */}
               {video.isUploading && (
