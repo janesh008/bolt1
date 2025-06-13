@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Card } from '../../components/ui/card';
-import { Users, Package, ShoppingCart, DollarSign, TrendingUp, Eye, Cuboid as Cube } from 'lucide-react';
+import { Users, Package, ShoppingCart, DollarSign, TrendingUp, Eye } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import QuickIJewelTool from '../../components/admin/QuickIJewelTool';
 
@@ -161,13 +161,6 @@ const AdminDashboard: React.FC = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <div className="flex gap-2">
-          <button 
-            onClick={() => setShowIJewelTool(!showIJewelTool)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
-          >
-            <Cube className="h-4 w-4" />
-            {showIJewelTool ? 'Hide' : 'Show'} 3D Tool
-          </button>
           <button 
             onClick={fetchDashboardData}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
