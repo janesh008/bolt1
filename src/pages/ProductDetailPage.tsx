@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Heart, ShoppingBag, ZoomIn, Share2, Star, ChevronLeft, ChevronRight, Shield, Truck, RotateCcw, Award, Info, Cuboid as Cube, Video as VideoIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import { supabase } from '../lib/supabase';
 import Button from '../components/ui/Button';
 import { Badge } from '../components/ui/badge';
@@ -51,22 +52,24 @@ const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  const [selectedMediaType, setSelectedMediaType] = useState<'image' | 'video'>('image');
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedTab, setSelectedTab] = useState('description');
   const [show3DViewer, setShow3DViewer] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  // Combined media array for slider
+  const [combinedMedia, setCombinedMedia] = useState<Array<{type: 'image' | 'video', url: string, id: string}>>([]);
 
   useEffect(() => {
     if (id) {
       fetchProduct();
-      checkWishlistStatus();
     }
   }, [id, user]);
 
@@ -74,8 +77,40 @@ const ProductDetailPage = () => {
     if (product) {
       fetchRelatedProducts();
       updateSEO();
+      
+      // Create combined media array from images and videos
+      const media: Array<{type: 'image' | 'video', url: string, id: string}> = [];
+      
+      // Add images
+      if (product.product_images && product.product_images.length > 0) {
+        product.product_images.forEach(image => {
+          media.push({
+            type: 'image',
+            url: image.image_url,
+            id: image.id
+          });
+        });
+      }
+      
+      // Add videos
+      if (product.product_videos && product.product_videos.length > 0) {
+        product.product_videos.forEach(video => {
+          media.push({
+            type: 'video',
+            url: video.video_url,
+            id: video.id
+          });
+        });
+      }
+      
+      setCombinedMedia(media);
+      
+      // Set initial media type based on what's selected
+      if (media.length > 0 && selectedMediaIndex < media.length) {
+        setSelectedMediaType(media[selectedMediaIndex].type);
+      }
     }
-  }, [product]);
+  }, [product, selectedMediaIndex]);
 
   const fetchProduct = async () => {
     try {
@@ -95,11 +130,6 @@ const ProductDetailPage = () => {
 
       if (error) throw error;
       setProduct(data);
-      
-      // If product has videos, set showVideo to true
-      if (data.product_videos && data.product_videos.length > 0) {
-        setShowVideo(true);
-      }
     } catch (error) {
       console.error('Error fetching product:', error);
       toast.error('Product not found');
@@ -146,65 +176,11 @@ const ProductDetailPage = () => {
     }
   };
 
-  const checkWishlistStatus = async () => {
-    if (!user || !id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('wishlists')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('product_id', id)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error checking wishlist status:', error);
-        setIsWishlisted(false);
-        return;
-      }
-
-      setIsWishlisted(!!data);
-    } catch (error) {
-      console.error('Error checking wishlist status:', error);
-      setIsWishlisted(false);
-    }
-  };
-
-  const toggleWishlist = async () => {
-    if (!user) {
-      toast.error('Please sign in to add items to your wishlist');
-      return;
-    }
-
-    try {
-      if (isWishlisted) {
-        await supabase
-          .from('wishlists')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('product_id', id);
-        
-        setIsWishlisted(false);
-        toast.success('Removed from wishlist');
-      } else {
-        await supabase
-          .from('wishlists')
-          .insert([{ user_id: user.id, product_id: id }]);
-        
-        setIsWishlisted(true);
-        toast.success('Added to wishlist');
-      }
-    } catch (error) {
-      console.error('Error updating wishlist:', error);
-      toast.error('Failed to update wishlist');
-    }
-  };
-
   const handleAddToCart = () => {
     if (!product) return;
 
-    const productName = product.product_name || product.name || 'Unknown Product';
-    const productImage = product.product_images?.[0]?.image_url || '';
+    const productName = getProductName();
+    const productImage = getProductImage(0);
     
     addToCart({
       product_id: product.id,
@@ -451,20 +427,25 @@ const ProductDetailPage = () => {
     return product?.product_videos && product.product_videos.length > 0;
   };
 
-  const nextImage = () => {
-    if (product?.product_images) {
-      setSelectedImageIndex((prev) => 
-        prev === product.product_images!.length - 1 ? 0 : prev + 1
+  const nextMedia = () => {
+    if (combinedMedia.length > 0) {
+      setSelectedMediaIndex((prev) => 
+        prev === combinedMedia.length - 1 ? 0 : prev + 1
       );
     }
   };
 
-  const prevImage = () => {
-    if (product?.product_images) {
-      setSelectedImageIndex((prev) => 
-        prev === 0 ? product.product_images!.length - 1 : prev - 1
+  const prevMedia = () => {
+    if (combinedMedia.length > 0) {
+      setSelectedMediaIndex((prev) => 
+        prev === 0 ? combinedMedia.length - 1 : prev - 1
       );
     }
+  };
+
+  const selectMedia = (index: number) => {
+    setSelectedMediaIndex(index);
+    setSelectedMediaType(combinedMedia[index].type);
   };
 
   const get3DModelUrl = () => {
@@ -510,27 +491,38 @@ const ProductDetailPage = () => {
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Product Images */}
+          {/* Product Media (Images & Videos) */}
           <div className="space-y-4">
-            {/* Main Image */}
+            {/* Main Media (Image or Video) */}
             <div className="relative aspect-square rounded-lg overflow-hidden bg-white">
-              <img
-                src={getProductImage(selectedImageIndex)}
-                alt={getProductName()}
-                className="w-full h-full object-cover"
-              />
+              {selectedMediaType === 'image' && combinedMedia[selectedMediaIndex] && (
+                <img
+                  src={combinedMedia[selectedMediaIndex].url}
+                  alt={getProductName()}
+                  className="w-full h-full object-cover"
+                />
+              )}
+              
+              {selectedMediaType === 'video' && combinedMedia[selectedMediaIndex] && (
+                <ProductVideoPlayer
+                  videoUrl={combinedMedia[selectedMediaIndex].url}
+                  productName={getProductName()}
+                  height="100%"
+                  autoPlay={true}
+                />
+              )}
               
               {/* Navigation Arrows */}
-              {product.product_images && product.product_images.length > 1 && (
+              {combinedMedia.length > 1 && (
                 <>
                   <button
-                    onClick={prevImage}
+                    onClick={prevMedia}
                     className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 hover:bg-white transition-colors shadow-lg"
                   >
                     <ChevronLeft className="h-5 w-5 text-charcoal-600" />
                   </button>
                   <button
-                    onClick={nextImage}
+                    onClick={nextMedia}
                     className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 hover:bg-white transition-colors shadow-lg"
                   >
                     <ChevronRight className="h-5 w-5 text-charcoal-600" />
@@ -538,10 +530,12 @@ const ProductDetailPage = () => {
                 </>
               )}
 
-              {/* Zoom Button */}
-              <button className="absolute top-4 right-4 p-2 rounded-full bg-white/90 hover:bg-white transition-colors shadow-lg">
-                <ZoomIn className="h-5 w-5 text-charcoal-600" />
-              </button>
+              {/* Zoom Button (only for images) */}
+              {selectedMediaType === 'image' && (
+                <button className="absolute top-4 right-4 p-2 rounded-full bg-white/90 hover:bg-white transition-colors shadow-lg">
+                  <ZoomIn className="h-5 w-5 text-charcoal-600" />
+                </button>
+              )}
 
               {/* Badges */}
               <div className="absolute top-4 left-4 flex flex-col gap-2">
@@ -549,89 +543,54 @@ const ProductDetailPage = () => {
                   <Badge className="bg-gold-400 text-charcoal-900">Featured</Badge>
                 )}
                 <Badge variant="secondary">{getProductCategory()}</Badge>
-                {has3DModel() && (
-                  <Badge className="bg-blue-100 text-blue-800 border border-blue-200">
-                    <Cube className="h-3 w-3 mr-1" />
-                    3D Model
-                  </Badge>
-                )}
                 {hasProductVideo() && (
                   <Badge className="bg-purple-100 text-purple-800 border border-purple-200">
                     <VideoIcon className="h-3 w-3 mr-1" />
                     Video
                   </Badge>
                 )}
+                {has3DModel() && (
+                  <Badge className="bg-blue-100 text-blue-800 border border-blue-200">
+                    <Cube className="h-3 w-3 mr-1" />
+                    3D Model
+                  </Badge>
+                )}
               </div>
             </div>
 
-            {/* Thumbnail Images */}
-            {product.product_images && product.product_images.length > 1 && (
-              <div className="grid grid-cols-4 gap-4">
-                {product.product_images.map((image, index) => (
+            {/* Thumbnail Images & Videos */}
+            {combinedMedia.length > 1 && (
+              <div className="grid grid-cols-5 gap-4">
+                {combinedMedia.map((media, index) => (
                   <button
-                    key={image.id}
-                    onClick={() => setSelectedImageIndex(index)}
+                    key={media.id}
+                    onClick={() => selectMedia(index)}
                     className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
-                      selectedImageIndex === index
+                      selectedMediaIndex === index
                         ? 'border-gold-400'
                         : 'border-cream-200 hover:border-gold-300'
-                    }`}
+                    } relative`}
                   >
-                    <img
-                      src={image.image_url}
-                      alt={`${getProductName()} ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
+                    {media.type === 'image' ? (
+                      <img
+                        src={media.url}
+                        alt={`${getProductName()} ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full relative bg-gray-100">
+                        <video
+                          src={media.url}
+                          className="w-full h-full object-cover"
+                          muted
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                          <VideoIcon className="h-6 w-6 text-white" />
+                        </div>
+                      </div>
+                    )}
                   </button>
                 ))}
-              </div>
-            )}
-
-            {/* Product Video */}
-            {hasProductVideo() && (
-              <div className="mt-6">
-                {!showVideo ? (
-                  <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-8 border border-purple-200">
-                    <div className="text-center">
-                      <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <VideoIcon className="h-10 w-10 text-purple-600" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                        Watch Product Video
-                      </h3>
-                      <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                        See this jewelry piece in action with our detailed product video. Get a better look at the craftsmanship and details.
-                      </p>
-                      <Button
-                        onClick={() => setShowVideo(true)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
-                        size="lg"
-                      >
-                        <VideoIcon className="h-5 w-5 mr-2" />
-                        Play Video
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">Product Video</h3>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowVideo(false)}
-                      >
-                        Hide Video
-                      </Button>
-                    </div>
-                    <ProductVideoPlayer
-                      videoUrl={getProductVideo()}
-                      productName={getProductName()}
-                      height="400px"
-                      autoPlay={true}
-                    />
-                  </div>
-                )}
               </div>
             )}
 
@@ -786,6 +745,18 @@ const ProductDetailPage = () => {
                   <p className="font-medium text-charcoal-800">{product.net_weight}g</p>
                 </div>
               )}
+              {hasProductVideo() && (
+                <div>
+                  <span className="text-sm text-charcoal-500">Product Video</span>
+                  <p className="font-medium text-purple-600">Available</p>
+                </div>
+              )}
+              {has3DModel() && (
+                <div>
+                  <span className="text-sm text-charcoal-500">3D Viewer</span>
+                  <p className="font-medium text-blue-600">Available</p>
+                </div>
+              )}
             </div>
 
             {/* Quantity & Actions */}
@@ -821,13 +792,13 @@ const ProductDetailPage = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={toggleWishlist}
+                  onClick={() => toggleWishlist(product.id)}
                   size="lg"
                   className="px-4"
                 >
                   <Heart
                     className={`h-5 w-5 ${
-                      isWishlisted ? 'fill-red-500 text-red-500' : ''
+                      isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''
                     }`}
                   />
                 </Button>
@@ -907,19 +878,6 @@ const ProductDetailPage = () => {
                     and contemporary design, making it an ideal choice for those who appreciate timeless elegance.
                   </p>
                   
-                  {has3DModel() && (
-                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Cube className="h-5 w-5 text-blue-600" />
-                        <h4 className="font-medium text-blue-900">Interactive 3D Model</h4>
-                      </div>
-                      <p className="text-blue-800 text-sm">
-                        This product features an interactive 3D model that allows you to view it from every angle. 
-                        Use the 3D viewer above to rotate, zoom, and explore the intricate details of this piece.
-                      </p>
-                    </div>
-                  )}
-
                   {hasProductVideo() && (
                     <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
@@ -929,6 +887,19 @@ const ProductDetailPage = () => {
                       <p className="text-purple-800 text-sm">
                         Watch our product video to see this piece in action and appreciate its beauty from all angles.
                         The video showcases the craftsmanship and details that make this piece special.
+                      </p>
+                    </div>
+                  )}
+
+                  {has3DModel() && (
+                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Cube className="h-5 w-5 text-blue-600" />
+                        <h4 className="font-medium text-blue-900">Interactive 3D Model</h4>
+                      </div>
+                      <p className="text-blue-800 text-sm">
+                        This product features an interactive 3D model that allows you to view it from every angle. 
+                        Use the 3D viewer above to rotate, zoom, and explore the intricate details of this piece.
                       </p>
                     </div>
                   )}
