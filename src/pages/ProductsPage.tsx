@@ -168,7 +168,20 @@ const ProductsPage = () => {
 
       // Apply filters
       if (category) {
-        query = query.or(`product_type.eq.${category},categories.name.eq.${category}`);
+        // First, try to find the category ID if filtering by category name
+        const { data: categoryData } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('name', category)
+          .single();
+        
+        if (categoryData) {
+          // Use category_id if found
+          query = query.or(`product_type.eq.${category},category_id.eq.${categoryData.id}`);
+        } else {
+          // Fallback to just product_type
+          query = query.eq('product_type', category);
+        }
       }
       
       if (searchTerm) {
