@@ -221,8 +221,6 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
                 "relative group aspect-video bg-gray-100 rounded-lg overflow-hidden border-2",
                 video.markedForDeletion
                   ? "border-red-300 opacity-50"
-                  : index === 0
-                  ? "border-blue-500"
                   : "border-gray-200"
               )}
             >
@@ -232,7 +230,7 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
                 className="w-full h-full object-cover"
                 controls={!video.isUploading}
                 muted
-                poster={video.isUploading ? undefined : ""}
+                playsInline
               />
 
               {/* Upload Progress Overlay */}
@@ -269,9 +267,6 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
 
               {/* Status Badges */}
               <div className="absolute top-2 left-2 flex flex-col gap-1">
-                {index === 0 && !video.markedForDeletion && (
-                  <Badge className="bg-blue-500 text-white text-xs">Primary</Badge>
-                )}
                 {video.isNew && !video.isUploading && (
                   <Badge className="bg-green-500 text-white text-xs">New</Badge>
                 )}
@@ -328,10 +323,10 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-1">Video Management Tips:</p>
               <ul className="space-y-1 text-xs">
-                <li>• The first video will be used as the primary product video</li>
                 <li>• Click the X to mark videos for deletion (they won't be deleted until you save)</li>
+                <li>• Videos will be displayed on the product detail page</li>
                 <li>• Maximum {maxVideos} videos per product</li>
-                <li>• Supported formats: MP4, WebM, MOV (max 100MB each)</li>
+                <li>• Supported formats: MP4, WebM, MOV</li>
               </ul>
             </div>
           </div>

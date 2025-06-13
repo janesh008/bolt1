@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, ShoppingBag, ZoomIn, Share2, Star, ChevronLeft, ChevronRight, Shield, Truck, RotateCcw, Award, Info, Cuboid as Cube } from 'lucide-react';
+import { Heart, ShoppingBag, ZoomIn, Share2, Star, ChevronLeft, ChevronRight, Shield, Truck, RotateCcw, Award, Info, Cuboid as Cube, Video as VideoIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
@@ -10,6 +10,7 @@ import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import IJewelViewer from '../components/products/IJewelViewer';
+import ProductVideoPlayer from '../components/products/ProductVideoPlayer';
 import toast from 'react-hot-toast';
 
 interface Product {
@@ -40,6 +41,10 @@ interface Product {
     image_url: string;
     alt_text?: string;
   }>;
+  product_videos?: Array<{
+    id: string;
+    video_url: string;
+  }>;
 }
 
 const ProductDetailPage = () => {
@@ -55,6 +60,7 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedTab, setSelectedTab] = useState('description');
   const [show3DViewer, setShow3DViewer] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
@@ -81,13 +87,19 @@ const ProductDetailPage = () => {
           *,
           categories:category_id(id, name),
           metal_colors:metal_color_id(id, name, hex_color),
-          product_images(*)
+          product_images(*),
+          product_videos(*)
         `)
         .eq('id', id)
         .single();
 
       if (error) throw error;
       setProduct(data);
+      
+      // If product has videos, set showVideo to true
+      if (data.product_videos && data.product_videos.length > 0) {
+        setShowVideo(true);
+      }
     } catch (error) {
       console.error('Error fetching product:', error);
       toast.error('Product not found');
@@ -195,7 +207,7 @@ const ProductDetailPage = () => {
     const productImage = product.product_images?.[0]?.image_url || '';
     
     addToCart({
-      id: product.id,
+      product_id: product.id,
       name: productName,
       price: product.price || 0,
       image: productImage,
@@ -431,6 +443,14 @@ const ProductDetailPage = () => {
     return product?.product_images?.[index]?.image_url || 'https://images.pexels.com/photos/10018318/pexels-photo-10018318.jpeg?auto=compress&cs=tinysrgb&w=1600';
   };
 
+  const getProductVideo = () => {
+    return product?.product_videos?.[0]?.video_url || '';
+  };
+
+  const hasProductVideo = () => {
+    return product?.product_videos && product.product_videos.length > 0;
+  };
+
   const nextImage = () => {
     if (product?.product_images) {
       setSelectedImageIndex((prev) => 
@@ -535,6 +555,12 @@ const ProductDetailPage = () => {
                     3D Model
                   </Badge>
                 )}
+                {hasProductVideo() && (
+                  <Badge className="bg-purple-100 text-purple-800 border border-purple-200">
+                    <VideoIcon className="h-3 w-3 mr-1" />
+                    Video
+                  </Badge>
+                )}
               </div>
             </div>
 
@@ -558,6 +584,54 @@ const ProductDetailPage = () => {
                     />
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* Product Video */}
+            {hasProductVideo() && (
+              <div className="mt-6">
+                {!showVideo ? (
+                  <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-8 border border-purple-200">
+                    <div className="text-center">
+                      <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <VideoIcon className="h-10 w-10 text-purple-600" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                        Watch Product Video
+                      </h3>
+                      <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                        See this jewelry piece in action with our detailed product video. Get a better look at the craftsmanship and details.
+                      </p>
+                      <Button
+                        onClick={() => setShowVideo(true)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
+                        size="lg"
+                      >
+                        <VideoIcon className="h-5 w-5 mr-2" />
+                        Play Video
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">Product Video</h3>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowVideo(false)}
+                      >
+                        Hide Video
+                      </Button>
+                    </div>
+                    <ProductVideoPlayer
+                      videoUrl={getProductVideo()}
+                      productName={getProductName()}
+                      height="400px"
+                      autoPlay={true}
+                    />
+                  </div>
+                )}
               </div>
             )}
 
@@ -644,6 +718,15 @@ const ProductDetailPage = () => {
                   <Badge className="bg-blue-100 text-blue-800 border border-blue-200">
                     <Cube className="h-3 w-3 mr-1" />
                     3D Model Available
+                  </Badge>
+                </div>
+              )}
+
+              {hasProductVideo() && (
+                <div className="mb-4">
+                  <Badge className="bg-purple-100 text-purple-800 border border-purple-200">
+                    <VideoIcon className="h-3 w-3 mr-1" />
+                    Product Video Available
                   </Badge>
                 </div>
               )}
@@ -836,6 +919,19 @@ const ProductDetailPage = () => {
                       </p>
                     </div>
                   )}
+
+                  {hasProductVideo() && (
+                    <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <VideoIcon className="h-5 w-5 text-purple-600" />
+                        <h4 className="font-medium text-purple-900">Product Video</h4>
+                      </div>
+                      <p className="text-purple-800 text-sm">
+                        Watch our product video to see this piece in action and appreciate its beauty from all angles.
+                        The video showcases the craftsmanship and details that make this piece special.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
@@ -867,6 +963,12 @@ const ProductDetailPage = () => {
                       <div className="flex justify-between py-2 border-b border-cream-200">
                         <span className="text-charcoal-600">3D Model</span>
                         <span className="font-medium text-blue-600">Available</span>
+                      </div>
+                    )}
+                    {hasProductVideo() && (
+                      <div className="flex justify-between py-2 border-b border-cream-200">
+                        <span className="text-charcoal-600">Product Video</span>
+                        <span className="font-medium text-purple-600">Available</span>
                       </div>
                     )}
                   </div>

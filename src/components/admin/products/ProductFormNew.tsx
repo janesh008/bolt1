@@ -216,7 +216,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
       const existingImages: ProductImage[] = (product.product_images || []).map((img: any) => ({
         id: img.id,
         url: img.image_url,
-        path: img.storage_path || '', 
+        path: img.storage_path || '',
         isNew: false,
         markedForDeletion: false,
       }));
@@ -837,18 +837,6 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
                     )}
                   </div>
 
-                  {/* Product Video Preview (if available) */}
-                  {videos.length > 0 && !videos[0].markedForDeletion && (
-                    <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                      <video
-                        src={videos[0].url}
-                        controls
-                        muted
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-
                   {/* Product Info */}
                   <div>
                     <h3 className="font-medium text-gray-800 line-clamp-2">
@@ -990,33 +978,19 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
             <DialogTitle>Product Preview</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                {images.length > 0 && !images[0].markedForDeletion ? (
-                  <img
-                    src={images[0].url}
-                    alt={watchedData.product_name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    No image available
-                  </div>
-                )}
-              </div>
-              
-              {videos.length > 0 && !videos[0].markedForDeletion && (
-                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                  <video
-                    src={videos[0].url}
-                    controls
-                    muted
-                    className="w-full h-full object-cover"
-                  />
+            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+              {images.length > 0 && !images[0].markedForDeletion ? (
+                <img
+                  src={images[0].url}
+                  alt={watchedData.product_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  No image available
                 </div>
               )}
             </div>
-            
             <div className="space-y-4">
               <div>
                 <h2 className="text-2xl font-serif text-gray-800">
@@ -1053,6 +1027,18 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
                 </div>
               )}
 
+              {videos.length > 0 && !videos[0].markedForDeletion && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-blue-700 mb-2">
+                    <VideoIcon className="h-4 w-4" />
+                    <span className="font-medium">Product Video Available</span>
+                  </div>
+                  <p className="text-sm text-blue-600">
+                    This product includes a video that will be displayed on the product page.
+                  </p>
+                </div>
+              )}
+
               {watchedData.ijewel_url && isValidIJewelUrl(watchedData.ijewel_url) && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 text-blue-700 mb-2">
@@ -1061,18 +1047,6 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
                   </div>
                   <p className="text-sm text-blue-600">
                     This product includes an interactive 3D model viewer.
-                  </p>
-                </div>
-              )}
-              
-              {videos.length > 0 && !videos[0].markedForDeletion && (
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-purple-700 mb-2">
-                    <VideoIcon className="h-4 w-4" />
-                    <span className="font-medium">Product Video Available</span>
-                  </div>
-                  <p className="text-sm text-purple-600">
-                    This product includes video content to showcase its features.
                   </p>
                 </div>
               )}

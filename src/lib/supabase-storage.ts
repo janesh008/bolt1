@@ -42,25 +42,6 @@ export const uploadProductImage = async (
   }
 };
 
-// Delete image from Supabase Storage
-export const deleteProductImage = async (path: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .remove([path]);
-
-    if (error) {
-      console.error('Delete error:', error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error deleting image:', error);
-    return false;
-  }
-};
-
 // Upload video to Supabase Storage
 export const uploadProductVideo = async (
   file: File,
@@ -96,6 +77,25 @@ export const uploadProductVideo = async (
   } catch (error) {
     console.error('Error uploading video:', error);
     return null;
+  }
+};
+
+// Delete image from Supabase Storage
+export const deleteProductImage = async (path: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .remove([path]);
+
+    if (error) {
+      console.error('Delete error:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    return false;
   }
 };
 
