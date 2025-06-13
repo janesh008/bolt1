@@ -13,9 +13,10 @@ import { Checkbox } from '../../ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../ui/dialog';
 import Button from '../../ui/Button';
 import ImageUploadZone, { ProductImage } from './ImageUploadZone';
+import VideoUploadZone, { ProductVideo } from './VideoUploadZone';
 import IJewelViewer from '../../products/IJewelViewer';
 import { supabase } from '../../../lib/supabase';
-import { deleteProductImage } from '../../../lib/supabase-storage';
+import { deleteProductImage, deleteProductVideo } from '../../../lib/supabase-storage';
 import toast from 'react-hot-toast';
 
 // Validation Schema with iJewel URL validation
@@ -70,6 +71,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [metalColors, setMetalColors] = useState<MetalColor[]>([]);
   const [images, setImages] = useState<ProductImage[]>([]);
+  const [videos, setVideos] = useState<ProductVideo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -126,8 +128,9 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
   useEffect(() => {
     const hasFormChanges = isDirty;
     const hasImageChanges = images.some(img => img.isNew || img.markedForDeletion);
-    setHasUnsavedChanges(hasFormChanges || hasImageChanges);
-  }, [isDirty, images]);
+    const hasVideoChanges = videos.some(vid => vid.isNew || vid.markedForDeletion);
+    setHasUnsavedChanges(hasFormChanges || hasImageChanges || hasVideoChanges);
+  }, [isDirty, images, videos]);
 
   // Prevent navigation with unsaved changes
   useEffect(() => {
@@ -182,7 +185,8 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
         .from('products')
         .select(`
           *,
-          product_images(id, image_url)
+          product_images(id, image_url, storage_path),
+          product_videos(id, video_url, storage_path)
         `)
         .eq('id', id)
         .single();
@@ -212,12 +216,23 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
       const existingImages: ProductImage[] = (product.product_images || []).map((img: any) => ({
         id: img.id,
         url: img.image_url,
-        path: '', // Set empty path since storage_path doesn't exist
+        path: img.storage_path || '', 
         isNew: false,
         markedForDeletion: false,
       }));
 
       setImages(existingImages);
+
+      // Load existing videos
+      const existingVideos: ProductVideo[] = (product.product_videos || []).map((vid: any) => ({
+        id: vid.id,
+        url: vid.video_url,
+        path: vid.storage_path || '',
+        isNew: false,
+        markedForDeletion: false,
+      }));
+
+      setVideos(existingVideos);
     } catch (error) {
       console.error('Error fetching product:', error);
       toast.error('Failed to load product');
@@ -291,6 +306,9 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
 
       // Handle image operations
       await handleImageOperations(savedProductId!);
+      
+      // Handle video operations
+      await handleVideoOperations(savedProductId!);
 
       toast.success(`Product ${mode === 'create' ? 'created' : 'updated'} successfully`);
       navigate('/admin/products');
@@ -328,11 +346,47 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
       const imageInserts = newImages.map((img) => ({
         product_id: productId,
         image_url: img.url,
+        storage_path: img.path
       }));
 
       await supabase
         .from('product_images')
         .insert(imageInserts);
+    }
+  };
+
+  const handleVideoOperations = async (productId: string) => {
+    // Delete marked videos
+    const videosToDelete = videos.filter(vid => vid.markedForDeletion && vid.id);
+    for (const video of videosToDelete) {
+      try {
+        // Delete from storage if path exists
+        if (video.path) {
+          await deleteProductVideo(video.path);
+        }
+        
+        // Delete from database
+        await supabase
+          .from('product_videos')
+          .delete()
+          .eq('id', video.id);
+      } catch (error) {
+        console.error('Error deleting video:', error);
+      }
+    }
+
+    // Add new videos to database
+    const newVideos = videos.filter(vid => vid.isNew && !vid.markedForDeletion && vid.path);
+    if (newVideos.length > 0) {
+      const videoInserts = newVideos.map((vid) => ({
+        product_id: productId,
+        video_url: vid.url,
+        storage_path: vid.path
+      }));
+
+      await supabase
+        .from('product_videos')
+        .insert(videoInserts);
     }
   };
 
@@ -351,6 +405,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
     } else {
       reset();
       setImages([]);
+      setVideos([]);
     }
     toast.success('Form reset successfully');
   };
@@ -741,6 +796,22 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
                 />
               </CardContent>
             </Card>
+
+            {/* Product Videos */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Videos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <VideoUploadZone
+                  videos={videos}
+                  onVideosChange={setVideos}
+                  productId={mode === 'edit' ? productId : undefined}
+                  maxVideos={3}
+                  disabled={isSaving}
+                />
+              </CardContent>
+            </Card>
           </div>
 
           {/* Live Preview Sidebar */}
@@ -765,6 +836,18 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
                       </div>
                     )}
                   </div>
+
+                  {/* Product Video Preview (if available) */}
+                  {videos.length > 0 && !videos[0].markedForDeletion && (
+                    <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                      <video
+                        src={videos[0].url}
+                        controls
+                        muted
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
 
                   {/* Product Info */}
                   <div>
@@ -798,6 +881,12 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
                     {watchedData.ijewel_url && isValidIJewelUrl(watchedData.ijewel_url) && (
                       <div className="flex justify-between">
                         <span className="text-gray-500">3D Viewer:</span>
+                        <span className="text-green-600">✓ Available</span>
+                      </div>
+                    )}
+                    {videos.length > 0 && !videos[0].markedForDeletion && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Video:</span>
                         <span className="text-green-600">✓ Available</span>
                       </div>
                     )}
@@ -901,19 +990,33 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
             <DialogTitle>Product Preview</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-              {images.length > 0 && !images[0].markedForDeletion ? (
-                <img
-                  src={images[0].url}
-                  alt={watchedData.product_name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  No image available
+            <div className="space-y-4">
+              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                {images.length > 0 && !images[0].markedForDeletion ? (
+                  <img
+                    src={images[0].url}
+                    alt={watchedData.product_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    No image available
+                  </div>
+                )}
+              </div>
+              
+              {videos.length > 0 && !videos[0].markedForDeletion && (
+                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                  <video
+                    src={videos[0].url}
+                    controls
+                    muted
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               )}
             </div>
+            
             <div className="space-y-4">
               <div>
                 <h2 className="text-2xl font-serif text-gray-800">
@@ -958,6 +1061,18 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
                   </div>
                   <p className="text-sm text-blue-600">
                     This product includes an interactive 3D model viewer.
+                  </p>
+                </div>
+              )}
+              
+              {videos.length > 0 && !videos[0].markedForDeletion && (
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-purple-700 mb-2">
+                    <VideoIcon className="h-4 w-4" />
+                    <span className="font-medium">Product Video Available</span>
+                  </div>
+                  <p className="text-sm text-purple-600">
+                    This product includes video content to showcase its features.
                   </p>
                 </div>
               )}
