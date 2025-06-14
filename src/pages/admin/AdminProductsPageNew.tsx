@@ -4,7 +4,7 @@ import {
   Search, 
   Filter, 
   Plus, 
-  Eye, Product Videos
+  Eye,
   Edit, 
   Info,
   Trash2,
