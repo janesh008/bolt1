@@ -15,64 +15,84 @@ export const uploadProductImage = async (
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `${productId}/${fileName}`;
 
-    // Create the bucket if it doesn't exist
-    const { data: bucketData, error: bucketError } = await supabase.storage
-      .getBucket(STORAGE_BUCKET);
-    
-    if (bucketError && bucketError.message.includes('not found')) {
-      // Bucket doesn't exist, create it
-      await supabase.storage.createBucket(STORAGE_BUCKET, {
-        public: true,
-        fileSizeLimit: 10485760, // 10MB
-        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-      });
-    }
+    // Create a FormData object to track upload progress
+    const formData = new FormData();
+    formData.append('file', file);
 
-    // Set up progress tracking
-    let progressInterval: any = null;
+    // Use XMLHttpRequest for progress tracking
     if (onProgress) {
-      let currentProgress = 0;
-      progressInterval = setInterval(() => {
-        // Simulate progress until we get to 90%
-        if (currentProgress < 90) {
-          currentProgress += 5;
-          onProgress(currentProgress);
-        }
-      }, 300);
-    }
-
-    // Upload the file
-    const { data, error } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            onProgress(percentComplete);
+          }
+        });
+        
+        xhr.addEventListener('load', async () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            // Get public URL after successful upload
+            const { data: { publicUrl } } = supabase.storage
+              .from(STORAGE_BUCKET)
+              .getPublicUrl(filePath);
+            
+            resolve({
+              url: publicUrl,
+              path: filePath,
+            });
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        });
+        
+        xhr.addEventListener('error', () => {
+          reject(new Error('Upload failed'));
+        });
+        
+        xhr.addEventListener('abort', () => {
+          reject(new Error('Upload aborted'));
+        });
+        
+        // Start the upload using Supabase's signed URL approach
+        supabase.storage.from(STORAGE_BUCKET).createSignedUploadUrl(filePath)
+          .then(({ data, error }) => {
+            if (error) {
+              reject(error);
+              return;
+            }
+            
+            xhr.open('PUT', data.signedUrl);
+            xhr.setRequestHeader('Content-Type', file.type);
+            xhr.send(file);
+          })
+          .catch(reject);
       });
+    } else {
+      // Standard upload without progress tracking
+      const { data, error } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
 
-    // Clear progress interval
-    if (progressInterval) {
-      clearInterval(progressInterval);
+      if (error) {
+        console.error('Upload error:', error);
+        return null;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(filePath);
+
+      return {
+        url: publicUrl,
+        path: filePath,
+      };
     }
-
-    if (error) {
-      console.error('Upload error:', error);
-      return null;
-    }
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from(STORAGE_BUCKET)
-      .getPublicUrl(filePath);
-
-    // Signal 100% completion
-    if (onProgress) {
-      onProgress(100);
-    }
-
-    return {
-      url: publicUrl,
-      path: filePath,
-    };
   } catch (error) {
     console.error('Error uploading image:', error);
     return null;
@@ -90,64 +110,84 @@ export const uploadProductVideo = async (
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `${productId}/${fileName}`;
 
-    // Create the bucket if it doesn't exist
-    const { data: bucketData, error: bucketError } = await supabase.storage
-      .getBucket(VIDEO_STORAGE_BUCKET);
-    
-    if (bucketError && bucketError.message.includes('not found')) {
-      // Bucket doesn't exist, create it
-      await supabase.storage.createBucket(VIDEO_STORAGE_BUCKET, {
-        public: true,
-        fileSizeLimit: 104857600, // 100MB
-        allowedMimeTypes: ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']
-      });
-    }
+    // Create a FormData object to track upload progress
+    const formData = new FormData();
+    formData.append('file', file);
 
-    // Set up progress tracking
-    let progressInterval: any = null;
+    // Use XMLHttpRequest for progress tracking
     if (onProgress) {
-      let currentProgress = 0;
-      progressInterval = setInterval(() => {
-        // Simulate progress until we get to 90%
-        if (currentProgress < 90) {
-          currentProgress += 3;
-          onProgress(currentProgress);
-        }
-      }, 300);
-    }
-
-    // Upload the file
-    const { data, error } = await supabase.storage
-      .from(VIDEO_STORAGE_BUCKET)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            onProgress(percentComplete);
+          }
+        });
+        
+        xhr.addEventListener('load', async () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            // Get public URL after successful upload
+            const { data: { publicUrl } } = supabase.storage
+              .from(VIDEO_STORAGE_BUCKET)
+              .getPublicUrl(filePath);
+            
+            resolve({
+              url: publicUrl,
+              path: filePath,
+            });
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        });
+        
+        xhr.addEventListener('error', () => {
+          reject(new Error('Upload failed'));
+        });
+        
+        xhr.addEventListener('abort', () => {
+          reject(new Error('Upload aborted'));
+        });
+        
+        // Start the upload using Supabase's signed URL approach
+        supabase.storage.from(VIDEO_STORAGE_BUCKET).createSignedUploadUrl(filePath)
+          .then(({ data, error }) => {
+            if (error) {
+              reject(error);
+              return;
+            }
+            
+            xhr.open('PUT', data.signedUrl);
+            xhr.setRequestHeader('Content-Type', file.type);
+            xhr.send(file);
+          })
+          .catch(reject);
       });
+    } else {
+      // Standard upload without progress tracking
+      const { data, error } = await supabase.storage
+        .from(VIDEO_STORAGE_BUCKET)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
 
-    // Clear progress interval
-    if (progressInterval) {
-      clearInterval(progressInterval);
+      if (error) {
+        console.error('Video upload error:', error);
+        return null;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from(VIDEO_STORAGE_BUCKET)
+        .getPublicUrl(filePath);
+
+      return {
+        url: publicUrl,
+        path: filePath,
+      };
     }
-
-    if (error) {
-      console.error('Video upload error:', error);
-      return null;
-    }
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from(VIDEO_STORAGE_BUCKET)
-      .getPublicUrl(filePath);
-
-    // Signal 100% completion
-    if (onProgress) {
-      onProgress(100);
-    }
-
-    return {
-      url: publicUrl,
-      path: filePath,
-    };
   } catch (error) {
     console.error('Error uploading video:', error);
     return null;
