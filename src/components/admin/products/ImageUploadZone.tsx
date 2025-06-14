@@ -38,6 +38,11 @@ const ImageUploadZone: React.FC<ImageUploadZoneProps> = ({
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (disabled) return;
     
+    if (!productId) {
+      toast.error('Please save the product first before uploading images');
+      return;
+    }
+    
     const remainingSlots = maxImages - images.filter(img => !img.markedForDeletion).length;
     const filesToProcess = acceptedFiles.slice(0, remainingSlots);
 
@@ -61,80 +66,78 @@ const ImageUploadZone: React.FC<ImageUploadZoneProps> = ({
     onImagesChange(updatedImages);
 
     // Upload files if productId is available
-    if (productId) {
-      for (let i = 0; i < newImages.length; i++) {
-        const tempImage = newImages[i];
-        const file = filesToProcess[i];
+    for (let i = 0; i < newImages.length; i++) {
+      const tempImage = newImages[i];
+      const file = filesToProcess[i];
+      
+      try {
+        // Update progress to show upload starting
+        const currentImages = [...updatedImages];
+        const imageIndex = currentImages.findIndex(img => img.id === tempImage.id);
         
-        try {
-          // Update progress to show upload starting
-          const currentImages = [...updatedImages];
-          const imageIndex = currentImages.findIndex(img => img.id === tempImage.id);
-          
-          if (imageIndex !== -1) {
-            currentImages[imageIndex] = {
-              ...currentImages[imageIndex],
-              uploadProgress: 10,
+        if (imageIndex !== -1) {
+          currentImages[imageIndex] = {
+            ...currentImages[imageIndex],
+            uploadProgress: 10,
+          };
+          onImagesChange(currentImages);
+        }
+
+        const result = await uploadProductImage(file, productId, (progress) => {
+          // Update progress during upload
+          const progressImages = [...currentImages];
+          const progressIndex = progressImages.findIndex(img => img.id === tempImage.id);
+          if (progressIndex !== -1) {
+            progressImages[progressIndex] = {
+              ...progressImages[progressIndex],
+              uploadProgress: Math.min(progress, 95), // Cap at 95% until completion
             };
-            onImagesChange(currentImages);
+            onImagesChange(progressImages);
           }
+        });
 
-          const result = await uploadProductImage(file, productId, (progress) => {
-            // Update progress during upload
-            const progressImages = [...currentImages];
-            const progressIndex = progressImages.findIndex(img => img.id === tempImage.id);
-            if (progressIndex !== -1) {
-              progressImages[progressIndex] = {
-                ...progressImages[progressIndex],
-                uploadProgress: Math.min(progress, 95), // Cap at 95% until completion
-              };
-              onImagesChange(progressImages);
-            }
-          });
-
-          if (result) {
-            // Upload successful - update with final data
-            const finalImages = [...currentImages];
-            const finalIndex = finalImages.findIndex(img => img.id === tempImage.id);
+        if (result) {
+          // Upload successful - update with final data
+          const finalImages = [...currentImages];
+          const finalIndex = finalImages.findIndex(img => img.id === tempImage.id);
+          
+          if (finalIndex !== -1) {
+            finalImages[finalIndex] = {
+              ...finalImages[finalIndex],
+              url: result.url,
+              path: result.path,
+              isUploading: false,
+              uploadProgress: 100,
+              file: undefined, // Clear file reference
+            };
+            onImagesChange(finalImages);
             
-            if (finalIndex !== -1) {
-              finalImages[finalIndex] = {
-                ...finalImages[finalIndex],
-                url: result.url,
-                path: result.path,
-                isUploading: false,
-                uploadProgress: 100,
-                file: undefined, // Clear file reference
-              };
-              onImagesChange(finalImages);
-              
-              // Clear progress after a short delay for visual feedback
-              setTimeout(() => {
-                const clearedImages = [...finalImages];
-                if (clearedImages[finalIndex]) {
-                  clearedImages[finalIndex] = {
-                    ...clearedImages[finalIndex],
-                    uploadProgress: undefined,
-                  };
-                  onImagesChange(clearedImages);
-                }
-              }, 1000);
-            }
-            
-            toast.success('Image uploaded successfully');
-          } else {
-            // Upload failed - remove the failed image
-            const failedImages = currentImages.filter(img => img.id !== tempImage.id);
-            onImagesChange(failedImages);
-            toast.error('Failed to upload image');
+            // Clear progress after a short delay for visual feedback
+            setTimeout(() => {
+              const clearedImages = [...finalImages];
+              if (clearedImages[finalIndex]) {
+                clearedImages[finalIndex] = {
+                  ...clearedImages[finalIndex],
+                  uploadProgress: undefined,
+                };
+                onImagesChange(clearedImages);
+              }
+            }, 1000);
           }
-        } catch (error) {
-          console.error('Upload error:', error);
-          // Remove failed upload from array
-          const errorImages = updatedImages.filter(img => img.id !== tempImage.id);
-          onImagesChange(errorImages);
+          
+          toast.success('Image uploaded successfully');
+        } else {
+          // Upload failed - remove the failed image
+          const failedImages = currentImages.filter(img => img.id !== tempImage.id);
+          onImagesChange(failedImages);
           toast.error('Failed to upload image');
         }
+      } catch (error) {
+        console.error('Upload error:', error);
+        // Remove failed upload from array
+        const errorImages = updatedImages.filter(img => img.id !== tempImage.id);
+        onImagesChange(errorImages);
+        toast.error('Failed to upload image');
       }
     }
   }, [images, onImagesChange, productId, maxImages, disabled]);

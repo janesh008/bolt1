@@ -38,6 +38,11 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (disabled) return;
     
+    if (!productId) {
+      toast.error('Please save the product first before uploading videos');
+      return;
+    }
+    
     const remainingSlots = maxVideos - videos.filter(vid => !vid.markedForDeletion).length;
     const filesToProcess = acceptedFiles.slice(0, remainingSlots);
 
@@ -61,80 +66,78 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
     onVideosChange(updatedVideos);
 
     // Upload files if productId is available
-    if (productId) {
-      for (let i = 0; i < newVideos.length; i++) {
-        const tempVideo = newVideos[i];
-        const file = filesToProcess[i];
+    for (let i = 0; i < newVideos.length; i++) {
+      const tempVideo = newVideos[i];
+      const file = filesToProcess[i];
+      
+      try {
+        // Update progress to show upload starting
+        const currentVideos = [...updatedVideos];
+        const videoIndex = currentVideos.findIndex(vid => vid.id === tempVideo.id);
         
-        try {
-          // Update progress to show upload starting
-          const currentVideos = [...updatedVideos];
-          const videoIndex = currentVideos.findIndex(vid => vid.id === tempVideo.id);
-          
-          if (videoIndex !== -1) {
-            currentVideos[videoIndex] = {
-              ...currentVideos[videoIndex],
-              uploadProgress: 10,
+        if (videoIndex !== -1) {
+          currentVideos[videoIndex] = {
+            ...currentVideos[videoIndex],
+            uploadProgress: 10,
+          };
+          onVideosChange(currentVideos);
+        }
+
+        const result = await uploadProductVideo(file, productId, (progress) => {
+          // Update progress during upload
+          const progressVideos = [...currentVideos];
+          const progressIndex = progressVideos.findIndex(vid => vid.id === tempVideo.id);
+          if (progressIndex !== -1) {
+            progressVideos[progressIndex] = {
+              ...progressVideos[progressIndex],
+              uploadProgress: Math.min(progress, 95), // Cap at 95% until completion
             };
-            onVideosChange(currentVideos);
+            onVideosChange(progressVideos);
           }
+        });
 
-          const result = await uploadProductVideo(file, productId, (progress) => {
-            // Update progress during upload
-            const progressVideos = [...currentVideos];
-            const progressIndex = progressVideos.findIndex(vid => vid.id === tempVideo.id);
-            if (progressIndex !== -1) {
-              progressVideos[progressIndex] = {
-                ...progressVideos[progressIndex],
-                uploadProgress: Math.min(progress, 95), // Cap at 95% until completion
-              };
-              onVideosChange(progressVideos);
-            }
-          });
-
-          if (result) {
-            // Upload successful - update with final data
-            const finalVideos = [...currentVideos];
-            const finalIndex = finalVideos.findIndex(vid => vid.id === tempVideo.id);
+        if (result) {
+          // Upload successful - update with final data
+          const finalVideos = [...currentVideos];
+          const finalIndex = finalVideos.findIndex(vid => vid.id === tempVideo.id);
+          
+          if (finalIndex !== -1) {
+            finalVideos[finalIndex] = {
+              ...finalVideos[finalIndex],
+              url: result.url,
+              path: result.path,
+              isUploading: false,
+              uploadProgress: 100,
+              file: undefined, // Clear file reference
+            };
+            onVideosChange(finalVideos);
             
-            if (finalIndex !== -1) {
-              finalVideos[finalIndex] = {
-                ...finalVideos[finalIndex],
-                url: result.url,
-                path: result.path,
-                isUploading: false,
-                uploadProgress: 100,
-                file: undefined, // Clear file reference
-              };
-              onVideosChange(finalVideos);
-              
-              // Clear progress after a short delay for visual feedback
-              setTimeout(() => {
-                const clearedVideos = [...finalVideos];
-                if (clearedVideos[finalIndex]) {
-                  clearedVideos[finalIndex] = {
-                    ...clearedVideos[finalIndex],
-                    uploadProgress: undefined,
-                  };
-                  onVideosChange(clearedVideos);
-                }
-              }, 1000);
-            }
-            
-            toast.success('Video uploaded successfully');
-          } else {
-            // Upload failed - remove the failed video
-            const failedVideos = currentVideos.filter(vid => vid.id !== tempVideo.id);
-            onVideosChange(failedVideos);
-            toast.error('Failed to upload video');
+            // Clear progress after a short delay for visual feedback
+            setTimeout(() => {
+              const clearedVideos = [...finalVideos];
+              if (clearedVideos[finalIndex]) {
+                clearedVideos[finalIndex] = {
+                  ...clearedVideos[finalIndex],
+                  uploadProgress: undefined,
+                };
+                onVideosChange(clearedVideos);
+              }
+            }, 1000);
           }
-        } catch (error) {
-          console.error('Upload error:', error);
-          // Remove failed upload from array
-          const errorVideos = updatedVideos.filter(vid => vid.id !== tempVideo.id);
-          onVideosChange(errorVideos);
+          
+          toast.success('Video uploaded successfully');
+        } else {
+          // Upload failed - remove the failed video
+          const failedVideos = currentVideos.filter(vid => vid.id !== tempVideo.id);
+          onVideosChange(failedVideos);
           toast.error('Failed to upload video');
         }
+      } catch (error) {
+        console.error('Upload error:', error);
+        // Remove failed upload from array
+        const errorVideos = updatedVideos.filter(vid => vid.id !== tempVideo.id);
+        onVideosChange(errorVideos);
+        toast.error('Failed to upload video');
       }
     }
   }, [videos, onVideosChange, productId, maxVideos, disabled]);
