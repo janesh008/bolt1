@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingBag, User, Heart, Search } from 'lucide-react';
+import { Menu, X, ShoppingBag, User, Heart, Search, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -80,6 +80,13 @@ const Header = () => {
             pathname === '/products/silver' ? 'text-charcoal-800' : 'text-charcoal-500 hover:text-charcoal-800'
           )}>
             Silver
+          </Link>
+          <Link to="/ai-designer" className={cn(
+            'text-sm font-medium transition-colors flex items-center',
+            pathname.includes('/ai-designer') ? 'text-charcoal-800' : 'text-charcoal-500 hover:text-charcoal-800'
+          )}>
+            <Sparkles className="h-4 w-4 mr-1" />
+            AI Designer
           </Link>
         </nav>
         

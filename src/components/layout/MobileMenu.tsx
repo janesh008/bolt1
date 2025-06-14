@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { Dialog, Transition } from '@headlessui/react';
-import { X, ShoppingBag, Heart, User } from 'lucide-react';
+import { X, ShoppingBag, Heart, User, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -98,6 +98,14 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
                       onClick={onClose}
                     >
                       Platinum
+                    </Link>
+                    <Link 
+                      to="/ai-designer" 
+                      className="text-lg font-medium text-charcoal-800 py-2 border-b border-cream-200 flex items-center"
+                      onClick={onClose}
+                    >
+                      <Sparkles className="h-5 w-5 mr-2 text-gold-500" />
+                      AI Designer
                     </Link>
                   </nav>
 
