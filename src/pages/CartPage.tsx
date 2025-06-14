@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Trash2, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -8,6 +8,7 @@ import { formatCurrency } from '../lib/utils';
 
 const CartPage = () => {
   const { items, removeFromCart, updateQuantity, totalPrice, isLoading } = useCart();
+  const navigate = useNavigate();
   
   useEffect(() => {
     document.title = 'Shopping Cart | AXELS';
@@ -34,6 +35,10 @@ const CartPage = () => {
       </div>
     );
   }
+  
+  const handleCheckout = () => {
+    navigate('/checkout');
+  };
   
   return (
     <div className="container mx-auto px-4 py-16">
@@ -122,11 +127,9 @@ const CartPage = () => {
               </div>
             </div>
             
-            <Link to="/checkout">
-              <Button className="w-full">
-                Proceed to Checkout
-              </Button>
-            </Link>
+            <Button className="w-full" onClick={handleCheckout}>
+              Proceed to Checkout
+            </Button>
             
             <Link to="/products">
               <Button variant="ghost" className="w-full mt-3">
