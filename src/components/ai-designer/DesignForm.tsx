@@ -33,6 +33,7 @@ const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading }) => {
     register, 
     handleSubmit, 
     control,
+    watch,
     formState: { errors } 
   } = useForm<DesignFormValues>({
     resolver: zodResolver(designFormSchema),
