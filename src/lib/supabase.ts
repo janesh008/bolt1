@@ -1,3 +1,4 @@
+// Add this import at the top if it's not already there
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
