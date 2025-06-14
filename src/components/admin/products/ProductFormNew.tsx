@@ -79,6 +79,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const [showIJewelPreview, setShowIJewelPreview] = useState(false);
+  const [tempProductId, setTempProductId] = useState<string | null>(null);
 
   const {
     register,
@@ -144,6 +145,13 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
+
+  // Generate a temporary product ID for uploads when creating a new product
+  useEffect(() => {
+    if (mode === 'create' && !tempProductId) {
+      setTempProductId(`temp_${Date.now()}`);
+    }
+  }, [mode, tempProductId]);
 
   const fetchCategories = async () => {
     try {
@@ -322,7 +330,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
 
   const handleImageOperations = async (productId: string) => {
     // Delete marked images
-    const imagesToDelete = images.filter(img => img.markedForDeletion && img.id);
+    const imagesToDelete = images.filter(img => img.markedForDeletion && img.id && !img.id.startsWith('temp-'));
     for (const image of imagesToDelete) {
       try {
         // Delete from storage if path exists
@@ -331,10 +339,12 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
         }
         
         // Delete from database
-        await supabase
-          .from('product_images')
-          .delete()
-          .eq('id', image.id);
+        if (image.id) {
+          await supabase
+            .from('product_images')
+            .delete()
+            .eq('id', image.id);
+        }
       } catch (error) {
         console.error('Error deleting image:', error);
       }
@@ -357,7 +367,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
 
   const handleVideoOperations = async (productId: string) => {
     // Delete marked videos
-    const videosToDelete = videos.filter(vid => vid.markedForDeletion && vid.id);
+    const videosToDelete = videos.filter(vid => vid.markedForDeletion && vid.id && !vid.id.startsWith('temp-'));
     for (const video of videosToDelete) {
       try {
         // Delete from storage if path exists
@@ -366,10 +376,12 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
         }
         
         // Delete from database
-        await supabase
-          .from('product_videos')
-          .delete()
-          .eq('id', video.id);
+        if (video.id) {
+          await supabase
+            .from('product_videos')
+            .delete()
+            .eq('id', video.id);
+        }
       } catch (error) {
         console.error('Error deleting video:', error);
       }
@@ -790,7 +802,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
                 <ImageUploadZone
                   images={images}
                   onImagesChange={setImages}
-                  productId={mode === 'edit' ? productId : undefined}
+                  productId={mode === 'edit' ? productId : tempProductId}
                   maxImages={10}
                   disabled={isSaving}
                 />
@@ -806,7 +818,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
                 <VideoUploadZone
                   videos={videos}
                   onVideosChange={setVideos}
-                  productId={mode === 'edit' ? productId : undefined}
+                  productId={mode === 'edit' ? productId : tempProductId}
                   maxVideos={3}
                   disabled={isSaving}
                 />

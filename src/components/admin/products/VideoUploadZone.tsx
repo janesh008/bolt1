@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, Video as VideoIcon, AlertCircle, Check } from 'lucide-react';
+import { Upload, X, Video, AlertCircle, Check } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { uploadProductVideo, deleteProductVideo } from '../../../lib/supabase-storage';
 import { Badge } from '../../ui/badge';
@@ -196,7 +196,7 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
           )}
         >
           <input {...getInputProps()} />
-          <VideoIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <div className="space-y-2">
             <p className="text-lg font-medium text-gray-700">
               {isDragActive ? 'Drop videos here' : 'Upload Product Videos'}
@@ -238,7 +238,7 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
               {/* Video Placeholder for Uploading */}
               {video.isUploading && (
                 <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                  <VideoIcon className="h-12 w-12 text-gray-400" />
+                  <Video className="h-12 w-12 text-gray-400" />
                 </div>
               )}
 
@@ -318,7 +318,7 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
       {/* Empty State */}
       {videos.length === 0 && (
         <div className="text-center py-12 text-gray-500">
-          <VideoIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
+          <Video className="h-16 w-16 mx-auto mb-4 opacity-50" />
           <p className="text-lg font-medium">No videos uploaded</p>
           <p className="text-sm">Add some product videos to get started</p>
         </div>

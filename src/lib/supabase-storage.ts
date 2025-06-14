@@ -15,6 +15,23 @@ export const uploadProductImage = async (
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `${productId}/${fileName}`;
 
+    // Check if bucket exists, create if not
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === STORAGE_BUCKET);
+    
+    if (!bucketExists) {
+      console.log('Creating images bucket...');
+      const { error: createBucketError } = await supabase.storage.createBucket(STORAGE_BUCKET, {
+        public: true,
+        fileSizeLimit: 10485760, // 10MB
+      });
+      
+      if (createBucketError) {
+        console.error('Error creating bucket:', createBucketError);
+        return null;
+      }
+    }
+
     const { data, error } = await supabase.storage
       .from(STORAGE_BUCKET)
       .upload(filePath, file, {
@@ -52,6 +69,23 @@ export const uploadProductVideo = async (
     const fileExt = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `${productId}/${fileName}`;
+
+    // Check if bucket exists, create if not
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === VIDEO_STORAGE_BUCKET);
+    
+    if (!bucketExists) {
+      console.log('Creating videos bucket...');
+      const { error: createBucketError } = await supabase.storage.createBucket(VIDEO_STORAGE_BUCKET, {
+        public: true,
+        fileSizeLimit: 104857600, // 100MB
+      });
+      
+      if (createBucketError) {
+        console.error('Error creating video bucket:', createBucketError);
+        return null;
+      }
+    }
 
     const { data, error } = await supabase.storage
       .from(VIDEO_STORAGE_BUCKET)
