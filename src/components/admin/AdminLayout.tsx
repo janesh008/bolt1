@@ -36,7 +36,7 @@ const AdminLayout = () => {
   }
 
   if (!user || !hasRole('Moderator')) {
-    return <Navigate to="/admin/login\" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   const handleSignOut = async () => {
