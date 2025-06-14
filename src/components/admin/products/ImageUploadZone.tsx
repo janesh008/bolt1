@@ -79,7 +79,6 @@ const ImageUploadZone: React.FC<ImageUploadZoneProps> = ({
             onImagesChange(currentImages);
           }
 
-          console.log('Uploading image:', file.name, 'for product:', productId);
           const result = await uploadProductImage(file, productId, (progress) => {
             // Update progress during upload
             const progressImages = [...currentImages];
@@ -93,7 +92,6 @@ const ImageUploadZone: React.FC<ImageUploadZoneProps> = ({
             }
           });
 
-          console.log('Upload result:', result);
           if (result) {
             // Upload successful - update with final data
             const finalImages = [...currentImages];
