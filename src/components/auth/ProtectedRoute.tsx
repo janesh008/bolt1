@@ -23,7 +23,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   
   // Allow access in dev mode or if user is authenticated
   if (!user && !isDevMode) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login\" state={{ from: location }} replace />;
   }
   
   return <>{children}</>;
