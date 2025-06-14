@@ -126,13 +126,19 @@ const ProductDetailPage = () => {
           product_videos(*)
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      
+      if (!data) {
+        toast.error('Product not found');
+        return;
+      }
+      
       setProduct(data);
     } catch (error) {
       console.error('Error fetching product:', error);
-      toast.error('Product not found');
+      toast.error('Failed to load product');
     } finally {
       setIsLoading(false);
     }
