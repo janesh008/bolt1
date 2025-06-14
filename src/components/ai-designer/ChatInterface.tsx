@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Heart, Send, RefreshCw, Download, ShoppingBag, Clock, Star, Sparkles, X } from 'lucide-react';
+import { Heart, Send, RefreshCw, Download, ShoppingBag, Clock, Star, Sparkles, X, Image as ImageIcon } from 'lucide-react';
 import { AIDesignSession, AIMessage } from '../../types/ai-designer';
 import { Input } from '../ui/input';
 import Button from '../ui/Button';

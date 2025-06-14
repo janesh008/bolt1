@@ -62,6 +62,11 @@ const AIDesignerPage = () => {
   };
   
   const handleFormSubmit = async (data: DesignFormValues, imageFile?: File) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    
     const sessionId = await createSession(data, imageFile);
     if (sessionId) {
       navigate(`/ai-designer/${sessionId}`);
@@ -109,7 +114,11 @@ const AIDesignerPage = () => {
               Back to Sessions
             </Button>
           </div>
-          <DesignForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+          <DesignForm 
+            onSubmit={handleFormSubmit} 
+            isLoading={isLoading} 
+            isAuthenticated={!!user}
+          />
         </div>
       )}
       

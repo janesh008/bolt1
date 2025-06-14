@@ -23,9 +23,10 @@ import { cn } from '../../lib/utils';
 interface DesignFormProps {
   onSubmit: (data: DesignFormValues, imageFile?: File) => Promise<void>;
   isLoading: boolean;
+  isAuthenticated: boolean;
 }
 
-const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading }) => {
+const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading, isAuthenticated }) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
@@ -62,6 +63,9 @@ const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading }) => {
   });
   
   const handleFormSubmit = async (data: DesignFormValues) => {
+    if (!isAuthenticated) {
+      return;
+    }
     await onSubmit(data, imageFile || undefined);
   };
   
@@ -82,6 +86,11 @@ const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading }) => {
             <p className="text-charcoal-500">
               Describe your perfect piece and our AI will bring it to life
             </p>
+            {!isAuthenticated && (
+              <p className="text-red-500 text-sm">
+                Please log in to create a design session
+              </p>
+            )}
           </div>
           
           {/* Jewelry Category */}
@@ -97,6 +106,7 @@ const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading }) => {
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  disabled={!isAuthenticated}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select jewelry type" />
@@ -129,6 +139,7 @@ const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading }) => {
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  disabled={!isAuthenticated}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select metal type" />
@@ -160,6 +171,7 @@ const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading }) => {
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  disabled={!isAuthenticated}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select style" />
@@ -192,6 +204,7 @@ const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading }) => {
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  disabled={!isAuthenticated}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select diamond option" />
@@ -221,6 +234,7 @@ const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading }) => {
               {...register('description')}
               placeholder="Describe your dream jewelry in detail..."
               className="min-h-[120px]"
+              disabled={!isAuthenticated}
             />
             {errors.description && (
               <p className="text-red-500 text-sm">{errors.description.message}</p>
@@ -244,10 +258,11 @@ const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading }) => {
                   "border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer",
                   isDragActive
                     ? "border-gold-400 bg-gold-50"
-                    : "border-cream-200 hover:border-gold-300"
+                    : "border-cream-200 hover:border-gold-300",
+                  !isAuthenticated && "opacity-50 cursor-not-allowed"
                 )}
               >
-                <input {...getInputProps()} />
+                <input {...getInputProps()} disabled={!isAuthenticated} />
                 <Upload className="h-10 w-10 text-charcoal-400 mx-auto mb-4" />
                 <p className="text-charcoal-600">
                   {isDragActive
@@ -269,6 +284,7 @@ const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading }) => {
                   type="button"
                   onClick={removeImage}
                   className="absolute top-2 right-2 p-1 bg-charcoal-800 rounded-full text-white"
+                  disabled={!isAuthenticated}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -282,9 +298,10 @@ const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading }) => {
             isLoading={isLoading}
             className="w-full py-3"
             size="lg"
+            disabled={!isAuthenticated || isLoading}
           >
             <Sparkles className="h-5 w-5 mr-2" />
-            Start Designing with AI
+            {!isAuthenticated ? 'Please Log In to Continue' : 'Start Designing with AI'}
           </Button>
         </form>
       </CardContent>
