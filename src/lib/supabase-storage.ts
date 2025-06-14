@@ -15,6 +15,20 @@ export const uploadProductImage = async (
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `${productId}/${fileName}`;
 
+    // Create the bucket if it doesn't exist
+    const { data: bucketData, error: bucketError } = await supabase.storage
+      .getBucket(STORAGE_BUCKET);
+    
+    if (bucketError && bucketError.message.includes('not found')) {
+      // Bucket doesn't exist, create it
+      await supabase.storage.createBucket(STORAGE_BUCKET, {
+        public: true,
+        fileSizeLimit: 10485760, // 10MB
+        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+      });
+    }
+
+    // Upload the file
     const { data, error } = await supabase.storage
       .from(STORAGE_BUCKET)
       .upload(filePath, file, {
@@ -53,6 +67,20 @@ export const uploadProductVideo = async (
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `${productId}/${fileName}`;
 
+    // Create the bucket if it doesn't exist
+    const { data: bucketData, error: bucketError } = await supabase.storage
+      .getBucket(VIDEO_STORAGE_BUCKET);
+    
+    if (bucketError && bucketError.message.includes('not found')) {
+      // Bucket doesn't exist, create it
+      await supabase.storage.createBucket(VIDEO_STORAGE_BUCKET, {
+        public: true,
+        fileSizeLimit: 104857600, // 100MB
+        allowedMimeTypes: ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']
+      });
+    }
+
+    // Upload the file
     const { data, error } = await supabase.storage
       .from(VIDEO_STORAGE_BUCKET)
       .upload(filePath, file, {

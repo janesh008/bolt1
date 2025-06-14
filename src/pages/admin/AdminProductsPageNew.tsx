@@ -74,13 +74,11 @@ interface DatabaseProduct {
 interface Category {
   id: string;
   name: string;
-  created_at: string;
 }
 
 interface MetalColor {
   id: string;
   name: string;
-  created_at: string;
 }
 
 const AdminProductsPageNew = () => {
@@ -142,12 +140,9 @@ const AdminProductsPageNew = () => {
 
       const { data, error } = await query;
 
-      if (error) {
-        console.error('Error fetching products:', error);
-        toast.error('Failed to fetch products from database');
-        return;
-      }
-
+      if (error) throw error;
+      
+      console.log('Fetched products:', data);
       setProducts(data || []);
       setTotalPages(Math.ceil((data?.length || 0) / productsPerPage));
     } catch (error) {
@@ -162,17 +157,15 @@ const AdminProductsPageNew = () => {
     try {
       const { data, error } = await supabase
         .from('categories')
-        .select('*')
+        .select('id, name')
+        .eq('is_active', true)
         .order('name');
 
-      if (error) {
-        console.error('Error fetching categories:', error);
-        return;
-      }
-
+      if (error) throw error;
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
+      toast.error('Failed to load categories');
     }
   };
 
@@ -180,17 +173,15 @@ const AdminProductsPageNew = () => {
     try {
       const { data, error } = await supabase
         .from('metal_colors')
-        .select('*')
+        .select('id, name')
+        .eq('is_active', true)
         .order('name');
 
-      if (error) {
-        console.error('Error fetching metal colors:', error);
-        return;
-      }
-
+      if (error) throw error;
       setMetalColors(data || []);
     } catch (error) {
       console.error('Error fetching metal colors:', error);
+      toast.error('Failed to load metal colors');
     }
   };
 
@@ -211,18 +202,22 @@ const AdminProductsPageNew = () => {
       setIsDeleting(true);
       
       // Delete product images from storage first
-      if (productToDelete.product_images) {
+      if (productToDelete.product_images && productToDelete.product_images.length > 0) {
+        console.log('Deleting product images:', productToDelete.product_images);
         for (const image of productToDelete.product_images) {
           if (image.storage_path) {
+            console.log('Deleting image from storage:', image.storage_path);
             await deleteProductImage(image.storage_path);
           }
         }
       }
 
       // Delete product videos from storage
-      if (productToDelete.product_videos) {
+      if (productToDelete.product_videos && productToDelete.product_videos.length > 0) {
+        console.log('Deleting product videos:', productToDelete.product_videos);
         for (const video of productToDelete.product_videos) {
           if (video.storage_path) {
+            console.log('Deleting video from storage:', video.storage_path);
             await deleteProductVideo(video.storage_path);
           }
         }
@@ -296,6 +291,7 @@ const AdminProductsPageNew = () => {
         if (product.product_images) {
           for (const image of product.product_images) {
             if (image.storage_path) {
+              console.log('Deleting image from storage:', image.storage_path);
               await deleteProductImage(image.storage_path);
             }
           }
@@ -305,6 +301,7 @@ const AdminProductsPageNew = () => {
         if (product.product_videos) {
           for (const video of product.product_videos) {
             if (video.storage_path) {
+              console.log('Deleting video from storage:', video.storage_path);
               await deleteProductVideo(video.storage_path);
             }
           }
