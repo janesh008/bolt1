@@ -28,6 +28,19 @@ export const uploadProductImage = async (
       });
     }
 
+    // Set up progress tracking
+    let progressInterval: any = null;
+    if (onProgress) {
+      let currentProgress = 0;
+      progressInterval = setInterval(() => {
+        // Simulate progress until we get to 90%
+        if (currentProgress < 90) {
+          currentProgress += 5;
+          onProgress(currentProgress);
+        }
+      }, 300);
+    }
+
     // Upload the file
     const { data, error } = await supabase.storage
       .from(STORAGE_BUCKET)
@@ -35,6 +48,11 @@ export const uploadProductImage = async (
         cacheControl: '3600',
         upsert: false,
       });
+
+    // Clear progress interval
+    if (progressInterval) {
+      clearInterval(progressInterval);
+    }
 
     if (error) {
       console.error('Upload error:', error);
@@ -45,6 +63,11 @@ export const uploadProductImage = async (
     const { data: { publicUrl } } = supabase.storage
       .from(STORAGE_BUCKET)
       .getPublicUrl(filePath);
+
+    // Signal 100% completion
+    if (onProgress) {
+      onProgress(100);
+    }
 
     return {
       url: publicUrl,
@@ -80,6 +103,19 @@ export const uploadProductVideo = async (
       });
     }
 
+    // Set up progress tracking
+    let progressInterval: any = null;
+    if (onProgress) {
+      let currentProgress = 0;
+      progressInterval = setInterval(() => {
+        // Simulate progress until we get to 90%
+        if (currentProgress < 90) {
+          currentProgress += 3;
+          onProgress(currentProgress);
+        }
+      }, 300);
+    }
+
     // Upload the file
     const { data, error } = await supabase.storage
       .from(VIDEO_STORAGE_BUCKET)
@@ -87,6 +123,11 @@ export const uploadProductVideo = async (
         cacheControl: '3600',
         upsert: false,
       });
+
+    // Clear progress interval
+    if (progressInterval) {
+      clearInterval(progressInterval);
+    }
 
     if (error) {
       console.error('Video upload error:', error);
@@ -97,6 +138,11 @@ export const uploadProductVideo = async (
     const { data: { publicUrl } } = supabase.storage
       .from(VIDEO_STORAGE_BUCKET)
       .getPublicUrl(filePath);
+
+    // Signal 100% completion
+    if (onProgress) {
+      onProgress(100);
+    }
 
     return {
       url: publicUrl,
