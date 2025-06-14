@@ -13,8 +13,7 @@ import {
   MoreHorizontal,
   Package,
   Image as ImageIcon,
-  RefreshCw,
-  Video as VideoIcon
+  RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -27,7 +26,7 @@ import Button from '../../components/ui/Button';
 import ProductInfoModal from '../../components/admin/products/ProductInfoModal';
 import { useDebounce } from '../../hooks/useDebounce';
 import { supabase } from '../../lib/supabase';
-import { deleteProductImage, deleteProductVideo } from '../../lib/supabase-storage';
+import { deleteProductImage } from '../../lib/supabase-storage';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import toast from 'react-hot-toast';
 
@@ -59,13 +58,6 @@ interface DatabaseProduct {
     id: string;
     product_id: string;
     image_url: string;
-    storage_path?: string;
-    created_at: string;
-  }>;
-  product_videos?: Array<{
-    id: string;
-    product_id: string;
-    video_url: string;
     storage_path?: string;
     created_at: string;
   }>;
@@ -120,8 +112,7 @@ const AdminProductsPageNew = () => {
           *,
           categories:category_id(id, name, created_at),
           metal_colors:metal_color_id(id, name, created_at),
-          product_images(id, product_id, image_url, storage_path, created_at),
-          product_videos(id, product_id, video_url, storage_path, created_at)
+          product_images(id, product_id, image_url, storage_path, created_at)
         `)
         .order('created_at', { ascending: false });
 
@@ -219,15 +210,6 @@ const AdminProductsPageNew = () => {
         }
       }
 
-      // Delete product videos from storage
-      if (productToDelete.product_videos) {
-        for (const video of productToDelete.product_videos) {
-          if (video.storage_path) {
-            await deleteProductVideo(video.storage_path);
-          }
-        }
-      }
-
       // Delete product images from database
       const { error: imageError } = await supabase
         .from('product_images')
@@ -236,16 +218,6 @@ const AdminProductsPageNew = () => {
 
       if (imageError) {
         console.warn('Error deleting product images:', imageError);
-      }
-
-      // Delete product videos from database
-      const { error: videoError } = await supabase
-        .from('product_videos')
-        .delete()
-        .eq('product_id', productToDelete.id);
-
-      if (videoError) {
-        console.warn('Error deleting product videos:', videoError);
       }
 
       // Delete the product
@@ -289,23 +261,13 @@ const AdminProductsPageNew = () => {
     try {
       setIsDeleting(true);
       
-      // Delete product images and videos from storage first
+      // Delete product images from storage first
       const productsToDelete = products.filter(p => selectedProducts.includes(p.id));
       for (const product of productsToDelete) {
-        // Delete images
         if (product.product_images) {
           for (const image of product.product_images) {
             if (image.storage_path) {
               await deleteProductImage(image.storage_path);
-            }
-          }
-        }
-        
-        // Delete videos
-        if (product.product_videos) {
-          for (const video of product.product_videos) {
-            if (video.storage_path) {
-              await deleteProductVideo(video.storage_path);
             }
           }
         }
@@ -319,16 +281,6 @@ const AdminProductsPageNew = () => {
 
       if (imageError) {
         console.warn('Error deleting product images:', imageError);
-      }
-
-      // Delete product videos from database
-      const { error: videoError } = await supabase
-        .from('product_videos')
-        .delete()
-        .in('product_id', selectedProducts);
-
-      if (videoError) {
-        console.warn('Error deleting product videos:', videoError);
       }
 
       // Delete products
@@ -406,10 +358,6 @@ const AdminProductsPageNew = () => {
       return product.product_images[0].image_url;
     }
     return null;
-  };
-
-  const hasProductVideo = (product: DatabaseProduct) => {
-    return product.product_videos && product.product_videos.length > 0;
   };
 
   const paginatedProducts = useMemo(() => {
@@ -584,17 +532,6 @@ const AdminProductsPageNew = () => {
                           <div>
                             <div className="font-medium text-gray-900">{getProductName(product)}</div>
                             <div className="text-sm text-gray-500">{product.product_id || product.id}</div>
-                            <div className="flex gap-1 mt-1">
-                              {hasProductVideo(product) && (
-                                <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                                  <VideoIcon className="h-3 w-3" />
-                                  Video
-                                </Badge>
-                              )}
-                              {product.featured && (
-                                <Badge className="bg-gold-400 text-xs">Featured</Badge>
-                              )}
-                            </div>
                           </div>
                         </div>
                       </TableCell>
@@ -715,7 +652,7 @@ const AdminProductsPageNew = () => {
             <DialogTitle>Delete Product</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete "{productToDelete ? getProductName(productToDelete) : ''}"? 
-              This action cannot be undone and will also delete all associated images and videos.
+              This action cannot be undone and will also delete all associated images.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end space-x-2 mt-6">
