@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Lock, Check, AlertCircle } from 'lucide-react';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../lib/supabase';
 import Button from '../../components/ui/Button';
 import Logo from '../../components/ui/Logo';
 import { Card, CardContent } from '../../components/ui/card';
