@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../hooks/useCart';
 import { useWishlist } from '../hooks/useWishlist';
-import Button from '../components/ui/Button';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
-import RazorpayPaymentButton from '../components/checkout/RazorpayPaymentButton';
-import IJewelViewer from '../components/products/IJewelViewer';
-import ProductVideoPlayer from '../components/products/ProductVideoPlayer';
+import { Button } from '../components/ui/Button';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { RazorpayPaymentButton } from '../components/checkout/RazorpayPaymentButton';
+import { IJewelViewer } from '../components/products/IJewelViewer';
+import { ProductVideoPlayer } from '../components/products/ProductVideoPlayer';
 import { Heart, ShoppingCart, Share2, Star, Minus, Plus } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
