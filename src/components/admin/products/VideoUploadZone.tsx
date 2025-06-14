@@ -79,6 +79,7 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
             onVideosChange(currentVideos);
           }
 
+          console.log('Uploading video:', file.name, 'for product:', productId);
           const result = await uploadProductVideo(file, productId, (progress) => {
             // Update progress during upload
             const progressVideos = [...currentVideos];
@@ -92,6 +93,7 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
             }
           });
 
+          console.log('Video upload result:', result);
           if (result) {
             // Upload successful - update with final data
             const finalVideos = [...currentVideos];
