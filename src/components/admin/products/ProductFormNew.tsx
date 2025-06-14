@@ -33,6 +33,7 @@ const productSchema = z.object({
   diamond_color: z.string().optional(),
   diamond_piece_count: z.coerce.number().int().min(0).optional(),
   diamond_weight: z.coerce.number().min(0).optional(),
+  product_link: z.string().url().optional().or(z.literal('')),
   ijewel_url: z.string()
     .optional()
     .refine((val) => {
@@ -103,6 +104,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
       diamond_color: '',
       diamond_piece_count: 0,
       diamond_weight: 0,
+      product_link: '',
       ijewel_url: '',
       featured: false,
     }
@@ -213,6 +215,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
         diamond_color: product.diamond_color || '',
         diamond_piece_count: product.diamond_piece_count || 0,
         diamond_weight: product.diamond_weight || 0,
+        product_link: product.product_link || '',
         ijewel_url: product.ijewel_url || '',
         featured: product.featured || false,
       });
@@ -271,6 +274,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
             diamond_color: data.diamond_color || null,
             diamond_piece_count: data.diamond_piece_count || 0,
             diamond_weight: data.diamond_weight || 0,
+            product_link: data.product_link || null,
             ijewel_url: data.ijewel_url || null,
             featured: data.featured,
             availability: true,
@@ -298,6 +302,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
             diamond_color: data.diamond_color || null,
             diamond_piece_count: data.diamond_piece_count || 0,
             diamond_weight: data.diamond_weight || 0,
+            product_link: data.product_link || null,
             ijewel_url: data.ijewel_url || null,
             featured: data.featured,
             updated_at: new Date().toISOString(),
@@ -535,6 +540,19 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
                     />
                     {errors.price && (
                       <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="product_link">Product Link</Label>
+                    <Input
+                      id="product_link"
+                      {...register('product_link')}
+                      placeholder="https://example.com/product"
+                      type="url"
+                    />
+                    {errors.product_link && (
+                      <p className="text-sm text-red-600 mt-1">{errors.product_link.message}</p>
                     )}
                   </div>
                 </div>
