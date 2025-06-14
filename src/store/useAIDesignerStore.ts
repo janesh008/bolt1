@@ -21,9 +21,16 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not authenticated');
+      }
+      
       const { data: sessions, error } = await supabase
         .from('ai_design_sessions')
         .select('*')
+        .eq('user_id', user.id)
         .order('last_message_at', { ascending: false });
       
       if (error) throw error;
@@ -43,10 +50,17 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not authenticated');
+      }
+      
       const { data: session, error } = await supabase
         .from('ai_design_sessions')
         .select('*')
         .eq('id', id)
+        .eq('user_id', user.id)
         .single();
       
       if (error) throw error;
@@ -69,11 +83,18 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not authenticated');
+      }
+      
       // Check if user has reached the limit of favorite sessions
       if (formData.is_favorite) {
         const { data: favoriteCount, error: countError } = await supabase
           .from('ai_design_sessions')
           .select('id', { count: 'exact' })
+          .eq('user_id', user.id)
           .eq('is_favorite', true);
         
         if (countError) throw countError;
@@ -89,7 +110,7 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${uuidv4()}.${fileExt}`;
-        const filePath = `design-references/${fileName}`;
+        const filePath = `design-references/${user.id}/${fileName}`;
         
         const { error: uploadError, data } = await supabase.storage
           .from('design-references')
@@ -113,6 +134,7 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
       const { data: session, error } = await supabase
         .from('ai_design_sessions')
         .insert([{
+          user_id: user.id,
           category: formData.category,
           metal_type: formData.metal_type,
           style: formData.style,
@@ -155,6 +177,12 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
   // Send initial message to AI
   sendInitialMessage: async (sessionId: string, formData: DesignFormValues, imageUrl?: string) => {
     try {
+      // Get current user and session for authentication
+      const { data: { user, session }, error: authError } = await supabase.auth.getSession();
+      if (authError || !user || !session) {
+        throw new Error('User not authenticated');
+      }
+      
       // Create user's initial message
       const initialMessage = `I'd like to design a ${formData.style} ${formData.category} in ${formData.metal_type}${formData.diamond_type !== 'none' ? ` with ${formData.diamond_type} diamonds` : ''}. ${formData.description}`;
       
@@ -174,6 +202,7 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           session_id: sessionId,
@@ -220,6 +249,12 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not authenticated');
+      }
+      
       // Delete all messages in the session
       const { error: messagesError } = await supabase
         .from('ai_messages')
@@ -228,11 +263,12 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
       
       if (messagesError) throw messagesError;
       
-      // Delete the session
+      // Delete the session (only if it belongs to the current user)
       const { error } = await supabase
         .from('ai_design_sessions')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
       
       if (error) throw error;
       
@@ -259,11 +295,18 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not authenticated');
+      }
+      
       // Get current session
       const { data: session, error: fetchError } = await supabase
         .from('ai_design_sessions')
         .select('is_favorite')
         .eq('id', id)
+        .eq('user_id', user.id)
         .single();
       
       if (fetchError) throw fetchError;
@@ -275,6 +318,7 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
         const { data: favoriteCount, error: countError } = await supabase
           .from('ai_design_sessions')
           .select('id', { count: 'exact' })
+          .eq('user_id', user.id)
           .eq('is_favorite', true);
         
         if (countError) throw countError;
@@ -293,7 +337,8 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
           // If favorited, remove expiration; if unfavorited, set expiration to 15 days from now
           expires_at: newFavoriteStatus ? null : new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString()
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
       
       if (error) throw error;
       
@@ -347,12 +392,18 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
+      // Get current user and session for authentication
+      const { data: { user, session }, error: authError } = await supabase.auth.getSession();
+      if (authError || !user || !session) {
+        throw new Error('User not authenticated');
+      }
+      
       // Upload image if provided
       let imageUrl = undefined;
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${uuidv4()}.${fileExt}`;
-        const filePath = `design-references/${fileName}`;
+        const filePath = `design-references/${user.id}/${fileName}`;
         
         const { error: uploadError } = await supabase.storage
           .from('design-references')
@@ -392,6 +443,7 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           session_id: sessionId,
