@@ -5,11 +5,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
+import { supabase, getCurrentUser } from '../../lib/supabase';
 
 interface RazorpayCheckoutProps {
   orderData: {
-    amount: number;
-    currency: string;
     items: Array<{
       product_id: string;
       quantity: number;
@@ -24,6 +23,7 @@ interface RazorpayCheckoutProps {
       country: string;
       pincode: string;
     };
+    amount: number; // Total amount in INR (number)
   };
   onSuccess?: (paymentData: any) => void;
   onError?: (error: any) => void;
@@ -51,7 +51,6 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
         resolve(true);
         return;
       }
-
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.onload = () => resolve(true);
@@ -62,22 +61,27 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
 
   const createOrder = async () => {
     try {
-      const response = await fetch('/orders/create-order', {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create_payment_session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.access_token || ''}`
+          Authorization: `Bearer ${accessToken || ''}`,
         },
-        body: JSON.stringify(orderData)
+        body: JSON.stringify({
+          items: orderData.items,
+          shippingAddress: orderData.shipping_address,
+        }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create order');
-      }
+      const errorText = await response.text();
+      console.error('Create order failed:', errorText);
+      throw new Error(errorText || 'Failed to create payment session');
+    }
 
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (error) {
       console.error('Create order error:', error);
       throw error;
@@ -86,22 +90,25 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
 
   const verifyPayment = async (paymentData: any) => {
     try {
-      const response = await fetch('/orders/verify-payment', {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify_payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.access_token || ''}`
+          Authorization: `Bearer ${accessToken || ''}`,
         },
-        body: JSON.stringify(paymentData)
+        body: JSON.stringify(paymentData),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        const errorText = await response.text();
+        console.error('Payment verification failed - :', errorText);
         throw new Error(errorData.error || 'Payment verification failed');
       }
 
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (error) {
       console.error('Payment verification error:', error);
       throw error;
@@ -112,53 +119,42 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
     try {
       setIsProcessing(true);
 
-      // Load Razorpay script
       const isScriptLoaded = await loadRazorpayScript();
-      if (!isScriptLoaded) {
-        throw new Error('Failed to load Razorpay SDK');
-      }
+      if (!isScriptLoaded) throw new Error('Failed to load Razorpay SDK');
 
-      // Create order
       const orderResponse = await createOrder();
-      const { order, razorpay_order, customer } = orderResponse;
 
-      // Configure Razorpay options
+      if (!orderResponse || !orderResponse.razorpayOrderId)
+        throw new Error('Invalid order response from server');
+
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_95lpU4BLVjzNkI',
-        amount: razorpay_order.amount,
-        currency: razorpay_order.currency,
+        amount: orderResponse.amount * 100, // paise
+        currency: orderResponse.currency || 'INR',
         name: 'AXELS Jewelry',
-        description: `Order #${order.order_number}`,
+        description: `Order #${orderResponse.orderId}`,
         image: '/favicon.svg',
-        order_id: razorpay_order.id,
+        order_id: orderResponse.razorpayOrderId,
         handler: async (response: any) => {
           try {
-            // Verify payment on backend
             const verificationData = {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
+              razorpay_signature: response.razorpay_signature,
+              order_id: orderResponse.orderId,
             };
-
             const verificationResponse = await verifyPayment(verificationData);
 
             if (verificationResponse.success) {
-              // Clear cart
               clearCart();
-              
-              // Show success message
               toast.success('Payment successful! Your order has been confirmed.');
-              
-              // Call success callback
               if (onSuccess) {
                 onSuccess({
                   order: verificationResponse.order,
-                  payment: verificationResponse.payment
+                  payment: response,
                 });
               }
-
-              // Redirect to order confirmation
-              navigate(`/account?tab=orders&highlight=${order.id}`);
+              navigate(`/account?tab=orders&highlight=${orderResponse.orderId}`);
             } else {
               throw new Error('Payment verification failed');
             }
@@ -171,29 +167,27 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
           }
         },
         prefill: {
-          name: customer.name,
-          email: customer.email,
-          contact: orderData.shipping_address.phone
+          name: orderData.shipping_address.name,
+          email: user?.email || '',
+          contact: orderData.shipping_address.phone,
         },
         notes: {
-          order_id: order.id,
-          order_number: order.order_number
+          order_id: orderResponse.orderId,
+          shipping_address: JSON.stringify(orderData.shipping_address),
         },
         theme: {
-          color: '#C6A050'
+          color: '#C6A050',
         },
         modal: {
           ondismiss: () => {
             setIsProcessing(false);
             toast.error('Payment cancelled');
-          }
-        }
+          },
+        },
       };
 
-      // Open Razorpay checkout
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-
     } catch (error) {
       console.error('Payment initiation error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to initiate payment');
@@ -210,7 +204,7 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
           <CreditCard className="h-5 w-5 mr-2 text-gold-500" />
           Payment Summary
         </h3>
-        
+
         <div className="space-y-3 mb-6">
           <div className="flex justify-between text-charcoal-600">
             <span>Subtotal</span>
@@ -239,7 +233,7 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
           <Shield className="h-5 w-5 mr-2 text-green-600" />
           Secure Payment
         </h4>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-charcoal-600">
           <div className="flex items-center">
             <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
@@ -259,7 +253,7 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
       {/* Payment Methods */}
       <div className="bg-white rounded-lg p-6 border border-cream-200">
         <h4 className="font-medium text-charcoal-800 mb-4">Accepted Payment Methods</h4>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="flex items-center justify-center p-3 border border-cream-200 rounded-lg">
             <span className="text-sm font-medium text-charcoal-600">Credit Card</span>
