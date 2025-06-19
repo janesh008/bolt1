@@ -1,532 +1,308 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useForm } from 'react-hook-form';
-import { CreditCard, Truck, ChevronRight, MapPin, User, Phone, Mail } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabase';
-import Button from '../components/ui/Button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Textarea } from '../components/ui/textarea';
-import RazorpayCheckout from '../components/checkout/RazorpayCheckout';
-import { formatCurrency } from '../lib/utils';
+import { CreditCard, Shield, Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
+import Button from '../ui/Button';
 import toast from 'react-hot-toast';
+import { supabase, getCurrentUser } from '../../lib/supabase';
 
-interface ShippingFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  address2?: string;
-  city: string;
-  state: string;
-  pincode: string;
-  country: string;
-  notes?: string;
+interface RazorpayCheckoutProps {
+  orderData: {
+    items: Array<{
+      product_id: string;
+      quantity: number;
+    }>;
+    shipping_address: {
+      name: string;
+      phone: string;
+      address_line1: string;
+      address_line2?: string;
+      city: string;
+      state: string;
+      country: string;
+      pincode: string;
+    };
+    amount: number; // Total amount in INR (number)
+  };
+  onSuccess?: (paymentData: any) => void;
+  onError?: (error: any) => void;
 }
 
-const CheckoutPage = () => {
-  const { items, totalPrice, clearCart } = useCart();
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState<'shipping' | 'payment'>('shipping');
-  const [isLoading, setIsLoading] = useState(false);
-  const [shippingData, setShippingData] = useState<ShippingFormData | null>(null);
-  
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<ShippingFormData>();
-  
-  useEffect(() => {
-    document.title = 'Checkout | AXELS';
-    
-    if (items.length === 0) {
-      navigate('/cart');
-      return;
-    }
-
-    // Load user data if available
-    if (user) {
-      loadUserData();
-    }
-  }, [items.length, navigate, user]);
-
-  const loadUserData = async () => {
-    try {
-      // Try to get customer data
-      const { data: customer } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('user_id', user?.id)
-        .maybeSingle();
-
-      if (customer) {
-        setValue('firstName', customer.first_name || '');
-        setValue('lastName', customer.last_name || '');
-        setValue('email', customer.email || '');
-        setValue('phone', customer.phone || '');
-      }
-
-      // Try to get user profile data
-      const { data: userProfile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user?.id)
-        .maybeSingle();
-
-      if (userProfile) {
-        const [firstName, ...lastNameParts] = (userProfile.full_name || '').split(' ');
-        setValue('firstName', firstName || '');
-        setValue('lastName', lastNameParts.join(' ') || '');
-        setValue('email', userProfile.email || '');
-        setValue('phone', userProfile.phone || '');
-        setValue('city', userProfile.city || '');
-        setValue('state', userProfile.state || '');
-        setValue('pincode', userProfile.zip_code || '');
-        setValue('country', userProfile.country || 'India');
-      }
-
-      // Try to get default address
-      const { data: address } = await supabase
-        .from('addresses')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('is_default', true)
-        .maybeSingle();
-
-      if (address) {
-        setValue('address', address.address || '');
-        setValue('city', address.city || '');
-        setValue('state', address.state || '');
-        setValue('pincode', address.zip_code || '');
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    }
-  };
-  
-  const handleShippingSubmit = async (data: ShippingFormData) => {
-    try {
-      setIsLoading(true);
-
-      // Validate that we have products in cart
-      if (items.length === 0) {
-        toast.error('Your cart is empty');
-        navigate('/cart');
-        return;
-      }
-
-      // Ensure user is authenticated
-      if (!user) {
-        toast.error('Please sign in to continue');
-        navigate('/login');
-        return;
-      }
-
-      // Create or update customer profile
-      const { error: customerError } = await supabase
-        .from('customers')
-        .upsert({
-          user_id: user.id,
-          email: data.email,
-          first_name: data.firstName,
-          last_name: data.lastName,
-          phone: data.phone
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (customerError) {
-        console.error('Customer upsert error:', customerError);
-        toast.error('Failed to save customer information');
-        return;
-      }
-
-      // Save shipping data and proceed to payment
-      setShippingData(data);
-      setCurrentStep('payment');
-      
-    } catch (error) {
-      console.error('Shipping form error:', error);
-      toast.error('Failed to process shipping information');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePaymentSuccess = (paymentData: any) => {
-    toast.success('Order placed successfully!');
-    clearCart();
-    navigate('/account?tab=orders');
-  };
-
-  const handlePaymentError = (error: any) => {
-    console.error('Payment error:', error);
-    toast.error('Payment failed. Please try again.');
-  };
-
-  if (items.length === 0) {
-    return (
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center">
-          <h1 className="text-2xl font-medium mb-4">Your cart is empty</h1>
-          <Button onClick={() => navigate('/products')}>
-            Continue Shopping
-          </Button>
-        </div>
-      </div>
-    );
+declare global {
+  interface Window {
+    Razorpay: any;
   }
-  
+}
+
+const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
+  orderData,
+  onSuccess,
+  onError
+}) => {
+  const { user } = useAuth();
+  const { clearCart } = useCart();
+  const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const createOrder = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create_payment_session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken || ''}`,
+        },
+        body: JSON.stringify({
+          items: orderData.items,
+          shippingAddress: orderData.shipping_address,
+        }),
+      });
+
+      if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Create order failed:', errorText);
+      throw new Error(errorText || 'Failed to create payment session');
+    }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Create order error:', error);
+      throw error;
+    }
+  };
+
+  const verifyPayment = async (paymentData: any) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify_payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken || ''}`,
+        },
+        body: JSON.stringify(paymentData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorText = await response.text();
+        console.error('Payment verification failed - :', errorText);
+        throw new Error(errorData.error || 'Payment verification failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Payment verification error:', error);
+      throw error;
+    }
+  };
+
+  const handlePayment = async () => {
+    try {
+      setIsProcessing(true);
+
+      const isScriptLoaded = await loadRazorpayScript();
+      if (!isScriptLoaded) throw new Error('Failed to load Razorpay SDK');
+
+      const orderResponse = await createOrder();
+
+      if (!orderResponse || !orderResponse.razorpayOrderId)
+        throw new Error('Invalid order response from server');
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_95lpU4BLVjzNkI',
+        amount: orderResponse.amount * 100, // paise
+        currency: orderResponse.currency || 'INR',
+        name: 'AXELS Jewelry',
+        description: `Order #${orderResponse.orderId}`,
+        image: '/favicon.svg',
+        order_id: orderResponse.razorpayOrderId,
+        handler: async (response: any) => {
+          try {
+            const verificationData = {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              order_id: orderResponse.orderId,
+            };
+            const verificationResponse = await verifyPayment(verificationData);
+
+            if (verificationResponse.success) {
+              clearCart();
+              toast.success('Payment successful! Your order has been confirmed.');
+              if (onSuccess) {
+                onSuccess({
+                  order: verificationResponse.order,
+                  payment: response,
+                });
+              }
+              navigate(`/account?tab=orders&highlight=${orderResponse.orderId}`);
+            } else {
+              throw new Error('Payment verification failed');
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            toast.error('Payment verification failed. Please contact support.');
+            if (onError) onError(error);
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: orderData.shipping_address.name,
+          email: user?.email || '',
+          contact: orderData.shipping_address.phone,
+        },
+        notes: {
+          order_id: orderResponse.orderId,
+          shipping_address: JSON.stringify(orderData.shipping_address),
+        },
+        theme: {
+          color: '#C6A050',
+        },
+        modal: {
+          ondismiss: () => {
+            setIsProcessing(false);
+            toast.error('Payment cancelled');
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error('Payment initiation error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to initiate payment');
+      if (onError) onError(error);
+      setIsProcessing(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-cream-50 pt-20">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Progress Indicator */}
-          <div className="mb-8">
-            <div className="flex items-center justify-center space-x-4">
-              <div className={`flex items-center ${currentStep === 'shipping' ? 'text-gold-600' : 'text-green-600'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  currentStep === 'shipping' ? 'bg-gold-600 text-white' : 'bg-green-600 text-white'
-                }`}>
-                  {currentStep === 'payment' ? '✓' : '1'}
-                </div>
-                <span className="ml-2 font-medium">Shipping</span>
-              </div>
-              <div className="w-16 h-0.5 bg-gray-300"></div>
-              <div className={`flex items-center ${currentStep === 'payment' ? 'text-gold-600' : 'text-gray-400'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  currentStep === 'payment' ? 'bg-gold-600 text-white' : 'bg-gray-300 text-gray-600'
-                }`}>
-                  2
-                </div>
-                <span className="ml-2 font-medium">Payment</span>
-              </div>
-            </div>
+    <div className="space-y-6">
+      {/* Payment Summary */}
+      <div className="bg-gradient-to-r from-gold-50 to-cream-100 rounded-lg p-6 border border-gold-200">
+        <h3 className="text-lg font-semibold text-charcoal-800 mb-4 flex items-center">
+          <CreditCard className="h-5 w-5 mr-2 text-gold-500" />
+          Payment Summary
+        </h3>
+
+        <div className="space-y-3 mb-6">
+          <div className="flex justify-between text-charcoal-600">
+            <span>Subtotal</span>
+            <span>₹{orderData.amount.toLocaleString()}</span>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2">
-              {currentStep === 'shipping' ? (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="bg-white rounded-lg shadow-soft p-6"
-                >
-                  <h2 className="text-xl font-semibold mb-6 flex items-center">
-                    <Truck className="h-5 w-5 mr-2 text-gold-500" />
-                    Shipping Information
-                  </h2>
-                  
-                  <form onSubmit={handleSubmit(handleShippingSubmit)} className="space-y-6">
-                    {/* Personal Information */}
-                    <div>
-                      <h3 className="font-medium text-charcoal-800 mb-4 flex items-center">
-                        <User className="h-4 w-4 mr-2" />
-                        Personal Information
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="firstName">First Name *</Label>
-                          <Input
-                            id="firstName"
-                            {...register('firstName', { required: 'First name is required' })}
-                            className="mt-1"
-                          />
-                          {errors.firstName && (
-                            <span className="text-sm text-red-600">{errors.firstName.message}</span>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="lastName">Last Name *</Label>
-                          <Input
-                            id="lastName"
-                            {...register('lastName', { required: 'Last name is required' })}
-                            className="mt-1"
-                          />
-                          {errors.lastName && (
-                            <span className="text-sm text-red-600">{errors.lastName.message}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Contact Information */}
-                    <div>
-                      <h3 className="font-medium text-charcoal-800 mb-4 flex items-center">
-                        <Phone className="h-4 w-4 mr-2" />
-                        Contact Information
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="email">Email Address *</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            {...register('email', { 
-                              required: 'Email is required',
-                              pattern: {
-                                value: /^\S+@\S+$/i,
-                                message: 'Invalid email address'
-                              }
-                            })}
-                            className="mt-1"
-                          />
-                          {errors.email && (
-                            <span className="text-sm text-red-600">{errors.email.message}</span>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="phone">Phone Number *</Label>
-                          <Input
-                            id="phone"
-                            type="tel"
-                            {...register('phone', { 
-                              required: 'Phone number is required',
-                              pattern: {
-                                value: /^[0-9]{10}$/,
-                                message: 'Please enter a valid 10-digit phone number'
-                              }
-                            })}
-                            className="mt-1"
-                            placeholder="10-digit mobile number"
-                          />
-                          {errors.phone && (
-                            <span className="text-sm text-red-600">{errors.phone.message}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Shipping Address */}
-                    <div>
-                      <h3 className="font-medium text-charcoal-800 mb-4 flex items-center">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        Shipping Address
-                      </h3>
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="address">Address Line 1 *</Label>
-                          <Input
-                            id="address"
-                            {...register('address', { required: 'Address is required' })}
-                            className="mt-1"
-                            placeholder="House/Flat No., Street Name"
-                          />
-                          {errors.address && (
-                            <span className="text-sm text-red-600">{errors.address.message}</span>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="address2">Address Line 2 (Optional)</Label>
-                          <Input
-                            id="address2"
-                            {...register('address2')}
-                            className="mt-1"
-                            placeholder="Landmark, Area"
-                          />
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <Label htmlFor="city">City *</Label>
-                            <Input
-                              id="city"
-                              {...register('city', { required: 'City is required' })}
-                              className="mt-1"
-                            />
-                            {errors.city && (
-                              <span className="text-sm text-red-600">{errors.city.message}</span>
-                            )}
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="state">State *</Label>
-                            <Input
-                              id="state"
-                              {...register('state', { required: 'State is required' })}
-                              className="mt-1"
-                            />
-                            {errors.state && (
-                              <span className="text-sm text-red-600">{errors.state.message}</span>
-                            )}
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="pincode">Pincode *</Label>
-                            <Input
-                              id="pincode"
-                              {...register('pincode', { 
-                                required: 'Pincode is required',
-                                pattern: {
-                                  value: /^[0-9]{6}$/,
-                                  message: 'Please enter a valid 6-digit pincode'
-                                }
-                              })}
-                              className="mt-1"
-                              placeholder="6-digit pincode"
-                            />
-                            {errors.pincode && (
-                              <span className="text-sm text-red-600">{errors.pincode.message}</span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div>
-                          <Label htmlFor="country">Country *</Label>
-                          <Input
-                            id="country"
-                            {...register('country', { required: 'Country is required' })}
-                            defaultValue="India"
-                            className="mt-1"
-                          />
-                          {errors.country && (
-                            <span className="text-sm text-red-600">{errors.country.message}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Order Notes */}
-                    <div>
-                      <Label htmlFor="notes">Order Notes (Optional)</Label>
-                      <Textarea
-                        id="notes"
-                        {...register('notes')}
-                        className="mt-1"
-                        placeholder="Any special instructions for delivery..."
-                        rows={3}
-                      />
-                    </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full py-3"
-                      isLoading={isLoading}
-                      size="lg"
-                    >
-                      Continue to Payment
-                      <ChevronRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </form>
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="bg-white rounded-lg shadow-soft p-6"
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold flex items-center">
-                      <CreditCard className="h-5 w-5 mr-2 text-gold-500" />
-                      Payment
-                    </h2>
-                    <Button
-                      variant="outline"
-                      onClick={() => setCurrentStep('shipping')}
-                      size="sm"
-                    >
-                      Back to Shipping
-                    </Button>
-                  </div>
-                  
-                  {shippingData && (
-                    <RazorpayCheckout
-                      orderData={{
-                        amount: totalPrice,
-                        currency: 'INR',
-                        items: items.map(item => ({
-                          product_id: item.id,
-                          quantity: item.quantity
-                        })),
-                        shipping_address: {
-                          name: `${shippingData.firstName} ${shippingData.lastName}`,
-                          phone: shippingData.phone,
-                          address_line1: shippingData.address,
-                          address_line2: shippingData.address2,
-                          city: shippingData.city,
-                          state: shippingData.state,
-                          country: shippingData.country,
-                          pincode: shippingData.pincode
-                        }
-                      }}
-                      onSuccess={handlePaymentSuccess}
-                      onError={handlePaymentError}
-                    />
-                  )}
-                </motion.div>
-              )}
-            </div>
-            
-            {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-soft p-6 sticky top-24">
-                <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-                
-                <div className="space-y-4 mb-6">
-                  {items.map(item => (
-                    <div key={item.id} className="flex gap-4">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-16 h-16 object-cover rounded-lg"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-medium text-charcoal-800 text-sm line-clamp-2">
-                          {item.name}
-                        </h3>
-                        <p className="text-sm text-charcoal-500">Qty: {item.quantity}</p>
-                        <p className="text-sm font-medium text-gold-600">
-                          {formatCurrency(item.price * item.quantity)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="border-t border-cream-200 pt-4 space-y-3">
-                  <div className="flex justify-between text-charcoal-600">
-                    <span>Subtotal</span>
-                    <span>{formatCurrency(totalPrice)}</span>
-                  </div>
-                  <div className="flex justify-between text-charcoal-600">
-                    <span>Shipping</span>
-                    <span className="text-green-600">Free</span>
-                  </div>
-                  <div className="flex justify-between text-charcoal-600">
-                    <span>Taxes</span>
-                    <span>Included</span>
-                  </div>
-                  <div className="border-t border-cream-200 pt-3">
-                    <div className="flex justify-between text-lg font-semibold text-charcoal-800">
-                      <span>Total</span>
-                      <span className="text-gold-600">{formatCurrency(totalPrice)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Security Badge */}
-                <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-center text-green-700">
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    <span className="text-sm font-medium">Secure Payment</span>
-                  </div>
-                  <p className="text-xs text-green-600 mt-1">
-                    Your payment information is encrypted and secure
-                  </p>
-                </div>
-              </div>
+          <div className="flex justify-between text-charcoal-600">
+            <span>Shipping</span>
+            <span className="text-green-600">Free</span>
+          </div>
+          <div className="flex justify-between text-charcoal-600">
+            <span>Taxes</span>
+            <span>Included</span>
+          </div>
+          <div className="border-t border-gold-200 pt-3">
+            <div className="flex justify-between font-medium text-charcoal-800">
+              <span>Total</span>
+              <span className="text-gold-600">₹{orderData.amount.toLocaleString()}</span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Security Features */}
+      <div className="bg-white rounded-lg p-6 border border-cream-200">
+        <h4 className="font-medium text-charcoal-800 mb-4 flex items-center">
+          <Shield className="h-5 w-5 mr-2 text-green-600" />
+          Secure Payment
+        </h4>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-charcoal-600">
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            256-bit SSL Encryption
+          </div>
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            PCI DSS Compliant
+          </div>
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            Razorpay Secured
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Methods */}
+      <div className="bg-white rounded-lg p-6 border border-cream-200">
+        <h4 className="font-medium text-charcoal-800 mb-4">Accepted Payment Methods</h4>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="flex items-center justify-center p-3 border border-cream-200 rounded-lg">
+            <span className="text-sm font-medium text-charcoal-600">Credit Card</span>
+          </div>
+          <div className="flex items-center justify-center p-3 border border-cream-200 rounded-lg">
+            <span className="text-sm font-medium text-charcoal-600">Debit Card</span>
+          </div>
+          <div className="flex items-center justify-center p-3 border border-cream-200 rounded-lg">
+            <span className="text-sm font-medium text-charcoal-600">Net Banking</span>
+          </div>
+          <div className="flex items-center justify-center p-3 border border-cream-200 rounded-lg">
+            <span className="text-sm font-medium text-charcoal-600">UPI</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Pay Now Button */}
+      <Button
+        onClick={handlePayment}
+        disabled={isProcessing}
+        className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-gold-400 to-gold-500 hover:from-gold-500 hover:to-gold-600"
+        size="lg"
+      >
+        {isProcessing ? (
+          <>
+            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            Processing Payment...
+          </>
+        ) : (
+          <>
+            <CreditCard className="h-5 w-5 mr-2" />
+            Pay ₹{orderData.amount.toLocaleString()} Securely
+          </>
+        )}
+      </Button>
+
+      {/* Terms */}
+      <p className="text-xs text-charcoal-500 text-center">
+        By proceeding with payment, you agree to our{' '}
+        <a href="/terms" className="text-gold-500 hover:text-gold-600 underline">
+          Terms & Conditions
+        </a>{' '}
+        and{' '}
+        <a href="/privacy" className="text-gold-500 hover:text-gold-600 underline">
+          Privacy Policy
+        </a>
+      </p>
     </div>
   );
 };
 
-export default CheckoutPage;
+export default RazorpayCheckout;
