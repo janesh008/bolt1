@@ -35,7 +35,6 @@ interface DatabaseProduct {
   product_id?: string;
   product_name?: string;
   name?: string;
-  product_link?: string;
   metal_type?: string;
   metal?: string;
   category_id?: string;
