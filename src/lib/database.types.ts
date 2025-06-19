@@ -109,7 +109,6 @@ export interface Database {
           created_at: string | null
           product_id: string | null
           product_name: string | null
-          product_link: string | null
           metal_type: string | null
           category_id: string | null
           diamond_color: string | null
@@ -137,7 +136,6 @@ export interface Database {
           created_at?: string | null
           product_id?: string | null
           product_name?: string | null
-          product_link?: string | null
           metal_type?: string | null
           category_id?: string | null
           diamond_color?: string | null
@@ -165,7 +163,6 @@ export interface Database {
           created_at?: string | null
           product_id?: string | null
           product_name?: string | null
-          product_link?: string | null
           metal_type?: string | null
           category_id?: string | null
           diamond_color?: string | null
