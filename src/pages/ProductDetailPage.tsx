@@ -542,7 +542,7 @@ const ProductDetailPage = () => {
                 {product.featured && (
                   <Badge className="bg-gold-400 text-charcoal-900">Featured</Badge>
                 )}
-                <Badge variant="secondary">{getProductCategory()}</Badge>
+                {/* <Badge variant="secondary">{getProductCategory()}</Badge>
                 {hasProductVideo() && (
                   <Badge className="bg-purple-100 text-purple-800 border border-purple-200">
                     <VideoIcon className="h-3 w-3 mr-1" />
@@ -554,7 +554,7 @@ const ProductDetailPage = () => {
                     <Cube className="h-3 w-3 mr-1" />
                     3D Model
                   </Badge>
-                )}
+                )} */}
               </div>
             </div>
 
@@ -743,18 +743,6 @@ const ProductDetailPage = () => {
                 <div>
                   <span className="text-sm text-charcoal-500">Net Weight</span>
                   <p className="font-medium text-charcoal-800">{product.net_weight}g</p>
-                </div>
-              )}
-              {hasProductVideo() && (
-                <div>
-                  <span className="text-sm text-charcoal-500">Product Video</span>
-                  <p className="font-medium text-purple-600">Available</p>
-                </div>
-              )}
-              {has3DModel() && (
-                <div>
-                  <span className="text-sm text-charcoal-500">3D Viewer</span>
-                  <p className="font-medium text-blue-600">Available</p>
                 </div>
               )}
             </div>
