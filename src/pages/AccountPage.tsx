@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { User, Settings, Package, CreditCard, LogOut, Heart, ShoppingBag } from 'lucide-react';
+import { User, Settings, Package, CreditCard, LogOut, Heart, ShoppingBag, Eye } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import Button from '../components/ui/Button';
@@ -8,6 +8,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useSearchParams } from 'react-router-dom';
 import { formatCurrency } from '../lib/utils';
+import OrderDetails from '../components/account/OrderDetails';
 import toast from 'react-hot-toast';
 
 interface ProfileForm {
@@ -34,6 +35,7 @@ const AccountPage = () => {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(highlightedOrderId);
   
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<ProfileForm>();
   
@@ -155,6 +157,14 @@ const AccountPage = () => {
       toast.error('Failed to sign out');
     }
   };
+
+  const handleViewOrder = (orderId: string) => {
+    setSelectedOrderId(orderId);
+  };
+
+  const handleBackToOrders = () => {
+    setSelectedOrderId(null);
+  };
   
   if (isLoading) return <LoadingSpinner />;
   
@@ -179,7 +189,10 @@ const AccountPage = () => {
             </button>
             
             <button
-              onClick={() => setActiveTab('orders')}
+              onClick={() => {
+                setActiveTab('orders');
+                setSelectedOrderId(null);
+              }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 activeTab === 'orders'
                   ? 'bg-gold-400 text-white'
@@ -296,86 +309,122 @@ const AccountPage = () => {
               
               <TabsContent value="orders">
                 <div className="bg-white rounded-lg shadow-soft p-6">
-                  <h2 className="text-xl font-medium text-charcoal-800 mb-6">Order History</h2>
-                  
-                  {orders.length === 0 ? (
-                    <div className="text-center py-12">
-                      <ShoppingBag className="w-16 h-16 text-charcoal-300 mx-auto mb-4" />
-                      <p className="text-charcoal-500 mb-4">You haven't placed any orders yet.</p>
-                      <Button onClick={() => window.location.href = '/products'}>
-                        Start Shopping
-                      </Button>
-                    </div>
+                  {selectedOrderId ? (
+                    <OrderDetails 
+                      orderId={selectedOrderId} 
+                      onBack={handleBackToOrders} 
+                    />
                   ) : (
-                    <div className="space-y-4">
-                      {orders.map((order: any) => (
-                        <div
-                          key={order.id}
-                          className={`border ${
-                            highlightedOrderId === order.id 
-                              ? 'border-gold-400 bg-gold-50' 
-                              : 'border-cream-200'
-                          } rounded-lg p-4 transition-all duration-300`}
-                        >
-                          <div className="flex justify-between items-start mb-4">
-                            <div>
-                              <p className="font-medium text-charcoal-800">
-                                Order #{order.order_number}
-                              </p>
-                              <p className="text-sm text-charcoal-500">
-                                {new Date(order.created_at).toLocaleDateString()} • {new Date(order.created_at).toLocaleTimeString()}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-medium text-charcoal-800">
-                                ${order.total_amount.toFixed(2)}
-                              </p>
-                              <p className="text-sm text-charcoal-500 capitalize">
-                                {order.status}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            {order.order_items?.map((item: any) => (
-                              <div
-                                key={item.id}
-                                className="flex items-center space-x-4"
-                              >
-                                <img
-                                  src={item.products?.product_images?.[0]?.image_url}
-                                  alt={item.products?.name || item.products?.product_name}
-                                  className="w-16 h-16 object-cover rounded"
-                                />
+                    <>
+                      <h2 className="text-xl font-medium text-charcoal-800 mb-6">Order History</h2>
+                      
+                      {orders.length === 0 ? (
+                        <div className="text-center py-12">
+                          <ShoppingBag className="w-16 h-16 text-charcoal-300 mx-auto mb-4" />
+                          <p className="text-charcoal-500 mb-4">You haven't placed any orders yet.</p>
+                          <Button onClick={() => window.location.href = '/products'}>
+                            Start Shopping
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {orders.map((order: any) => (
+                            <div
+                              key={order.id}
+                              className={`border ${
+                                highlightedOrderId === order.id 
+                                  ? 'border-gold-400 bg-gold-50' 
+                                  : 'border-cream-200'
+                              } rounded-lg p-4 transition-all duration-300`}
+                            >
+                              <div className="flex justify-between items-start mb-4">
                                 <div>
                                   <p className="font-medium text-charcoal-800">
-                                    {item.products?.name || item.products?.product_name}
+                                    Order #{order.order_number}
                                   </p>
                                   <p className="text-sm text-charcoal-500">
-                                    Quantity: {item.quantity}
+                                    {new Date(order.created_at).toLocaleDateString()} • {new Date(order.created_at).toLocaleTimeString()}
                                   </p>
                                 </div>
+                                <div className="text-right">
+                                  <p className="font-medium text-charcoal-800">
+                                    {formatCurrency(order.total_amount)}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge 
+                                      variant={
+                                        order.status === 'delivered' ? 'success' : 
+                                        order.status === 'cancelled' ? 'error' : 
+                                        order.status === 'pending' ? 'warning' : 
+                                        'secondary'
+                                      }
+                                      className="capitalize"
+                                    >
+                                      {order.status}
+                                    </Badge>
+                                    <Badge 
+                                      variant={
+                                        order.payment_status === 'completed' ? 'success' : 
+                                        order.payment_status === 'failed' ? 'error' : 
+                                        'warning'
+                                      }
+                                    >
+                                      {order.payment_status}
+                                    </Badge>
+                                  </div>
+                                </div>
                               </div>
-                            ))}
-                          </div>
-                          
-                          <div className="mt-4 pt-4 border-t border-cream-200 flex justify-between items-center">
-                            <div className="text-sm">
-                              <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                                order.payment_status === 'completed' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {order.payment_status}
-                              </span>
+                              
+                              <div className="space-y-2">
+                                {order.order_items?.slice(0, 2).map((item: any) => (
+                                  <div
+                                    key={item.id}
+                                    className="flex items-center space-x-4"
+                                  >
+                                    <div className="w-12 h-12 bg-cream-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                      {item.products?.product_images?.[0]?.image_url ? (
+                                        <img
+                                          src={item.products.product_images[0].image_url}
+                                          alt={item.products?.name || item.products?.product_name}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <Package className="h-6 w-6 text-charcoal-400" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium text-charcoal-800 text-sm">
+                                        {item.products?.product_name || item.products?.name || 'Product'}
+                                      </p>
+                                      <p className="text-xs text-charcoal-500">
+                                        Qty: {item.quantity}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                                
+                                {order.order_items && order.order_items.length > 2 && (
+                                  <p className="text-xs text-charcoal-500">
+                                    +{order.order_items.length - 2} more items
+                                  </p>
+                                )}
+                              </div>
+                              
+                              <div className="mt-4 pt-4 border-t border-cream-200 flex justify-end">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleViewOrder(order.id)}
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Details
+                                </Button>
+                              </div>
                             </div>
-                            <Button variant="outline" size="sm">
-                              View Details
-                            </Button>
-                          </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      )}
+                    </>
                   )}
                 </div>
               </TabsContent>

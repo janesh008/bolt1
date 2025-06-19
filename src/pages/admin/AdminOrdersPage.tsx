@@ -30,15 +30,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import Button from '../../components/ui/Button';
+import OrderStatusUpdater from '../../components/admin/orders/OrderStatusUpdater';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useAuth } from '../../context/AuthContext';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { supabase } from '../../lib/supabase';
+import { formatCurrency } from '../../lib/utils';
 import toast from 'react-hot-toast';
 
 interface Order {
   id: string;
   order_number: string;
-  customer_id: string;
+  customer_id: string | null;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'confirmed';
   total_amount: number;
   shipping_address: any;
@@ -60,6 +63,7 @@ interface Order {
   };
   order_items?: Array<{
     id: string;
+    order_id: string;
     product_id: string;
     quantity: number;
     unit_price: number;
@@ -108,7 +112,6 @@ const AdminOrdersPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const ordersPerPage = 10;
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -121,14 +124,37 @@ const AdminOrdersPage = () => {
     try {
       setIsLoading(true);
       
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: ordersPerPage.toString(),
-      });
-
-      if (debouncedSearchTerm) params.append('search', debouncedSearchTerm);
-      if (statusFilter !== 'all') params.append('status', statusFilter);
-      if (paymentStatusFilter !== 'all') params.append('payment_status', paymentStatusFilter);
+      let query = supabase
+        .from('orders')
+        .select(`
+          *,
+          customers (
+            id,
+            first_name,
+            last_name,
+            email,
+            phone
+          ),
+          order_items (
+            id,
+            quantity
+          )
+        `)
+        .order('created_at', { ascending: false });
+      
+      // Apply filters
+      if (debouncedSearchTerm) {
+        query = query.or(`order_number.ilike.%${debouncedSearchTerm}%,customers.email.ilike.%${debouncedSearchTerm}%`);
+      }
+      
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+      
+      if (paymentStatusFilter !== 'all') {
+        query = query.eq('payment_status', paymentStatusFilter);
+      }
+      
       if (dateFilter !== 'all') {
         const now = new Date();
         let startDate: Date;
@@ -147,23 +173,19 @@ const AdminOrdersPage = () => {
             startDate = new Date(0);
         }
         
-        params.append('start_date', startDate.toISOString());
+        query = query.gte('created_at', startDate.toISOString());
       }
-
-      const response = await fetch(`/admin/orders?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${user?.access_token || ''}`
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch orders');
-      }
-
-      const data = await response.json();
-      setOrders(data.orders || []);
-      setTotalPages(data.pagination?.totalPages || 1);
+      
+      // Apply pagination
+      const from = (currentPage - 1) * ordersPerPage;
+      const to = from + ordersPerPage - 1;
+      
+      const { data, error, count } = await query.range(from, to);
+      
+      if (error) throw error;
+      
+      setOrders(data || []);
+      setTotalPages(Math.ceil((count || 0) / ordersPerPage));
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('Failed to fetch orders');
@@ -174,10 +196,14 @@ const AdminOrdersPage = () => {
 
   const handleViewOrder = async (order: Order) => {
     try {
-      const response = await fetch(`/admin/orders/${order.id}`, {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get_order_details/${order.id}`, {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${user?.access_token || ''}`
-        }
+          'Authorization': `Bearer ${accessToken || ''}`,
+        },
       });
 
       if (!response.ok) {
@@ -194,53 +220,18 @@ const AdminOrdersPage = () => {
     }
   };
 
-  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
-    if (!hasRole('Moderator')) {
-      toast.error('Insufficient permissions to update order status');
-      return;
-    }
+  const handleStatusUpdate = (orderId: string, newStatus: string) => {
+    // Update local state
+    setOrders(orders.map(order => 
+      order.id === orderId 
+        ? { ...order, status: newStatus as any, updated_at: new Date().toISOString() }
+        : order
+    ));
 
-    try {
-      setIsUpdatingStatus(true);
-      
-      const response = await fetch(`/admin/orders/${orderId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.access_token || ''}`
-        },
-        body: JSON.stringify({ 
-          status: newStatus,
-          notes: `Status updated to ${newStatus} by admin`
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update order status');
-      }
-
-      const data = await response.json();
-
-      // Update local state
-      setOrders(orders.map(order => 
-        order.id === orderId 
-          ? { ...order, status: newStatus as any, updated_at: new Date().toISOString() }
-          : order
-      ));
-
-      if (selectedOrder?.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus as any });
-        // Refresh order details to get updated timeline
-        handleViewOrder({ ...selectedOrder, status: newStatus as any });
-      }
-
-      toast.success('Order status updated successfully');
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      toast.error('Failed to update order status');
-    } finally {
-      setIsUpdatingStatus(false);
+    if (selectedOrder?.id === orderId) {
+      setSelectedOrder({ ...selectedOrder, status: newStatus as any });
+      // Refresh order details to get updated timeline
+      handleViewOrder({ ...selectedOrder, status: newStatus as any });
     }
   };
 
@@ -291,17 +282,6 @@ const AdminOrdersPage = () => {
       minute: '2-digit'
     });
   };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR'
-    }).format(amount);
-  };
-
-  const paginatedOrders = useMemo(() => {
-    return orders;
-  }, [orders]);
 
   const getOrderProgress = (status: string) => {
     const steps = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
@@ -439,8 +419,8 @@ const AdminOrdersPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedOrders.length > 0 ? (
-                    paginatedOrders.map((order) => (
+                  {orders.length > 0 ? (
+                    orders.map((order) => (
                       <TableRow key={order.id}>
                         <TableCell>
                           <div className="font-medium">{order.order_number}</div>
@@ -492,23 +472,11 @@ const AdminOrdersPage = () => {
                               <Eye className="h-4 w-4" />
                             </Button>
                             {hasRole('Moderator') && (
-                              <Select
-                                value={order.status}
-                                onValueChange={(value) => handleUpdateOrderStatus(order.id, value)}
-                                disabled={isUpdatingStatus}
-                              >
-                                <SelectTrigger className="w-32">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="pending">Pending</SelectItem>
-                                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                                  <SelectItem value="processing">Processing</SelectItem>
-                                  <SelectItem value="shipped">Shipped</SelectItem>
-                                  <SelectItem value="delivered">Delivered</SelectItem>
-                                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <OrderStatusUpdater
+                                orderId={order.id}
+                                currentStatus={order.status}
+                                onStatusUpdated={(newStatus) => handleStatusUpdate(order.id, newStatus)}
+                              />
                             )}
                           </div>
                         </TableCell>
@@ -573,6 +541,22 @@ const AdminOrdersPage = () => {
           
           {selectedOrder && (
             <div className="space-y-6">
+              {/* Order Status Updater */}
+              {hasRole('Moderator') && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Update Order Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <OrderStatusUpdater
+                      orderId={selectedOrder.id}
+                      currentStatus={selectedOrder.status}
+                      onStatusUpdated={(newStatus) => handleStatusUpdate(selectedOrder.id, newStatus)}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Order Progress */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-medium mb-4">Order Progress</h3>
@@ -781,7 +765,7 @@ const AdminOrdersPage = () => {
                 {hasRole('Admin') && selectedOrder.status !== 'cancelled' && (
                   <Button
                     variant="outline"
-                    onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'cancelled')}
+                    onClick={() => handleStatusUpdate(selectedOrder.id, 'cancelled')}
                     className="text-red-600 hover:text-red-700"
                   >
                     <X className="h-4 w-4 mr-2" />
