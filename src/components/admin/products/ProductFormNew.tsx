@@ -524,7 +524,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
                   </div>
 
                   <div>
-                    <Label htmlFor="price">Price (USD) *</Label>
+                    <Label htmlFor="price">Price (INR) *</Label>
                     <Input
                       id="price"
                       type="number"
