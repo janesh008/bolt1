@@ -86,7 +86,7 @@ const CheckoutPage: React.FC = () => {
 
   const orderData = {
     items: items.map(item => ({
-      product_id: item.product.id,
+      product_id: item.product_id,
       quantity: item.quantity,
     })),
     shipping_address: shippingAddress,
@@ -294,14 +294,14 @@ const CheckoutPage: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-charcoal-800 truncate">
-                        {item.product.name}
+                        {item.product?.name || 'Product'}
                       </p>
                       <p className="text-xs text-charcoal-500">
                         Qty: {item.quantity}
                       </p>
                     </div>
                     <p className="text-sm font-medium text-charcoal-800">
-                      ₹{(Number(item.product.price) * item.quantity).toLocaleString()}
+                      ₹{(Number(item.product?.price || 0) * item.quantity).toLocaleString()}
                     </p>
                   </div>
                 ))}
