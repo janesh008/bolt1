@@ -20,7 +20,7 @@ interface ShippingAddress {
 }
 
 const CheckoutPage: React.FC = () => {
-  const { items, total, loading } = useCart();
+  const { items, totalPrice, loading } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState<'address' | 'payment'>('address');
@@ -90,7 +90,7 @@ const CheckoutPage: React.FC = () => {
       quantity: item.quantity,
     })),
     shipping_address: shippingAddress,
-    amount: total,
+    amount: totalPrice,
   };
 
   return (
@@ -310,7 +310,7 @@ const CheckoutPage: React.FC = () => {
               <div className="border-t border-cream-200 pt-4 space-y-2">
                 <div className="flex justify-between text-charcoal-600">
                   <span>Subtotal</span>
-                  <span>₹{total.toLocaleString()}</span>
+                  <span>₹{totalPrice.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-charcoal-600">
                   <span>Shipping</span>
@@ -323,7 +323,7 @@ const CheckoutPage: React.FC = () => {
                 <div className="border-t border-cream-200 pt-2">
                   <div className="flex justify-between font-semibold text-charcoal-800">
                     <span>Total</span>
-                    <span className="text-gold-600">₹{total.toLocaleString()}</span>
+                    <span className="text-gold-600">₹{totalPrice.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
