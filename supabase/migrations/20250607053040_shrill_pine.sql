@@ -58,13 +58,6 @@ BEGIN
     ALTER TABLE products ADD COLUMN product_name text;
   END IF;
 
-  -- Add product_link column if it doesn't exist
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'products' AND column_name = 'product_link'
-  ) THEN
-    ALTER TABLE products ADD COLUMN product_link text;
-  END IF;
 
   -- Add metal_type column if it doesn't exist
   IF NOT EXISTS (
