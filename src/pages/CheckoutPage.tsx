@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CreditCard, Shield, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import Button from '../ui/Button';
+import Button from '..components/ui/Button';
 import toast from 'react-hot-toast';
 import { supabase, getCurrentUser } from '../../lib/supabase';
 
