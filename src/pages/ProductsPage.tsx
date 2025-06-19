@@ -480,8 +480,8 @@ const ProductsPage = () => {
                       className="w-full"
                     />
                     <div className="flex justify-between text-sm text-charcoal-600">
-                      <span>${priceRange[0].toLocaleString()}</span>
-                      <span>${priceRange[1].toLocaleString()}</span>
+                      <span>₹{priceRange[0].toLocaleString()}</span>
+                      <span>₹{priceRange[1].toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -646,7 +646,7 @@ const ProductsPage = () => {
                             </div>
                             <div className="text-right">
                               <p className="font-medium text-gold-500">
-                                ${product.price?.toLocaleString() || 'N/A'}
+                                ₹{product.price?.toLocaleString() || 'N/A'}
                               </p>
                             </div>
                           </div>
@@ -698,7 +698,7 @@ const ProductsPage = () => {
                             
                             <div className="text-right">
                               <p className="font-medium text-gold-500 text-lg">
-                                ${product.price?.toLocaleString() || 'N/A'}
+                                ₹{product.price?.toLocaleString() || 'N/A'}
                               </p>
                               <div className="flex items-center gap-2 mt-2">
                                 <button
