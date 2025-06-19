@@ -1,308 +1,346 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Shield, Loader2 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { ShoppingBag, MapPin, User, Phone, Mail } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
+import RazorpayPaymentSection from '../components/checkout/RazorpayPaymentSection';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
-import { supabase, getCurrentUser } from '../lib/supabase';
 
-interface RazorpayCheckoutProps {
-  orderData: {
-    items: Array<{
-      product_id: string;
-      quantity: number;
-    }>;
-    shipping_address: {
-      name: string;
-      phone: string;
-      address_line1: string;
-      address_line2?: string;
-      city: string;
-      state: string;
-      country: string;
-      pincode: string;
-    };
-    amount: number; // Total amount in INR (number)
-  };
-  onSuccess?: (paymentData: any) => void;
-  onError?: (error: any) => void;
+interface ShippingAddress {
+  name: string;
+  phone: string;
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
 }
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
-const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
-  orderData,
-  onSuccess,
-  onError
-}) => {
+const CheckoutPage: React.FC = () => {
+  const { items, total, loading } = useCart();
   const { user } = useAuth();
-  const { clearCart } = useCart();
   const navigate = useNavigate();
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [step, setStep] = useState<'address' | 'payment'>('address');
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
+    name: '',
+    phone: '',
+    address_line1: '',
+    address_line2: '',
+    city: '',
+    state: '',
+    country: 'India',
+    pincode: '',
+  });
 
-  const loadRazorpayScript = (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
+  // Redirect if cart is empty
+  useEffect(() => {
+    if (!loading && items.length === 0) {
+      toast.error('Your cart is empty');
+      navigate('/cart');
+    }
+  }, [items, loading, navigate]);
+
+  // Pre-fill user data if available
+  useEffect(() => {
+    if (user) {
+      setShippingAddress(prev => ({
+        ...prev,
+        name: user.user_metadata?.full_name || '',
+        phone: user.user_metadata?.phone || '',
+      }));
+    }
+  }, [user]);
+
+  const handleAddressSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    const requiredFields = ['name', 'phone', 'address_line1', 'city', 'state', 'pincode'];
+    const missingFields = requiredFields.filter(field => !shippingAddress[field as keyof ShippingAddress]);
+    
+    if (missingFields.length > 0) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setStep('payment');
   };
 
-  const createOrder = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const accessToken = session?.access_token;
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create_payment_session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken || ''}`,
-        },
-        body: JSON.stringify({
-          items: orderData.items,
-          shippingAddress: orderData.shipping_address,
-        }),
-      });
-
-      if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Create order failed:', errorText);
-      throw new Error(errorText || 'Failed to create payment session');
-    }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Create order error:', error);
-      throw error;
-    }
+  const handleInputChange = (field: keyof ShippingAddress, value: string) => {
+    setShippingAddress(prev => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const verifyPayment = async (paymentData: any) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const accessToken = session?.access_token;
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify_payment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken || ''}`,
-        },
-        body: JSON.stringify(paymentData),
-      });
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        const errorText = await response.text();
-        console.error('Payment verification failed - :', errorText);
-        throw new Error(errorData.error || 'Payment verification failed');
-      }
+  if (items.length === 0) {
+    return null; // Will redirect via useEffect
+  }
 
-      return await response.json();
-    } catch (error) {
-      console.error('Payment verification error:', error);
-      throw error;
-    }
-  };
-
-  const handlePayment = async () => {
-    try {
-      setIsProcessing(true);
-
-      const isScriptLoaded = await loadRazorpayScript();
-      if (!isScriptLoaded) throw new Error('Failed to load Razorpay SDK');
-
-      const orderResponse = await createOrder();
-
-      if (!orderResponse || !orderResponse.razorpayOrderId)
-        throw new Error('Invalid order response from server');
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_95lpU4BLVjzNkI',
-        amount: orderResponse.amount * 100, // paise
-        currency: orderResponse.currency || 'INR',
-        name: 'AXELS Jewelry',
-        description: `Order #${orderResponse.orderId}`,
-        image: '/favicon.svg',
-        order_id: orderResponse.razorpayOrderId,
-        handler: async (response: any) => {
-          try {
-            const verificationData = {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              order_id: orderResponse.orderId,
-            };
-            const verificationResponse = await verifyPayment(verificationData);
-
-            if (verificationResponse.success) {
-              clearCart();
-              toast.success('Payment successful! Your order has been confirmed.');
-              if (onSuccess) {
-                onSuccess({
-                  order: verificationResponse.order,
-                  payment: response,
-                });
-              }
-              navigate(`/account?tab=orders&highlight=${orderResponse.orderId}`);
-            } else {
-              throw new Error('Payment verification failed');
-            }
-          } catch (error) {
-            console.error('Payment verification error:', error);
-            toast.error('Payment verification failed. Please contact support.');
-            if (onError) onError(error);
-          } finally {
-            setIsProcessing(false);
-          }
-        },
-        prefill: {
-          name: orderData.shipping_address.name,
-          email: user?.email || '',
-          contact: orderData.shipping_address.phone,
-        },
-        notes: {
-          order_id: orderResponse.orderId,
-          shipping_address: JSON.stringify(orderData.shipping_address),
-        },
-        theme: {
-          color: '#C6A050',
-        },
-        modal: {
-          ondismiss: () => {
-            setIsProcessing(false);
-            toast.error('Payment cancelled');
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
-    } catch (error) {
-      console.error('Payment initiation error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to initiate payment');
-      if (onError) onError(error);
-      setIsProcessing(false);
-    }
+  const orderData = {
+    items: items.map(item => ({
+      product_id: item.product.id,
+      quantity: item.quantity,
+    })),
+    shipping_address: shippingAddress,
+    amount: total,
   };
 
   return (
-    <div className="space-y-6">
-      {/* Payment Summary */}
-      <div className="bg-gradient-to-r from-gold-50 to-cream-100 rounded-lg p-6 border border-gold-200">
-        <h3 className="text-lg font-semibold text-charcoal-800 mb-4 flex items-center">
-          <CreditCard className="h-5 w-5 mr-2 text-gold-500" />
-          Payment Summary
-        </h3>
+    <div className="min-h-screen bg-cream-50 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-charcoal-800 mb-2">Checkout</h1>
+          <p className="text-charcoal-600">Complete your order securely</p>
+        </div>
 
-        <div className="space-y-3 mb-6">
-          <div className="flex justify-between text-charcoal-600">
-            <span>Subtotal</span>
-            <span>₹{orderData.amount.toLocaleString()}</span>
+        {/* Progress Steps */}
+        <div className="flex items-center justify-center mb-8">
+          <div className="flex items-center space-x-4">
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+              step === 'address' ? 'bg-gold-500 text-white' : 'bg-gold-100 text-gold-600'
+            }`}>
+              1
+            </div>
+            <span className={`text-sm font-medium ${
+              step === 'address' ? 'text-gold-600' : 'text-charcoal-500'
+            }`}>
+              Shipping Address
+            </span>
+            <div className="w-12 h-0.5 bg-cream-300"></div>
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+              step === 'payment' ? 'bg-gold-500 text-white' : 'bg-cream-200 text-charcoal-400'
+            }`}>
+              2
+            </div>
+            <span className={`text-sm font-medium ${
+              step === 'payment' ? 'text-gold-600' : 'text-charcoal-400'
+            }`}>
+              Payment
+            </span>
           </div>
-          <div className="flex justify-between text-charcoal-600">
-            <span>Shipping</span>
-            <span className="text-green-600">Free</span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            {step === 'address' && (
+              <div className="bg-white rounded-lg shadow-sm border border-cream-200 p-6">
+                <h2 className="text-xl font-semibold text-charcoal-800 mb-6 flex items-center">
+                  <MapPin className="h-5 w-5 mr-2 text-gold-500" />
+                  Shipping Address
+                </h2>
+
+                <form onSubmit={handleAddressSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal-700 mb-2">
+                        <User className="h-4 w-4 inline mr-1" />
+                        Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingAddress.name}
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        className="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal-700 mb-2">
+                        <Phone className="h-4 w-4 inline mr-1" />
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        value={shippingAddress.phone}
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        className="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-charcoal-700 mb-2">
+                      Address Line 1 *
+                    </label>
+                    <input
+                      type="text"
+                      value={shippingAddress.address_line1}
+                      onChange={(e) => handleInputChange('address_line1', e.target.value)}
+                      className="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                      placeholder="Street address, apartment, suite, etc."
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-charcoal-700 mb-2">
+                      Address Line 2
+                    </label>
+                    <input
+                      type="text"
+                      value={shippingAddress.address_line2}
+                      onChange={(e) => handleInputChange('address_line2', e.target.value)}
+                      className="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                      placeholder="Apartment, suite, unit, building, floor, etc."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal-700 mb-2">
+                        City *
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingAddress.city}
+                        onChange={(e) => handleInputChange('city', e.target.value)}
+                        className="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal-700 mb-2">
+                        State *
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingAddress.state}
+                        onChange={(e) => handleInputChange('state', e.target.value)}
+                        className="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-charcoal-700 mb-2">
+                        PIN Code *
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingAddress.pincode}
+                        onChange={(e) => handleInputChange('pincode', e.target.value)}
+                        className="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-charcoal-700 mb-2">
+                      Country *
+                    </label>
+                    <select
+                      value={shippingAddress.country}
+                      onChange={(e) => handleInputChange('country', e.target.value)}
+                      className="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="India">India</option>
+                    </select>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-gold-400 to-gold-500 hover:from-gold-500 hover:to-gold-600"
+                    size="lg"
+                  >
+                    Continue to Payment
+                  </Button>
+                </form>
+              </div>
+            )}
+
+            {step === 'payment' && (
+              <div className="bg-white rounded-lg shadow-sm border border-cream-200 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-charcoal-800">Payment</h2>
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep('address')}
+                    size="sm"
+                  >
+                    Edit Address
+                  </Button>
+                </div>
+
+                <RazorpayPaymentSection orderData={orderData} />
+              </div>
+            )}
           </div>
-          <div className="flex justify-between text-charcoal-600">
-            <span>Taxes</span>
-            <span>Included</span>
-          </div>
-          <div className="border-t border-gold-200 pt-3">
-            <div className="flex justify-between font-medium text-charcoal-800">
-              <span>Total</span>
-              <span className="text-gold-600">₹{orderData.amount.toLocaleString()}</span>
+
+          {/* Order Summary Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-sm border border-cream-200 p-6 sticky top-8">
+              <h3 className="text-lg font-semibold text-charcoal-800 mb-4 flex items-center">
+                <ShoppingBag className="h-5 w-5 mr-2 text-gold-500" />
+                Order Summary
+              </h3>
+
+              <div className="space-y-4 mb-6">
+                {items.map((item) => (
+                  <div key={item.id} className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-cream-100 rounded-lg flex items-center justify-center">
+                      <ShoppingBag className="h-6 w-6 text-gold-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-charcoal-800 truncate">
+                        {item.product.name}
+                      </p>
+                      <p className="text-xs text-charcoal-500">
+                        Qty: {item.quantity}
+                      </p>
+                    </div>
+                    <p className="text-sm font-medium text-charcoal-800">
+                      ₹{(Number(item.product.price) * item.quantity).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-cream-200 pt-4 space-y-2">
+                <div className="flex justify-between text-charcoal-600">
+                  <span>Subtotal</span>
+                  <span>₹{total.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-charcoal-600">
+                  <span>Shipping</span>
+                  <span className="text-green-600">Free</span>
+                </div>
+                <div className="flex justify-between text-charcoal-600">
+                  <span>Taxes</span>
+                  <span>Included</span>
+                </div>
+                <div className="border-t border-cream-200 pt-2">
+                  <div className="flex justify-between font-semibold text-charcoal-800">
+                    <span>Total</span>
+                    <span className="text-gold-600">₹{total.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {step === 'address' && (
+                <div className="mt-6 p-4 bg-gold-50 rounded-lg border border-gold-200">
+                  <p className="text-sm text-gold-700">
+                    <strong>Free shipping</strong> on all orders. Secure payment with 256-bit SSL encryption.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Security Features */}
-      <div className="bg-white rounded-lg p-6 border border-cream-200">
-        <h4 className="font-medium text-charcoal-800 mb-4 flex items-center">
-          <Shield className="h-5 w-5 mr-2 text-green-600" />
-          Secure Payment
-        </h4>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-charcoal-600">
-          <div className="flex items-center">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-            256-bit SSL Encryption
-          </div>
-          <div className="flex items-center">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-            PCI DSS Compliant
-          </div>
-          <div className="flex items-center">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-            Razorpay Secured
-          </div>
-        </div>
-      </div>
-
-      {/* Payment Methods */}
-      <div className="bg-white rounded-lg p-6 border border-cream-200">
-        <h4 className="font-medium text-charcoal-800 mb-4">Accepted Payment Methods</h4>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="flex items-center justify-center p-3 border border-cream-200 rounded-lg">
-            <span className="text-sm font-medium text-charcoal-600">Credit Card</span>
-          </div>
-          <div className="flex items-center justify-center p-3 border border-cream-200 rounded-lg">
-            <span className="text-sm font-medium text-charcoal-600">Debit Card</span>
-          </div>
-          <div className="flex items-center justify-center p-3 border border-cream-200 rounded-lg">
-            <span className="text-sm font-medium text-charcoal-600">Net Banking</span>
-          </div>
-          <div className="flex items-center justify-center p-3 border border-cream-200 rounded-lg">
-            <span className="text-sm font-medium text-charcoal-600">UPI</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Pay Now Button */}
-      <Button
-        onClick={handlePayment}
-        disabled={isProcessing}
-        className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-gold-400 to-gold-500 hover:from-gold-500 hover:to-gold-600"
-        size="lg"
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-            Processing Payment...
-          </>
-        ) : (
-          <>
-            <CreditCard className="h-5 w-5 mr-2" />
-            Pay ₹{orderData.amount.toLocaleString()} Securely
-          </>
-        )}
-      </Button>
-
-      {/* Terms */}
-      <p className="text-xs text-charcoal-500 text-center">
-        By proceeding with payment, you agree to our{' '}
-        <a href="/terms" className="text-gold-500 hover:text-gold-600 underline">
-          Terms & Conditions
-        </a>{' '}
-        and{' '}
-        <a href="/privacy" className="text-gold-500 hover:text-gold-600 underline">
-          Privacy Policy
-        </a>
-      </p>
     </div>
   );
 };
 
-export default RazorpayCheckout;
+export default CheckoutPage;
