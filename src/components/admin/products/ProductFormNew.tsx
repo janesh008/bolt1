@@ -840,7 +840,7 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
                       {watchedData.metal_type} • {getSelectedCategory()?.name || 'Category'}
                     </p>
                     <p className="font-medium text-blue-600 mt-2">
-                      ${watchedData.price?.toLocaleString() || '0'}
+                      ₹{watchedData.price?.toLocaleString() || '0'}
                     </p>
                   </div>
 
