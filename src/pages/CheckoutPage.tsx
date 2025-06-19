@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import Button from '../components/ui/Button';
 import toast from 'react-hot-toast';
-import { supabase, getCurrentUser } from '../../lib/supabase';
+import { supabase, getCurrentUser } from '../lib/supabase';
 
 interface RazorpayCheckoutProps {
   orderData: {
