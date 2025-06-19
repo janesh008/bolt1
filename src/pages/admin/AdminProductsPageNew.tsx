@@ -545,7 +545,7 @@ const AdminProductsPageNew = () => {
                       </TableCell>
                       <TableCell>
                         <div className="font-medium text-green-600">
-                          ${product.price?.toLocaleString() || 'N/A'}
+                          ₹{product.price?.toLocaleString() || 'N/A'}
                         </div>
                       </TableCell>
                       <TableCell>
