@@ -108,7 +108,7 @@ const ProductCard = ({ product, viewMode = 'grid', showQuickActions = true }: Pr
             },
             body: JSON.stringify({
               amount: product.price || 0,
-              currency: 'INR',
+              currency: 'USD',
               items: [{
                 product_id: product.id,
                 quantity: 1
