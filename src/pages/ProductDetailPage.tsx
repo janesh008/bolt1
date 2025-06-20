@@ -652,7 +652,7 @@ const ProductDetailPage = () => {
               </h1>
               <div className="flex items-center gap-4 mb-4">
                 <p className="text-3xl font-medium text-gold-500">
-                  ₹{product.price?.toLocaleString() || 'N/A'}
+                  ${product.price?.toLocaleString() || 'N/A'}
                 </p>
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
@@ -807,7 +807,7 @@ const ProductDetailPage = () => {
                 size="lg" 
                 className="w-full bg-gold-500 hover:bg-gold-600"
               >
-                Buy Now - ₹{((product.price || 0) * quantity).toLocaleString()}
+                Buy Now - ${((product.price || 0) * quantity).toLocaleString()}
               </Button>
             </div>
 
@@ -1103,7 +1103,7 @@ const ProductDetailPage = () => {
                       {relatedProduct.metal_type || relatedProduct.metal}
                     </p>
                     <p className="font-medium text-gold-500 mt-2">
-                      ₹{relatedProduct.price?.toLocaleString() || 'N/A'}
+                      ${relatedProduct.price?.toLocaleString() || 'N/A'}
                     </p>
                   </div>
                 </motion.div>
