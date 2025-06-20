@@ -84,6 +84,7 @@ const AccountPage = () => {
       }
       
       // Fetch orders - Updated query to use customer_id and proper relationships
+      console.log('Fetching orders for user:', user?.id);
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select(`
@@ -174,6 +175,7 @@ const AccountPage = () => {
   };
 
   const handleViewOrder = (orderId: string) => {
+    console.log('Viewing order:', orderId);
     setSelectedOrderId(orderId);
   };
 
