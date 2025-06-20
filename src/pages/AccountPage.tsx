@@ -172,11 +172,11 @@ const AccountPage = () => {
               )
             )
           `)
-          .eq('customer_email', user.email)
+          .eq('customer_id', user.email)
           .order('created_at', { ascending: false });
         
-        console.log('Orders with customer_email:', data3);
-        console.log('customer_email error:', error3);
+        console.log('Orders with customer_id:', data3);
+        console.log('customer_id error:', error3);
         
         if (data3 && data3.length > 0) {
           orderData = data3;
@@ -213,7 +213,7 @@ const AccountPage = () => {
           const userOrders = data4.filter(order => 
             order.customer_id === user.id || 
             order.user_id === user.id || 
-            order.customer_email === user.email
+            order.customer_id === user.email
           );
           console.log('Filtered user orders from recent:', userOrders);
           
@@ -357,7 +357,7 @@ const AccountPage = () => {
       // Get all orders to see what's there
       const { data: allOrders } = await supabase
         .from('orders')
-        .select('id, customer_id, user_id, customer_email, created_at')
+        .select('id, customer_id, user_id, customer_id, created_at')
         .order('created_at', { ascending: false })
         .limit(10);
       
@@ -372,7 +372,7 @@ const AccountPage = () => {
         const possibleUserOrders = allOrders.filter(order => {
           return order.customer_id === user?.id || 
                  order.user_id === user?.id || 
-                 order.customer_email === user?.email;
+                 order.customer_id === user?.email;
         });
         console.log('Orders that might belong to current user:', possibleUserOrders);
       }
