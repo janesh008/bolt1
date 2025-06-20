@@ -36,12 +36,12 @@ const ProductFormNew = lazy(() => import('./components/admin/products/ProductFor
 
 // Help pages
 const HelpLayout = lazy(() => import('./pages/help/HelpLayout'));
-const HelpPage = lazy(() => import('./pages/help/HelpPage'));
-const ContactUsPage = lazy(() => import('./pages/help/ContactUsPage'));
-const FAQsPage = lazy(() => import('./pages/help/FAQsPage'));
-const ShippingReturnsPage = lazy(() => import('./pages/help/ShippingReturnsPage'));
-const JewelryCarePage = lazy(() => import('./pages/help/JewelryCarePage'));
-const SizeGuidePage = lazy(() => import('./pages/help/SizeGuidePage'));
+const HelpPage = lazy(() => import('./app/help/page'));
+const ContactUsPage = lazy(() => import('./app/help/contact-us/page'));
+const FAQsPage = lazy(() => import('./app/help/faqs/page'));
+const ShippingReturnsPage = lazy(() => import('./app/help/shipping-returns/page'));
+const JewelryCarePage = lazy(() => import('./app/help/jewelry-care/page'));
+const SizeGuidePage = lazy(() => import('./app/help/size-guide/page'));
 
 function App() {
   const [showLoadingScreen, setShowLoadingScreen] = useState(true);
