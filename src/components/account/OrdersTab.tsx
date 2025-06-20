@@ -170,13 +170,6 @@ const OrdersTab: React.FC<OrdersTabProps> = ({ userId, highlightedOrderId }) => 
           <Button 
             variant="outline" 
             size="sm"
-            onClick={debugOrdersTable}
-          >
-            Debug Orders
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
             onClick={fetchOrders}
             disabled={isLoading}
           >
