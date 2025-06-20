@@ -224,7 +224,7 @@ const ProductDetailPage = () => {
             },
             body: JSON.stringify({
               amount: (product.price || 0) * quantity,
-              currency: 'INR',
+              currency: 'USD',
               items: [{
                 product_id: product.id,
                 quantity: quantity
@@ -386,7 +386,7 @@ const ProductDetailPage = () => {
       "offers": {
         "@type": "Offer",
         "url": window.location.href,
-        "priceCurrency": "INR",
+        "priceCurrency": "USD",
         "price": product.price,
         "availability": product.availability ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
       },
