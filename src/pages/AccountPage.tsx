@@ -11,6 +11,26 @@ import { formatCurrency } from '../lib/utils';
 import OrderDetails from '../components/account/OrderDetails';
 import toast from 'react-hot-toast';
 
+// Simple Badge component since it's not imported
+const Badge = ({ variant = 'secondary', className = '', children }: { 
+  variant?: 'success' | 'error' | 'warning' | 'secondary', 
+  className?: string, 
+  children: React.ReactNode 
+}) => {
+  const variantClasses = {
+    success: 'bg-green-100 text-green-800',
+    error: 'bg-red-100 text-red-800',
+    warning: 'bg-yellow-100 text-yellow-800',
+    secondary: 'bg-gray-100 text-gray-800'
+  };
+  
+  return (
+    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${variantClasses[variant]} ${className}`}>
+      {children}
+    </span>
+  );
+};
+
 interface ProfileForm {
   name: string;
   email: string;
@@ -68,9 +88,26 @@ const AccountPage = () => {
 
     try {
       setIsOrdersLoading(true);
-      console.log('Fetching orders for user:', user.id);
+      console.log('=== FETCHING ORDERS DEBUG ===');
+      console.log('User ID:', user.id);
+      console.log('User Email:', user.email);
       
-      const { data: orderData, error: orderError } = await supabase
+      // First, let's check what's in the orders table
+      const { data: allOrders, error: allOrdersError } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      console.log('All orders in database:', allOrders);
+      console.log('All orders error:', allOrdersError);
+      
+      // Try different possible column names for user identification
+      let orderData = null;
+      let orderError = null;
+      
+      // Method 1: Try customer_id
+      console.log('Trying customer_id...');
+      const { data: data1, error: error1 } = await supabase
         .from('orders')
         .select(`
           *,
@@ -85,17 +122,128 @@ const AccountPage = () => {
         .eq('customer_id', user.id)
         .order('created_at', { ascending: false });
       
+      console.log('Orders with customer_id:', data1);
+      console.log('customer_id error:', error1);
+      
+      if (data1 && data1.length > 0) {
+        orderData = data1;
+        orderError = error1;
+      }
+      
+      // Method 2: Try user_id if customer_id didn't work
+      if (!orderData || orderData.length === 0) {
+        console.log('Trying user_id...');
+        const { data: data2, error: error2 } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            order_items (
+              *,
+              products (
+                *,
+                product_images (*)
+              )
+            )
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        console.log('Orders with user_id:', data2);
+        console.log('user_id error:', error2);
+        
+        if (data2 && data2.length > 0) {
+          orderData = data2;
+          orderError = error2;
+        }
+      }
+      
+      // Method 3: Try email if both user_id and customer_id didn't work
+      if (!orderData || orderData.length === 0) {
+        console.log('Trying email...');
+        const { data: data3, error: error3 } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            order_items (
+              *,
+              products (
+                *,
+                product_images (*)
+              )
+            )
+          `)
+          .eq('customer_email', user.email)
+          .order('created_at', { ascending: false });
+        
+        console.log('Orders with customer_email:', data3);
+        console.log('customer_email error:', error3);
+        
+        if (data3 && data3.length > 0) {
+          orderData = data3;
+          orderError = error3;
+        }
+      }
+      
+      // Method 4: Try looking for orders created in the last 24 hours (for recent orders)
+      if (!orderData || orderData.length === 0) {
+        console.log('Trying recent orders...');
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        const { data: data4, error: error4 } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            order_items (
+              *,
+              products (
+                *,
+                product_images (*)
+              )
+            )
+          `)
+          .gte('created_at', yesterday.toISOString())
+          .order('created_at', { ascending: false });
+        
+        console.log('Recent orders:', data4);
+        console.log('Recent orders error:', error4);
+        
+        // Filter by user if we found recent orders
+        if (data4 && data4.length > 0) {
+          const userOrders = data4.filter(order => 
+            order.customer_id === user.id || 
+            order.user_id === user.id || 
+            order.customer_email === user.email
+          );
+          console.log('Filtered user orders from recent:', userOrders);
+          
+          if (userOrders.length > 0) {
+            orderData = userOrders;
+            orderError = error4;
+          }
+        }
+      }
+      
       if (orderError) {
         console.error('Error fetching orders:', orderError);
         toast.error('Failed to load orders: ' + orderError.message);
         return;
       }
 
-      console.log('Fetched orders:', orderData);
+      console.log('Final orders data:', orderData);
       setOrders(orderData || []);
       
       if (!orderData || orderData.length === 0) {
-        console.log('No orders found for user:', user.id);
+        console.log('No orders found for user after all methods');
+        console.log('Consider checking:');
+        console.log('1. Column names in orders table');
+        console.log('2. User ID format');
+        console.log('3. Row Level Security policies');
+        
+        // Show all orders in console for debugging
+        if (allOrders && allOrders.length > 0) {
+          console.log('Sample order structure:', allOrders[0]);
+        }
       }
     } catch (error) {
       console.error('Error in fetchOrders:', error);
@@ -188,6 +336,50 @@ const AccountPage = () => {
   // Add a refresh orders function
   const refreshOrders = async () => {
     await fetchOrders();
+  };
+
+  // Debug function to check table structure and data
+  const debugOrdersTable = async () => {
+    console.log('=== DEBUGGING ORDERS TABLE ===');
+    
+    try {
+      // Get table structure by fetching one row
+      const { data: sampleData, error: sampleError } = await supabase
+        .from('orders')
+        .select('*')
+        .limit(1);
+      
+      if (sampleData && sampleData.length > 0) {
+        console.log('Orders table columns:', Object.keys(sampleData[0]));
+        console.log('Sample order:', sampleData[0]);
+      }
+      
+      // Get all orders to see what's there
+      const { data: allOrders } = await supabase
+        .from('orders')
+        .select('id, customer_id, user_id, customer_email, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      console.log('Recent orders (limited to 10):', allOrders);
+      
+      // Check current user
+      console.log('Current user ID:', user?.id);
+      console.log('Current user email:', user?.email);
+      
+      // Try to find orders that might belong to current user
+      if (allOrders) {
+        const possibleUserOrders = allOrders.filter(order => {
+          return order.customer_id === user?.id || 
+                 order.user_id === user?.id || 
+                 order.customer_email === user?.email;
+        });
+        console.log('Orders that might belong to current user:', possibleUserOrders);
+      }
+      
+    } catch (error) {
+      console.error('Debug error:', error);
+    }
   };
   
   const onSubmit = async (data: ProfileForm) => {
@@ -406,14 +598,23 @@ const AccountPage = () => {
                     <>
                       <div className="flex justify-between items-center mb-6">
                         <h2 className="text-xl font-medium text-charcoal-800">Order History</h2>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={refreshOrders}
-                          disabled={isOrdersLoading}
-                        >
-                          {isOrdersLoading ? 'Refreshing...' : 'Refresh'}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={debugOrdersTable}
+                          >
+                            Debug Orders
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={refreshOrders}
+                            disabled={isOrdersLoading}
+                          >
+                            {isOrdersLoading ? 'Refreshing...' : 'Refresh'}
+                          </Button>
+                        </div>
                       </div>
                       
                       {isOrdersLoading ? (
