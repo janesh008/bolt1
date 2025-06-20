@@ -1,41 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { User, Settings, Package, CreditCard, LogOut, Heart, ShoppingBag, Eye } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { useSearchParams } from 'react-router-dom';
-import { formatCurrency } from '../lib/utils';
-import OrderDetails from '../components/account/OrderDetails';
+import Button from '../components/ui/Button';
+import { Tabs, TabsContent } from '../components/ui/tabs';
 import toast from 'react-hot-toast';
 
-// Simple Badge component since it's not imported
-const Badge = ({ variant = 'secondary', className = '', children }: { 
-  variant?: 'success' | 'error' | 'warning' | 'secondary', 
-  className?: string, 
-  children: React.ReactNode 
-}) => {
-  const variantClasses = {
-    success: 'bg-green-100 text-green-800',
-    error: 'bg-red-100 text-red-800',
-    warning: 'bg-yellow-100 text-yellow-800',
-    secondary: 'bg-gray-100 text-gray-800'
-  };
-  
-  return (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${variantClasses[variant]} ${className}`}>
-      {children}
-    </span>
-  );
-};
-
-interface ProfileForm {
-  name: string;
-  email: string;
-  phone: string;
-}
+// Import components
+import AccountSidebar from '../components/account/AccountSidebar';
+import ProfileTab from '../components/account/ProfileTab';
+import OrdersTab from '../components/account/OrdersTab';
+import WishlistTab from '../components/account/WishlistTab';
+import AddressesTab from '../components/account/AddressesTab';
+import SettingsTab from '../components/account/SettingsTab';
 
 interface Address {
   id: string;
@@ -52,13 +30,10 @@ const AccountPage = () => {
   
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isLoading, setIsLoading] = useState(true);
-  const [isOrdersLoading, setIsOrdersLoading] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(highlightedOrderId);
-  
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<ProfileForm>();
+  const [profileData, setProfileData] = useState<{name?: string, email?: string, phone?: string}>({});
+  const [orders, setOrders] = useState<any[]>([]);
   
   useEffect(() => {
     document.title = 'My Account | AXELS';
@@ -74,64 +49,10 @@ const AccountPage = () => {
     }
     
     if (highlightedOrderId) {
-      setSelectedOrderId(highlightedOrderId);
       setActiveTab('orders');
     }
   }, [initialTab, highlightedOrderId]);
 
-  // Separate function to fetch orders with better error handling
-  const fetchOrders = async () => {
-    if (!user?.id) {
-      console.error('No user ID available for fetching orders');
-      return;
-    }
-
-    try {
-      setIsOrdersLoading(true);
-      console.log('=== FETCHING ORDERS DEBUG ===');
-      console.log('User ID:', user.id);
-      console.log('User Email:', user.email);
-      
-      // Fetch orders directly using user_id
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (
-            *,
-            products (
-              *,
-              product_images (*)
-            )
-          ),
-          shipping_addresses(*)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      console.log('Orders with user_id:', orderData);
-      console.log('Orders error:', orderError);
-      
-      if (orderError) {
-        console.error('Error fetching orders:', orderError);
-        toast.error('Failed to load orders: ' + orderError.message);
-        return;
-      }
-
-      console.log('Final orders data:', orderData);
-      setOrders(orderData || []);
-      
-      if (!orderData || orderData.length === 0) {
-        console.log('No orders found for user');
-      }
-    } catch (error) {
-      console.error('Error in fetchOrders:', error);
-      toast.error('Failed to load orders');
-    } finally {
-      setIsOrdersLoading(false);
-    }
-  };
-  
   const fetchUserData = async () => {
     if (!user?.id) {
       console.error('No user ID available');
@@ -160,14 +81,18 @@ const AccountPage = () => {
           .single();
           
         if (!userError && userProfile) {
-          setValue('name', userProfile.full_name || '');
-          setValue('email', userProfile.email || '');
-          setValue('phone', userProfile.phone || '');
+          setProfileData({
+            name: userProfile.full_name || '',
+            email: userProfile.email || '',
+            phone: userProfile.phone || ''
+          });
         }
       } else if (profile) {
-        setValue('name', profile.full_name || '');
-        setValue('email', profile.email || '');
-        setValue('phone', profile.phone || '');
+        setProfileData({
+          name: profile.full_name || '',
+          email: profile.email || '',
+          phone: profile.phone || ''
+        });
       }
       
       // Fetch addresses
@@ -182,8 +107,27 @@ const AccountPage = () => {
         setAddresses(addressData);
       }
       
-      // Fetch orders with separate function
-      await fetchOrders();
+      // Fetch orders
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            *,
+            products (
+              *,
+              product_images (*)
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+        
+      if (orderError) {
+        console.error('Error fetching orders:', orderError);
+      } else {
+        setOrders(orderData || []);
+      }
 
       // Fetch wishlist items
       const { data: wishlistData, error: wishlistError } = await supabase
@@ -224,95 +168,25 @@ const AccountPage = () => {
       setIsLoading(false);
     }
   };
-
-  // Add a refresh orders function
-  const refreshOrders = async () => {
-    await fetchOrders();
-  };
-
-  // Debug function to check table structure and data
-  const debugOrdersTable = async () => {
-    console.log('=== DEBUGGING ORDERS TABLE ===');
-    
-    try {
-      // Get table structure by fetching one row
-      const { data: sampleData, error: sampleError } = await supabase
-        .from('orders')
-        .select('*')
-        .limit(1);
-      
-      if (sampleData && sampleData.length > 0) {
-        console.log('Orders table columns:', Object.keys(sampleData[0]));
-        console.log('Sample order:', sampleData[0]);
-      }
-      
-      // Get all orders to see what's there
-      const { data: allOrders } = await supabase
-        .from('orders')
-        .select('id, user_id, created_at')
-        .order('created_at', { ascending: false })
-        .limit(10);
-      
-      console.log('Recent orders (limited to 10):', allOrders);
-      
-      // Check current user
-      console.log('Current user ID:', user?.id);
-      console.log('Current user email:', user?.email);
-      
-      // Try to find orders that might belong to current user
-      if (allOrders) {
-        const possibleUserOrders = allOrders.filter(order => {
-          return order.user_id === user?.id;
-        });
-        console.log('Orders that might belong to current user:', possibleUserOrders);
-      }
-      
-    } catch (error) {
-      console.error('Debug error:', error);
-    }
-  };
   
-  const onSubmit = async (data: ProfileForm) => {
-    if (!user?.id) {
-      toast.error('User not authenticated');
-      return;
-    }
-
+  const handleRemoveFromWishlist = async (productId: string) => {
     try {
-      // Try to update user_profiles first
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .update({
-          full_name: data.name,
-          phone: data.phone,
-          email: data.email
-        })
-        .eq('user_id', user.id);
-      
-      if (profileError) {
-        console.error('Error updating user_profiles:', profileError);
+      const { error } = await supabase
+        .from('wishlists')
+        .delete()
+        .eq('user_id', user?.id)
+        .eq('product_id', productId);
         
-        // Fallback to users table
-        const { error: userError } = await supabase
-          .from('users')
-          .update({
-            full_name: data.name,
-            phone: data.phone
-          })
-          .eq('id', user.id);
-          
-        if (userError) {
-          throw userError;
-        }
-      }
+      if (error) throw error;
       
-      toast.success('Profile updated successfully');
+      setWishlistItems(prev => prev.filter(item => item.product_id !== productId));
+      toast.success('Removed from wishlist');
     } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      console.error('Error removing from wishlist:', error);
+      toast.error('Failed to remove from wishlist');
     }
   };
-  
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -322,18 +196,7 @@ const AccountPage = () => {
       toast.error('Failed to sign out');
     }
   };
-
-  const handleViewOrder = (orderId: string) => {
-    console.log('Viewing order:', orderId);
-    setSelectedOrderId(orderId);
-  };
-
-  const handleBackToOrders = () => {
-    setSelectedOrderId(null);
-    // Refresh orders when coming back from order details
-    refreshOrders();
-  };
-
+  
   // Add authentication check
   if (!user) {
     return (
@@ -358,425 +221,47 @@ const AccountPage = () => {
         
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar Navigation */}
-          <aside className="w-full md:w-64 space-y-2">
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === 'profile'
-                  ? 'bg-gold-400 text-white'
-                  : 'hover:bg-cream-100 text-charcoal-600'
-              }`}
-            >
-              <User className="h-5 w-5" />
-              <span>Profile</span>
-            </button>
-            
-            <button
-              onClick={() => {
-                setActiveTab('orders');
-                setSelectedOrderId(null);
-                // Refresh orders when switching to orders tab
-                if (activeTab !== 'orders') {
-                  refreshOrders();
-                }
-              }}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === 'orders'
-                  ? 'bg-gold-400 text-white'
-                  : 'hover:bg-cream-100 text-charcoal-600'
-              }`}
-            >
-              <Package className="h-5 w-5" />
-              <span>Orders</span>
-              {orders.length > 0 && (
-                <span className="ml-auto bg-cream-200 text-charcoal-800 text-xs px-2 py-1 rounded-full">
-                  {orders.length}
-                </span>
-              )}
-            </button>
-            
-            <button
-              onClick={() => setActiveTab('wishlist')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === 'wishlist'
-                  ? 'bg-gold-400 text-white'
-                  : 'hover:bg-cream-100 text-charcoal-600'
-              }`}
-            >
-              <Heart className="h-5 w-5" />
-              <span>Wishlist</span>
-              {wishlistItems.length > 0 && (
-                <span className="ml-auto bg-cream-200 text-charcoal-800 text-xs px-2 py-1 rounded-full">
-                  {wishlistItems.length}
-                </span>
-              )}
-            </button>
-            
-            <button
-              onClick={() => setActiveTab('addresses')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === 'addresses'
-                  ? 'bg-gold-400 text-white'
-                  : 'hover:bg-cream-100 text-charcoal-600'
-              }`}
-            >
-              <CreditCard className="h-5 w-5" />
-              <span>Addresses</span>
-            </button>
-            
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === 'settings'
-                  ? 'bg-gold-400 text-white'
-                  : 'hover:bg-cream-100 text-charcoal-600'
-              }`}
-            >
-              <Settings className="h-5 w-5" />
-              <span>Settings</span>
-            </button>
-            
-            <button
-              onClick={handleSignOut}
-              className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-error-500 hover:bg-error-100 transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
-              <span>Sign Out</span>
-            </button>
-          </aside>
+          <AccountSidebar 
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            ordersCount={orders.length}
+            wishlistCount={wishlistItems.length}
+            onSignOut={handleSignOut}
+          />
           
           {/* Main Content */}
           <div className="flex-1">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsContent value="profile">
-                <div className="bg-white rounded-lg shadow-soft p-6">
-                  <h2 className="text-xl font-medium text-charcoal-800 mb-6">Profile Information</h2>
-                  
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-charcoal-600 mb-1">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        {...register('name')}
-                        className="w-full px-4 py-2 rounded-md border border-cream-200 focus:outline-none focus:ring-2 focus:ring-gold-400"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-charcoal-600 mb-1">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        {...register('email')}
-                        disabled
-                        className="w-full px-4 py-2 rounded-md border border-cream-200 bg-cream-50 cursor-not-allowed"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-charcoal-600 mb-1">
-                        Phone
-                      </label>
-                      <input
-                        type="tel"
-                        {...register('phone')}
-                        className="w-full px-4 py-2 rounded-md border border-cream-200 focus:outline-none focus:ring-2 focus:ring-gold-400"
-                      />
-                    </div>
-                    
-                    <Button type="submit" className="mt-4">
-                      Save Changes
-                    </Button>
-                  </form>
-                </div>
+                <ProfileTab 
+                  userId={user.id} 
+                  initialData={profileData}
+                />
               </TabsContent>
               
               <TabsContent value="orders">
-                <div className="bg-white rounded-lg shadow-soft p-6">
-                  {selectedOrderId ? (
-                    <OrderDetails 
-                      orderId={selectedOrderId} 
-                      onBack={handleBackToOrders} 
-                    />
-                  ) : (
-                    <>
-                      <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-medium text-charcoal-800">Order History</h2>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={debugOrdersTable}
-                          >
-                            Debug Orders
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={refreshOrders}
-                            disabled={isOrdersLoading}
-                          >
-                            {isOrdersLoading ? 'Refreshing...' : 'Refresh'}
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      {isOrdersLoading ? (
-                        <div className="text-center py-8">
-                          <LoadingSpinner />
-                          <p className="text-charcoal-500 mt-2">Loading orders...</p>
-                        </div>
-                      ) : orders.length === 0 ? (
-                        <div className="text-center py-12">
-                          <ShoppingBag className="w-16 h-16 text-charcoal-300 mx-auto mb-4" />
-                          <p className="text-charcoal-500 mb-4">You haven't placed any orders yet.</p>
-                          <Button onClick={() => window.location.href = '/products'}>
-                            Start Shopping
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {orders.map((order: any) => (
-                            <div
-                              key={order.id}
-                              className={`border ${
-                                highlightedOrderId === order.id 
-                                  ? 'border-gold-400 bg-gold-50' 
-                                  : 'border-cream-200'
-                              } rounded-lg p-4 transition-all duration-300`}
-                            >
-                              <div className="flex justify-between items-start mb-4">
-                                <div>
-                                  <p className="font-medium text-charcoal-800">
-                                    Order #{order.order_number}
-                                  </p>
-                                  <p className="text-sm text-charcoal-500">
-                                    {new Date(order.created_at).toLocaleDateString()} • {new Date(order.created_at).toLocaleTimeString()}
-                                  </p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="font-medium text-charcoal-800">
-                                    {formatCurrency(order.total_amount)}
-                                  </p>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <Badge 
-                                      variant={
-                                        order.status === 'delivered' ? 'success' : 
-                                        order.status === 'cancelled' ? 'error' : 
-                                        order.status === 'pending' ? 'warning' : 
-                                        'secondary'
-                                      }
-                                      className="capitalize"
-                                    >
-                                      {order.status}
-                                    </Badge>
-                                    <Badge 
-                                      variant={
-                                        order.payment_status === 'completed' ? 'success' : 
-                                        order.payment_status === 'failed' ? 'error' : 
-                                        'warning'
-                                      }
-                                    >
-                                      {order.payment_status}
-                                    </Badge>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                {order.order_items?.slice(0, 2).map((item: any) => (
-                                  <div
-                                    key={item.id}
-                                    className="flex items-center space-x-4"
-                                  >
-                                    <div className="w-12 h-12 bg-cream-100 rounded-lg flex items-center justify-center overflow-hidden">
-                                      {item.products?.product_images?.[0]?.image_url ? (
-                                        <img
-                                          src={item.products.product_images[0].image_url}
-                                          alt={item.products?.name || item.products?.product_name}
-                                          className="w-full h-full object-cover"
-                                        />
-                                      ) : (
-                                        <Package className="h-6 w-6 text-charcoal-400" />
-                                      )}
-                                    </div>
-                                    <div>
-                                      <p className="font-medium text-charcoal-800 text-sm">
-                                        {item.products?.product_name || item.products?.name || 'Product'}
-                                      </p>
-                                      <p className="text-xs text-charcoal-500">
-                                        Qty: {item.quantity}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
-                                
-                                {order.order_items && order.order_items.length > 2 && (
-                                  <p className="text-xs text-charcoal-500">
-                                    +{order.order_items.length - 2} more items
-                                  </p>
-                                )}
-                              </div>
-                              
-                              <div className="mt-4 pt-4 border-t border-cream-200 flex justify-end">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleViewOrder(order.id)}
-                                >
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View Details
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
+                <OrdersTab 
+                  userId={user.id}
+                  highlightedOrderId={highlightedOrderId}
+                />
               </TabsContent>
               
               <TabsContent value="wishlist">
                 <div className="bg-white rounded-lg shadow-soft p-6">
                   <h2 className="text-xl font-medium text-charcoal-800 mb-6">My Wishlist</h2>
-                  
-                  {wishlistItems.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Heart className="w-16 h-16 text-charcoal-300 mx-auto mb-4" />
-                      <p className="text-charcoal-500 mb-4">Your wishlist is empty.</p>
-                      <Button onClick={() => window.location.href = '/products'}>
-                        Explore Products
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {wishlistItems.map((item) => (
-                        <div key={item.id} className="border border-cream-200 rounded-lg overflow-hidden">
-                          <div className="aspect-square bg-cream-100">
-                            <img 
-                              src={item.image} 
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="p-4">
-                            <h3 className="font-medium text-charcoal-800 line-clamp-1">{item.name}</h3>
-                            <p className="text-gold-500 mt-1">{formatCurrency(item.price)}</p>
-                            <div className="flex gap-2 mt-3">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="flex-1"
-                                onClick={() => window.location.href = `/product/${item.product_id}`}
-                              >
-                                View
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                className="flex-1"
-                              >
-                                <ShoppingBag className="h-4 w-4 mr-2" />
-                                Add to Cart
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <WishlistTab 
+                    items={wishlistItems}
+                    onRemoveItem={handleRemoveFromWishlist}
+                  />
                 </div>
               </TabsContent>
               
               <TabsContent value="addresses">
-                <div className="bg-white rounded-lg shadow-soft p-6">
-                  <h2 className="text-xl font-medium text-charcoal-800 mb-6">Saved Addresses</h2>
-                  
-                  {addresses.length === 0 ? (
-                    <p className="text-charcoal-500">No addresses found.</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {addresses.map((address) => (
-                        <div
-                          key={address.id}
-                          className="border border-cream-200 rounded-lg p-4"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="font-medium text-charcoal-800 capitalize">
-                                {address.type}
-                              </p>
-                              <p className="text-charcoal-600 mt-1">
-                                {address.address}
-                              </p>
-                            </div>
-                            {address.is_default && (
-                              <span className="text-sm text-gold-400 font-medium">
-                                Default
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  <Button className="mt-6">
-                    Add New Address
-                  </Button>
-                </div>
+                <AddressesTab addresses={addresses} />
               </TabsContent>
               
               <TabsContent value="settings">
-                <div className="bg-white rounded-lg shadow-soft p-6">
-                  <h2 className="text-xl font-medium text-charcoal-800 mb-6">Account Settings</h2>
-                  
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-medium text-charcoal-800 mb-2">
-                        Email Preferences
-                      </h3>
-                      <div className="space-y-2">
-                        <label className="flex items-center space-x-2">
-                          <input type="checkbox" className="rounded text-gold-400 focus:ring-gold-400" />
-                          <span className="text-charcoal-600">Order updates</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input type="checkbox" className="rounded text-gold-400 focus:ring-gold-400" />
-                          <span className="text-charcoal-600">Promotional emails</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input type="checkbox" className="rounded text-gold-400 focus:ring-gold-400" />
-                          <span className="text-charcoal-600">New product launches</span>
-                        </label>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-medium text-charcoal-800 mb-2">
-                        Password
-                      </h3>
-                      <Button variant="outline">
-                        Change Password
-                      </Button>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-medium text-charcoal-800 mb-2">
-                        Delete Account
-                      </h3>
-                      <p className="text-charcoal-500 text-sm mb-2">
-                        Once you delete your account, there is no going back. Please be certain.
-                      </p>
-                      <Button variant="outline" className="text-error-500 border-error-500 hover:bg-error-50">
-                        Delete Account
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                <SettingsTab onSignOut={handleSignOut} />
               </TabsContent>
             </Tabs>
           </div>
