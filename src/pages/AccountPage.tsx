@@ -44,6 +44,18 @@ const AccountPage = () => {
     fetchUserData();
   }, []);
   
+  // Add this effect to handle tab changes from URL params
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+    
+    if (highlightedOrderId) {
+      setSelectedOrderId(highlightedOrderId);
+      setActiveTab('orders');
+    }
+  }, [initialTab, highlightedOrderId]);
+  
   const fetchUserData = async () => {
     try {
       setIsLoading(true);
@@ -72,7 +84,7 @@ const AccountPage = () => {
       }
       
       // Fetch orders - Updated query to use customer_id and proper relationships
-      const { data: orderData } = await supabase
+      const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select(`
           *,
@@ -86,9 +98,12 @@ const AccountPage = () => {
         `)
         .eq('customer_id', user?.id)
         .order('created_at', { ascending: false });
-        
-      if (orderData) {
-        setOrders(orderData);
+      
+      if (orderError) {
+        console.error('Error fetching orders:', orderError);
+      } else {
+        console.log('Fetched orders:', orderData);
+        setOrders(orderData || []);
       }
 
       // Fetch wishlist items

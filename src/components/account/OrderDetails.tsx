@@ -51,6 +51,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
       }
 
       const data = await response.json();
+      console.log('Fetched order details:', data.order);
       setOrder(data.order);
     } catch (error) {
       console.error('Error fetching order details:', error);
