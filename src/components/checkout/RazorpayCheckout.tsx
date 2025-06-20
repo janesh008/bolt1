@@ -23,7 +23,7 @@ interface RazorpayCheckoutProps {
       country: string;
       pincode: string;
     };
-    amount: number; // Total amount in INR (number)
+    amount: number; // Total amount in USD (number)
   };
   onSuccess?: (paymentData: any) => void;
   onError?: (error: any) => void;
@@ -130,7 +130,7 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_95lpU4BLVjzNkI',
         amount: orderResponse.amount * 100, // paise
-        currency: orderResponse.currency || 'INR',
+        currency: orderResponse.currency || 'USD',
         name: 'AXELS Jewelry',
         description: `Order #${orderResponse.orderId}`,
         image: '/favicon.svg',
