@@ -61,7 +61,6 @@ serve(async (req) => {
       .from("orders")
       .select(`
         *,
-        customers(*),
         order_items(
           *,
           products(
@@ -79,12 +78,13 @@ serve(async (req) => {
     
     if (!isAdmin) {
       // If not admin, only allow access to own orders
-      query = query.filter("customers.user_id", "eq", user.id);
+      query = query.eq("user_id", user.id);
     }
     
     const { data: order, error: orderError } = await query.single();
     
     if (orderError) {
+      console.error("Order fetch error:", orderError);
       return new Response(
         JSON.stringify({ error: "Order not found or access denied" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }

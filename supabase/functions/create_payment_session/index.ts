@@ -62,41 +62,6 @@ serve(async (req) => {
       );
     }
     
-    // Get customer ID or create customer if not exists
-    let customerId;
-    const { data: customerData, error: customerError } = await supabase
-      .from("customers")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
-    
-    if (customerError) {
-      // Create new customer
-      const { data: newCustomer, error: createError } = await supabase
-        .from("customers")
-        .insert({
-          user_id: user.id,
-          email: user.email,
-          first_name: shippingAddress.name.split(" ")[0],
-          last_name: shippingAddress.name.split(" ").slice(1).join(" "),
-          phone: shippingAddress.phone,
-          role: "user"
-        })
-        .select("id")
-        .single();
-      
-      if (createError) {
-        return new Response(
-          JSON.stringify({ error: "Failed to create customer" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      
-      customerId = newCustomer.id;
-    } else {
-      customerId = customerData.id;
-    }
-    
     // Calculate total amount
     let totalAmount = 0;
     
@@ -121,11 +86,11 @@ serve(async (req) => {
     // Generate unique order number
     const orderNumber = `ORD-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
     
-    // Create order in database
+    // Create order in database - now using user_id directly
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
-        customer_id: customerId,
+        user_id: user.id, // Use auth.users.id directly
         order_number: orderNumber,
         status: "pending",
         total_amount: totalAmount,
@@ -137,6 +102,7 @@ serve(async (req) => {
       .single();
     
     if (orderError) {
+      console.error("Order creation error:", orderError);
       return new Response(
         JSON.stringify({ error: "Failed to create order" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -222,13 +188,27 @@ serve(async (req) => {
       console.error("Failed to update order with Razorpay ID:", updateError);
     }
     
+    // Get user profile info for the response
+    const { data: userProfile } = await supabase
+      .from("user_profiles")
+      .select("full_name, email")
+      .eq("user_id", user.id)
+      .single();
+    
+    const customerName = userProfile?.full_name || user.user_metadata?.full_name || '';
+    const customerEmail = userProfile?.email || user.email || '';
+    
     return new Response(
       JSON.stringify({
         success: true,
         orderId: order.id,
         razorpayOrderId: razorpayOrderId,
         amount: totalAmount,
-        currency: "INR"
+        currency: "INR",
+        customer: {
+          name: customerName,
+          email: customerEmail
+        }
       }),
       { 
         status: 200, 

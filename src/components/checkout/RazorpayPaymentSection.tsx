@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import Button from '../ui/Button';
 import toast from 'react-hot-toast';
-import { supabase, getCurrentUser } from '../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 interface RazorpayPaymentSectionProps {
   orderData: {
@@ -76,10 +76,10 @@ const RazorpayPaymentSection: React.FC<RazorpayPaymentSectionProps> = ({
       });
 
       if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Create order failed:', errorText);
-      throw new Error(errorText || 'Failed to create payment session');
-    }
+        const errorText = await response.text();
+        console.error('Create order failed:', errorText);
+        throw new Error(errorText || 'Failed to create payment session');
+      }
 
       return await response.json();
     } catch (error) {

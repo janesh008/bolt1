@@ -83,10 +83,11 @@ serve(async (req) => {
         updated_at: new Date().toISOString()
       })
       .eq("id", order_id)
-      .select("*, customers(*)")
+      .select("*, user_profiles(*)")
       .single();
     
     if (orderError) {
+      console.error("Order update error:", orderError);
       return new Response(
         JSON.stringify({ error: "Failed to update order" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -128,6 +129,16 @@ serve(async (req) => {
       console.error("Failed to create payment transaction:", transactionError);
     }
     
+    // Get user profile info
+    const { data: userProfile } = await supabase
+      .from("user_profiles")
+      .select("full_name, email")
+      .eq("user_id", user.id)
+      .single();
+    
+    const customerName = userProfile?.full_name || user.user_metadata?.full_name || '';
+    const customerEmail = userProfile?.email || user.email || '';
+    
     return new Response(
       JSON.stringify({
         success: true,
@@ -137,8 +148,8 @@ serve(async (req) => {
           status: order.status,
           payment_status: order.payment_status,
           customer: {
-            name: order.customers?.first_name + " " + order.customers?.last_name,
-            email: order.customers?.email
+            name: customerName,
+            email: customerEmail
           }
         }
       }),

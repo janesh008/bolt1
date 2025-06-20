@@ -92,22 +92,8 @@ const AccountPage = () => {
       console.log('User ID:', user.id);
       console.log('User Email:', user.email);
       
-      // First, let's check what's in the orders table
-      const { data: allOrders, error: allOrdersError } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      console.log('All orders in database:', allOrders);
-      console.log('All orders error:', allOrdersError);
-      
-      // Try different possible column names for user identification
-      let orderData = null;
-      let orderError = null;
-      
-      // Method 1: Try customer_id
-      console.log('Trying customer_id...');
-      const { data: data1, error: error1 } = await supabase
+      // Fetch orders directly using user_id
+      const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select(`
           *,
@@ -117,112 +103,14 @@ const AccountPage = () => {
               *,
               product_images (*)
             )
-          )
+          ),
+          shipping_addresses(*)
         `)
-        .eq('customer_id', user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
-      console.log('Orders with customer_id:', data1);
-      console.log('customer_id error:', error1);
-      
-      if (data1 && data1.length > 0) {
-        orderData = data1;
-        orderError = error1;
-      }
-      
-      // Method 2: Try user_id if customer_id didn't work
-      if (!orderData || orderData.length === 0) {
-        console.log('Trying user_id...');
-        const { data: data2, error: error2 } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            order_items (
-              *,
-              products (
-                *,
-                product_images (*)
-              )
-            )
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-        
-        console.log('Orders with user_id:', data2);
-        console.log('user_id error:', error2);
-        
-        if (data2 && data2.length > 0) {
-          orderData = data2;
-          orderError = error2;
-        }
-      }
-      
-      // Method 3: Try email if both user_id and customer_id didn't work
-      if (!orderData || orderData.length === 0) {
-        console.log('Trying email...');
-        const { data: data3, error: error3 } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            order_items (
-              *,
-              products (
-                *,
-                product_images (*)
-              )
-            )
-          `)
-          .eq('customer_id', user.email)
-          .order('created_at', { ascending: false });
-        
-        console.log('Orders with customer_id:', data3);
-        console.log('customer_id error:', error3);
-        
-        if (data3 && data3.length > 0) {
-          orderData = data3;
-          orderError = error3;
-        }
-      }
-      
-      // Method 4: Try looking for orders created in the last 24 hours (for recent orders)
-      if (!orderData || orderData.length === 0) {
-        console.log('Trying recent orders...');
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        
-        const { data: data4, error: error4 } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            order_items (
-              *,
-              products (
-                *,
-                product_images (*)
-              )
-            )
-          `)
-          .gte('created_at', yesterday.toISOString())
-          .order('created_at', { ascending: false });
-        
-        console.log('Recent orders:', data4);
-        console.log('Recent orders error:', error4);
-        
-        // Filter by user if we found recent orders
-        if (data4 && data4.length > 0) {
-          const userOrders = data4.filter(order => 
-            order.customer_id === user.id || 
-            order.user_id === user.id || 
-            order.customer_id === user.email
-          );
-          console.log('Filtered user orders from recent:', userOrders);
-          
-          if (userOrders.length > 0) {
-            orderData = userOrders;
-            orderError = error4;
-          }
-        }
-      }
+      console.log('Orders with user_id:', orderData);
+      console.log('Orders error:', orderError);
       
       if (orderError) {
         console.error('Error fetching orders:', orderError);
@@ -234,16 +122,7 @@ const AccountPage = () => {
       setOrders(orderData || []);
       
       if (!orderData || orderData.length === 0) {
-        console.log('No orders found for user after all methods');
-        console.log('Consider checking:');
-        console.log('1. Column names in orders table');
-        console.log('2. User ID format');
-        console.log('3. Row Level Security policies');
-        
-        // Show all orders in console for debugging
-        if (allOrders && allOrders.length > 0) {
-          console.log('Sample order structure:', allOrders[0]);
-        }
+        console.log('No orders found for user');
       }
     } catch (error) {
       console.error('Error in fetchOrders:', error);
@@ -263,15 +142,28 @@ const AccountPage = () => {
     try {
       setIsLoading(true);
       
-      // Fetch user profile
+      // Fetch user profile from user_profiles
       const { data: profile, error: profileError } = await supabase
-        .from('users')
+        .from('user_profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single();
         
       if (profileError) {
         console.error('Error fetching profile:', profileError);
+        
+        // Fallback to users table if user_profiles doesn't exist
+        const { data: userProfile, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (!userError && userProfile) {
+          setValue('name', userProfile.full_name || '');
+          setValue('email', userProfile.email || '');
+          setValue('phone', userProfile.phone || '');
+        }
       } else if (profile) {
         setValue('name', profile.full_name || '');
         setValue('email', profile.email || '');
@@ -357,7 +249,7 @@ const AccountPage = () => {
       // Get all orders to see what's there
       const { data: allOrders } = await supabase
         .from('orders')
-        .select('id, customer_id, user_id, customer_id, created_at')
+        .select('id, user_id, created_at')
         .order('created_at', { ascending: false })
         .limit(10);
       
@@ -370,9 +262,7 @@ const AccountPage = () => {
       // Try to find orders that might belong to current user
       if (allOrders) {
         const possibleUserOrders = allOrders.filter(order => {
-          return order.customer_id === user?.id || 
-                 order.user_id === user?.id || 
-                 order.customer_id === user?.email;
+          return order.user_id === user?.id;
         });
         console.log('Orders that might belong to current user:', possibleUserOrders);
       }
@@ -389,15 +279,32 @@ const AccountPage = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('users')
+      // Try to update user_profiles first
+      const { error: profileError } = await supabase
+        .from('user_profiles')
         .update({
           full_name: data.name,
-          phone: data.phone
+          phone: data.phone,
+          email: data.email
         })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
+      
+      if (profileError) {
+        console.error('Error updating user_profiles:', profileError);
         
-      if (error) throw error;
+        // Fallback to users table
+        const { error: userError } = await supabase
+          .from('users')
+          .update({
+            full_name: data.name,
+            phone: data.phone
+          })
+          .eq('id', user.id);
+          
+        if (userError) {
+          throw userError;
+        }
+      }
       
       toast.success('Profile updated successfully');
     } catch (error) {
@@ -434,7 +341,7 @@ const AccountPage = () => {
         <div className="max-w-2xl mx-auto text-center">
           <h1 className="font-serif text-3xl text-charcoal-800 mb-4">Please Sign In</h1>
           <p className="text-charcoal-600 mb-4">You need to be signed in to view your account.</p>
-          <Button onClick={() => window.location.href = '/auth'}>
+          <Button onClick={() => window.location.href = '/login'}>
             Sign In
           </Button>
         </div>

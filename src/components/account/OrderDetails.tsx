@@ -34,10 +34,38 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
   const fetchOrderDetails = async () => {
     try {
       setIsLoading(true);
+      console.log('Fetching order details for ID:', orderId);
       
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
       
+      // First try direct Supabase query
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            *,
+            products (
+              *,
+              product_images (*)
+            )
+          ),
+          shipping_addresses(*),
+          order_timeline(*)
+        `)
+        .eq('id', orderId)
+        .single();
+      
+      if (!orderError && orderData) {
+        console.log('Fetched order details directly:', orderData);
+        setOrder(orderData);
+        setIsLoading(false);
+        return;
+      }
+      
+      // If direct query fails, try the edge function
+      console.log('Direct query failed, trying edge function');
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get_order_details/${orderId}`, {
         method: 'GET',
         headers: {
@@ -285,7 +313,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
                 {item.products?.product_images && item.products.product_images.length > 0 ? (
                   <img
                     src={item.products.product_images[0].image_url}
-                    alt={item.products.product_name || item.products.name}
+                    alt={item.products?.product_name || item.products?.name}
                     className="w-full h-full object-cover"
                   />
                 ) : (
