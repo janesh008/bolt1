@@ -32,6 +32,7 @@ const AccountPage = () => {
   
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOrdersLoading, setIsOrdersLoading] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
@@ -41,8 +42,10 @@ const AccountPage = () => {
   
   useEffect(() => {
     document.title = 'My Account | AXELS';
-    fetchUserData();
-  }, []);
+    if (user?.id) {
+      fetchUserData();
+    }
+  }, [user?.id]);
   
   // Add this effect to handle tab changes from URL params
   useEffect(() => {
@@ -55,36 +58,18 @@ const AccountPage = () => {
       setActiveTab('orders');
     }
   }, [initialTab, highlightedOrderId]);
-  
-  const fetchUserData = async () => {
+
+  // Separate function to fetch orders with better error handling
+  const fetchOrders = async () => {
+    if (!user?.id) {
+      console.error('No user ID available for fetching orders');
+      return;
+    }
+
     try {
-      setIsLoading(true);
+      setIsOrdersLoading(true);
+      console.log('Fetching orders for user:', user.id);
       
-      // Fetch user profile
-      const { data: profile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user?.id)
-        .single();
-        
-      if (profile) {
-        setValue('name', profile.full_name || '');
-        setValue('email', profile.email || '');
-        setValue('phone', profile.phone || '');
-      }
-      
-      // Fetch addresses
-      const { data: addressData } = await supabase
-        .from('addresses')
-        .select('*')
-        .eq('user_id', user?.id);
-        
-      if (addressData) {
-        setAddresses(addressData);
-      }
-      
-      // Fetch orders - Updated query to use customer_id and proper relationships
-      console.log('Fetching orders for user:', user?.id);
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .select(`
@@ -97,18 +82,71 @@ const AccountPage = () => {
             )
           )
         `)
-        .eq('customer_id', user?.id)
+        .eq('customer_id', user.id)
         .order('created_at', { ascending: false });
       
       if (orderError) {
         console.error('Error fetching orders:', orderError);
-      } else {
-        console.log('Fetched orders:', orderData);
-        setOrders(orderData || []);
+        toast.error('Failed to load orders: ' + orderError.message);
+        return;
       }
 
+      console.log('Fetched orders:', orderData);
+      setOrders(orderData || []);
+      
+      if (!orderData || orderData.length === 0) {
+        console.log('No orders found for user:', user.id);
+      }
+    } catch (error) {
+      console.error('Error in fetchOrders:', error);
+      toast.error('Failed to load orders');
+    } finally {
+      setIsOrdersLoading(false);
+    }
+  };
+  
+  const fetchUserData = async () => {
+    if (!user?.id) {
+      console.error('No user ID available');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // Fetch user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      } else if (profile) {
+        setValue('name', profile.full_name || '');
+        setValue('email', profile.email || '');
+        setValue('phone', profile.phone || '');
+      }
+      
+      // Fetch addresses
+      const { data: addressData, error: addressError } = await supabase
+        .from('addresses')
+        .select('*')
+        .eq('user_id', user.id);
+        
+      if (addressError) {
+        console.error('Error fetching addresses:', addressError);
+      } else if (addressData) {
+        setAddresses(addressData);
+      }
+      
+      // Fetch orders with separate function
+      await fetchOrders();
+
       // Fetch wishlist items
-      const { data: wishlistData } = await supabase
+      const { data: wishlistData, error: wishlistError } = await supabase
         .from('wishlists')
         .select(`
           id,
@@ -124,10 +162,12 @@ const AccountPage = () => {
             )
           )
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (wishlistData) {
+      if (wishlistError) {
+        console.error('Error fetching wishlist:', wishlistError);
+      } else if (wishlistData) {
         setWishlistItems(wishlistData.map((item: any) => ({
           id: item.id,
           product_id: item.product_id,
@@ -144,8 +184,18 @@ const AccountPage = () => {
       setIsLoading(false);
     }
   };
+
+  // Add a refresh orders function
+  const refreshOrders = async () => {
+    await fetchOrders();
+  };
   
   const onSubmit = async (data: ProfileForm) => {
+    if (!user?.id) {
+      toast.error('User not authenticated');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('users')
@@ -153,7 +203,7 @@ const AccountPage = () => {
           full_name: data.name,
           phone: data.phone
         })
-        .eq('id', user?.id);
+        .eq('id', user.id);
         
       if (error) throw error;
       
@@ -181,7 +231,24 @@ const AccountPage = () => {
 
   const handleBackToOrders = () => {
     setSelectedOrderId(null);
+    // Refresh orders when coming back from order details
+    refreshOrders();
   };
+
+  // Add authentication check
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8 pt-24">
+        <div className="max-w-2xl mx-auto text-center">
+          <h1 className="font-serif text-3xl text-charcoal-800 mb-4">Please Sign In</h1>
+          <p className="text-charcoal-600 mb-4">You need to be signed in to view your account.</p>
+          <Button onClick={() => window.location.href = '/auth'}>
+            Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
   
   if (isLoading) return <LoadingSpinner />;
   
@@ -209,6 +276,10 @@ const AccountPage = () => {
               onClick={() => {
                 setActiveTab('orders');
                 setSelectedOrderId(null);
+                // Refresh orders when switching to orders tab
+                if (activeTab !== 'orders') {
+                  refreshOrders();
+                }
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 activeTab === 'orders'
@@ -333,9 +404,24 @@ const AccountPage = () => {
                     />
                   ) : (
                     <>
-                      <h2 className="text-xl font-medium text-charcoal-800 mb-6">Order History</h2>
+                      <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-medium text-charcoal-800">Order History</h2>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={refreshOrders}
+                          disabled={isOrdersLoading}
+                        >
+                          {isOrdersLoading ? 'Refreshing...' : 'Refresh'}
+                        </Button>
+                      </div>
                       
-                      {orders.length === 0 ? (
+                      {isOrdersLoading ? (
+                        <div className="text-center py-8">
+                          <LoadingSpinner />
+                          <p className="text-charcoal-500 mt-2">Loading orders...</p>
+                        </div>
+                      ) : orders.length === 0 ? (
                         <div className="text-center py-12">
                           <ShoppingBag className="w-16 h-16 text-charcoal-300 mx-auto mb-4" />
                           <p className="text-charcoal-500 mb-4">You haven't placed any orders yet.</p>
