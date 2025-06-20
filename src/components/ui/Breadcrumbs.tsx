@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 
 interface BreadcrumbItem {
@@ -21,7 +22,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items }) => {
             <span className="text-charcoal-800 font-medium">{item.label}</span>
           ) : (
             <Link 
-              href={item.href} 
+              to={item.href} 
               className="hover:text-charcoal-800 transition-colors"
             >
               {item.label}

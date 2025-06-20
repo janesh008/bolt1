@@ -34,6 +34,15 @@ const AdminProductsPageNew = lazy(() => import('./pages/admin/AdminProductsPageN
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
 const ProductFormNew = lazy(() => import('./components/admin/products/ProductFormNew'));
 
+// Help pages
+const HelpLayout = lazy(() => import('./pages/help/HelpLayout'));
+const HelpPage = lazy(() => import('./pages/help/HelpPage'));
+const ContactUsPage = lazy(() => import('./pages/help/ContactUsPage'));
+const FAQsPage = lazy(() => import('./pages/help/FAQsPage'));
+const ShippingReturnsPage = lazy(() => import('./pages/help/ShippingReturnsPage'));
+const JewelryCarePage = lazy(() => import('./pages/help/JewelryCarePage'));
+const SizeGuidePage = lazy(() => import('./pages/help/SizeGuidePage'));
+
 function App() {
   const [showLoadingScreen, setShowLoadingScreen] = useState(true);
   const [isAppReady, setIsAppReady] = useState(false);
@@ -134,6 +143,14 @@ function App() {
                       </Layout>
                     } 
                   />
+
+                  {/* Help Center Routes */}
+                  <Route path="/help" element={<HelpLayout><HelpPage /></HelpLayout>} />
+                  <Route path="/help/contact-us" element={<HelpLayout><ContactUsPage /></HelpLayout>} />
+                  <Route path="/help/faqs" element={<HelpLayout><FAQsPage /></HelpLayout>} />
+                  <Route path="/help/shipping-returns" element={<HelpLayout><ShippingReturnsPage /></HelpLayout>} />
+                  <Route path="/help/jewelry-care" element={<HelpLayout><JewelryCarePage /></HelpLayout>} />
+                  <Route path="/help/size-guide" element={<HelpLayout><SizeGuidePage /></HelpLayout>} />
 
                   {/* Admin routes */}
                   <Route path="/admin/login" element={<AdminLoginPage />} />
