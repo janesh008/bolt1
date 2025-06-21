@@ -63,24 +63,7 @@ const Header = () => {
           )}>
             Shop
           </Link>
-          <Link to="/products/gold" className={cn(
-            'text-sm font-medium transition-colors',
-            pathname === '/products/gold' ? 'text-charcoal-800' : 'text-charcoal-500 hover:text-charcoal-800'
-          )}>
-            Gold
-          </Link>
-          <Link to="/products/diamond" className={cn(
-            'text-sm font-medium transition-colors',
-            pathname === '/products/diamond' ? 'text-charcoal-800' : 'text-charcoal-500 hover:text-charcoal-800'
-          )}>
-            Diamond
-          </Link>
-          <Link to="/products/silver" className={cn(
-            'text-sm font-medium transition-colors',
-            pathname === '/products/silver' ? 'text-charcoal-800' : 'text-charcoal-500 hover:text-charcoal-800'
-          )}>
-            Silver
-          </Link>
+          
           <Link to="/ai-designer" className={cn(
             'text-sm font-medium transition-colors flex items-center',
             pathname.includes('/ai-designer') ? 'text-charcoal-800' : 'text-charcoal-500 hover:text-charcoal-800'
