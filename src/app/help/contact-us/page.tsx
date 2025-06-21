@@ -38,7 +38,7 @@ export default function ContactUsPage() {
                 </div>
                 <div>
                   <h4 className="font-medium text-charcoal-800">Phone Support</h4>
-                  <p className="text-charcoal-600 mt-1">+1 (800) 123-4567</p>
+                  <p className="text-charcoal-600 mt-1">+91 992590-2377</p>
                   <p className="text-sm text-charcoal-500 mt-1">For immediate assistance with orders or products</p>
                 </div>
               </div>
@@ -60,7 +60,7 @@ export default function ContactUsPage() {
                 </div>
                 <div>
                   <h4 className="font-medium text-charcoal-800">Store Location</h4>
-                  <p className="text-charcoal-600 mt-1">123 Luxury Lane, Suite 100<br />New York, NY 10001</p>
+                  <p className="text-charcoal-600 mt-1">A23 White Elegance Park, Nr. CG Street<br />Ahmedabad, Gujarat-282345</p>
                   <p className="text-sm text-charcoal-500 mt-1">Visit our flagship store</p>
                 </div>
               </div>
@@ -71,7 +71,7 @@ export default function ContactUsPage() {
                 </div>
                 <div>
                   <h4 className="font-medium text-charcoal-800">Business Hours</h4>
-                  <p className="text-charcoal-600 mt-1">Monday - Friday: 9am - 6pm EST<br />Saturday: 10am - 4pm EST<br />Sunday: Closed</p>
+                  <p className="text-charcoal-600 mt-1">Monday - Friday: 9am - 6pm IST<br />Saturday: 10am - 4pm IST<br />Sunday: Closed</p>
                 </div>
               </div>
             </div>
@@ -107,11 +107,7 @@ export default function ContactUsPage() {
                   <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
                 </svg>
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="bg-white p-3 rounded-full shadow-sm hover:shadow-md transition-shadow">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gold-500">
-                  <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
-                </svg>
-              </a>
+             
               <a href="https://pinterest.com" target="_blank" rel="noopener noreferrer" className="bg-white p-3 rounded-full shadow-sm hover:shadow-md transition-shadow">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gold-500">
                   <path d="M8 12h8"></path>
