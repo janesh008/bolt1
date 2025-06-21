@@ -14,7 +14,6 @@ interface OrderTableProps {
   getPaymentStatusBadge: (status: string) => React.ReactNode;
   formatDate: (dateString: string) => string;
   getOrderProgress: (status: string) => number;
-  getPaymentMethodDisplay: (order: Order) => string;
   handleViewOrder: (order: Order) => void;
   handleStatusUpdate: (orderId: string, newStatus: string) => void;
   hasRole: (role: string) => boolean;
@@ -27,7 +26,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
   getPaymentStatusBadge,
   formatDate,
   getOrderProgress,
-  getPaymentMethodDisplay,
   handleViewOrder,
   handleStatusUpdate,
   hasRole
@@ -87,7 +85,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
               </TableCell>
               <TableCell>
                 <div className="font-medium">{formatCurrency(order.total_amount)}</div>
-                <div className="text-sm text-gray-500">{getPaymentMethodDisplay(order)}</div>
               </TableCell>
               <TableCell>
                 {getPaymentStatusBadge(order.payment_status)}
