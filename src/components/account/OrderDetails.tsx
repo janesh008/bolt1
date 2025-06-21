@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Package, 
-  Truck, 
+  Truck,
+  X,
   CheckCircle, 
   Clock, 
   AlertCircle, 
   Calendar, 
   MapPin, 
-  CreditCard,
+  CreditCard, 
+  AlertTriangle,
   ChevronLeft,
   ShoppingBag
 } from 'lucide-react';
@@ -26,6 +28,9 @@ interface OrderDetailsProps {
 const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
   const [order, setOrder] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   useEffect(() => {
     fetchOrderDetails();
@@ -86,6 +91,55 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
       toast.error('Failed to load order details');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!order) return;
+    
+    try {
+      setIsCancelling(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      
+      // Call the edge function to cancel the order
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel_order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken || ''}`,
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          reason: cancelReason || 'Customer requested cancellation',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to cancel order');
+      }
+
+      const data = await response.json();
+      
+      // Update the local order state
+      setOrder({
+        ...order,
+        status: 'cancelled',
+        payment_status: data.refunded ? 'refunded' : order.payment_status,
+      });
+      
+      toast.success(data.refunded 
+        ? 'Order cancelled and refund initiated' 
+        : 'Order cancelled successfully');
+      
+      setShowCancelDialog(false);
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      toast.error('Failed to cancel order');
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -173,6 +227,29 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
           {getPaymentStatusBadge(order.payment_status)}
         </div>
       </div>
+
+      {/* Cancel Order Button - Only show for pending/confirmed orders */}
+      {(order.status === 'pending' || order.status === 'confirmed') && (
+        <div className="mt-4 p-4 bg-cream-50 rounded-lg border border-cream-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-charcoal-600" />
+              <div>
+                <h3 className="font-medium text-charcoal-800">Need to cancel this order?</h3>
+                <p className="text-sm text-charcoal-500">You can cancel this order as it hasn't been processed yet.</p>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              className="text-red-600 border-red-200 hover:bg-red-50"
+              onClick={() => setShowCancelDialog(true)}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel Order
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Order Progress */}
       <div className="bg-white rounded-lg p-6 shadow-sm border border-cream-200">
@@ -349,6 +426,53 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
           </div>
         </div>
       </div>
+      
+      {/* Cancel Order Confirmation Dialog */}
+      {showCancelDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertTriangle className="h-6 w-6 text-red-500" />
+              <h3 className="text-xl font-medium text-charcoal-800">Cancel Order</h3>
+            </div>
+            
+            <p className="text-charcoal-600 mb-4">
+              Are you sure you want to cancel this order? {order.payment_status === 'completed' && 'A refund will be initiated to your original payment method.'}
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-charcoal-700 mb-1">
+                Reason for cancellation (optional)
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="w-full px-3 py-2 border border-cream-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-400"
+                placeholder="Please provide a reason for cancellation..."
+                rows={3}
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowCancelDialog(false)}
+                disabled={isCancelling}
+              >
+                Keep Order
+              </Button>
+              <Button
+                variant="outline"
+                className="text-red-600 border-red-200 hover:bg-red-50"
+                onClick={handleCancelOrder}
+                isLoading={isCancelling}
+              >
+                {order.payment_status === 'completed' ? 'Cancel & Refund' : 'Cancel Order'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
