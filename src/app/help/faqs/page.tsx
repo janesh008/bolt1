@@ -185,10 +185,9 @@ export default function FAQsPage() {
             Contact Us
           </a>
           <a
-            href="tel:+18001234567"
+            href="tel:+91 9925902377"
             className="inline-flex items-center justify-center py-3 px-6 bg-white border border-gold-400 text-gold-500 hover:bg-gold-50 rounded-md transition-colors"
           >
-            <Phone className="h-4 w-4 mr-2" />
             Call Us
           </a>
         </div>
