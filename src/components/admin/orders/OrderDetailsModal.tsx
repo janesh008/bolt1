@@ -114,7 +114,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               <CardContent className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <User className="h-4 w-4 text-gray-400" />
-                  <span>{selectedOrder.users?.first_name} {selectedOrder.users?.last_name}</span>
+                  <span>{selectedOrder.users?.full_name}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4 text-gray-400" />
@@ -122,7 +122,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 </div>
                 <div className="flex items-center space-x-2">
                   <Phone className="h-4 w-4 text-gray-400" />
-                  <span>{selectedOrder.users?.phone}</span>
+                  <span>{selectedOrder.users?.phone ?? "N/A"}</span>
                 </div>
               </CardContent>
             </Card>
