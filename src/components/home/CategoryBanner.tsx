@@ -20,7 +20,7 @@ const categories = [
     id: 'silver',
     name: 'Silver Statement',
     description: 'Contemporary designs in sterling silver',
-    image: 'https://images.pexels.com/photos/9428842/pexels-photo-9428842.jpeg?auto=compress&cs=tinysrgb&w=1600',
+    image: 'https://images.pexels.com/photos/31757540/pexels-photo-31757540.jpeg',
     link: '/products/silver'
   }
 ];
