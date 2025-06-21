@@ -43,26 +43,6 @@ const Footer = () => {
             <h3 className="text-gold-300 font-serif text-lg mb-4">Shop</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/products/gold" className="text-gray-300 hover:text-white text-sm transition-colors">
-                  Gold Collection
-                </Link>
-              </li>
-              <li>
-                <Link to="/products/diamond" className="text-gray-300 hover:text-white text-sm transition-colors">
-                  Diamond Jewelry
-                </Link>
-              </li>
-              <li>
-                <Link to="/products/silver" className="text-gray-300 hover:text-white text-sm transition-colors">
-                  Silver Jewelry
-                </Link>
-              </li>
-              <li>
-                <Link to="/products/platinum" className="text-gray-300 hover:text-white text-sm transition-colors">
-                  Platinum Collection
-                </Link>
-              </li>
-              <li>
                 <Link to="/products" className="text-gray-300 hover:text-white text-sm transition-colors">
                   New Arrivals
                 </Link>
