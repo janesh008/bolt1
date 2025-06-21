@@ -29,7 +29,6 @@ interface OrderDetailsModalProps {
   selectedOrder: Order | null;
   getStatusBadge: (status: string) => React.ReactNode;
   getPaymentStatusBadge: (status: string) => React.ReactNode;
-  getPaymentMethodDisplay: (order: Order) => string;
   formatDate: (dateString: string) => string;
   handleStatusUpdate: (orderId: string, newStatus: string) => void;
   hasRole: (role: string) => boolean;
@@ -41,7 +40,6 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   selectedOrder,
   getStatusBadge,
   getPaymentStatusBadge,
-  getPaymentMethodDisplay,
   formatDate,
   handleStatusUpdate,
   hasRole
@@ -138,11 +136,6 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span>Payment Method:</span>
-                  <span className="font-medium">{getPaymentMethodDisplay(selectedOrder)}</span>
-                </div>
-                <div className="flex justify-between">
                   <span>Payment Status:</span>
                   {getPaymentStatusBadge(selectedOrder.payment_status)}
                 </div>
