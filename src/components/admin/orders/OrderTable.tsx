@@ -106,7 +106,18 @@ const OrderTable: React.FC<OrderTableProps> = ({
               <TableCell className="text-sm text-gray-500">
                 {formatDate(order.created_at)}
               </TableCell>
-             
+              <TableCell className="text-right">
+                <div className="flex items-center justify-end space-x-2">
+                  
+                  {hasRole('Moderator') && (
+                    <OrderStatusUpdater
+                      orderId={order.id}
+                      currentStatus={order.status}
+                      onStatusUpdated={(newStatus) => handleStatusUpdate(order.id, newStatus)}
+                    />
+                  )}
+                </div>
+              </TableCell>
             </TableRow>
           ))
         ) : (
