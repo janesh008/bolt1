@@ -13,7 +13,7 @@ const categories = [
     id: 'diamond',
     name: 'Diamond Jewelry',
     description: 'Brilliance that captures every moment',
-    image: 'https://images.pexels.com/photos/12808501/pexels-photo-12808501.jpeg?auto=compress&cs=tinysrgb&w=1600',
+    image: 'https://images.pexels.com/photos/2735970/pexels-photo-2735970.jpeg',
     link: '/products/diamond'
   },
   {
