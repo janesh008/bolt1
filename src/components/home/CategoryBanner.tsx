@@ -68,11 +68,12 @@ const CategoryBanner = () => {
                 <h3 className="font-serif text-2xl mb-2">{category.name}</h3>
                 <p className="text-cream-100 mb-4">{category.description}</p>
                 <Link 
-                  to={category.link}
+                  to="/products"
                   className="inline-block text-gold-300 border-b border-gold-300 pb-1 hover:text-gold-400 hover:border-gold-400 transition-colors"
                 >
                   Explore Collection
                 </Link>
+                
               </div>
             </motion.div>
           ))}
