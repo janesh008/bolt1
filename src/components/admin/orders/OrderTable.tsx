@@ -5,25 +5,7 @@ import { Badge } from '../../ui/badge';
 import Button from '../../ui/Button';
 import OrderStatusUpdater from './OrderStatusUpdater';
 import { formatCurrency } from '../../../lib/utils';
-
-interface Order {
-  id: string;
-  order_number: string;
-  customer_id: string | null;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'confirmed';
-  total_amount: number;
-  payment_status: 'pending' | 'completed' | 'failed' | 'refunded';
-  payment_method: string;
-  created_at: string;
-  customers?: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-  };
-  order_items?: Array<any>;
-}
+import { Order } from './OrderUtils';
 
 interface OrderTableProps {
   orders: Order[];

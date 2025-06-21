@@ -200,7 +200,7 @@ const AdminOrdersPage = () => {
         </CardHeader>
         <CardContent>
           <OrderTable
-              ={orders}
+            orders={orders}
             isLoading={isLoading}
             getStatusBadge={getStatusBadge}
             getPaymentStatusBadge={getPaymentStatusBadge}

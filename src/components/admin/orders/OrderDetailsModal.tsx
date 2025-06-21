@@ -16,27 +16,12 @@ import {
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../ui/dialog';
 import { Badge } from '../../ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import Button from '../../ui/Button';
 import OrderStatusUpdater from './OrderStatusUpdater';
 import { formatCurrency } from '../../../lib/utils';
-
-interface Order {
-  id: string;
-  order_number: string;
-  status: string;
-  total_amount: number;
-  payment_status: string;
-  payment_method: string;
-  stripe_payment_intent_id?: string;
-  razorpay_order_id?: string;
-  razorpay_payment_id?: string;
-  created_at: string;
-  updated_at: string;
-  customers?: any;
-  order_items?: any[];
-  shipping_addresses?: any[];
-  order_timeline?: any[];
-}
+import { Order } from './OrderUtils';
+import toast from 'react-hot-toast';
 
 interface OrderDetailsModalProps {
   showOrderDetails: boolean;
@@ -153,7 +138,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
                   <span>Payment Method:</span>
-                  <span className="font-medium">{selectedOrder.payment_method}</span>
+                  <span className="font-medium">{getPaymentMethodDisplay(selectedOrder)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Payment Status:</span>
@@ -257,7 +242,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {selectedOrder.order_timeline.map((event, index) => (
+                  {selectedOrder.order_timeline.map((event) => (
                     <div key={event.id} className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                       <div className="flex-1">
