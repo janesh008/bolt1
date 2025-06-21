@@ -22,6 +22,7 @@ export interface Order {
   order_items?: Array<any>;
   shipping_addresses?: Array<any>;
   order_timeline?: Array<any>;
+  users: any;
 }
 
 export const getStatusBadge = (status: string) => {
