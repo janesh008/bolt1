@@ -1,13 +1,8 @@
-import { Metadata } from 'next';
-import Breadcrumbs from '@/components/ui/Breadcrumbs';
-import PageHeader from '@/components/help/PageHeader';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-export const metadata: Metadata = {
-  title: 'Frequently Asked Questions | AXELS Luxury Jewelry',
-  description: 'Find answers to common questions about AXELS jewelry, orders, shipping, returns, and more.',
-};
+import { Phone } from 'lucide-react';
+import Breadcrumbs from '@/components/ui/Breadcrumbs';
+import PageHeader from '@/components/help/PageHeader';
 
 // FAQ data organized by category
 const faqData = {
@@ -129,6 +124,28 @@ const faqData = {
 export default function FAQsPage() {
   return (
     <div>
+      {/* Hero Section */}
+      <div className="relative bg-charcoal-800 h-64 mb-8 overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-60"
+          style={{
+            backgroundImage: "url('https://images.pexels.com/photos/3266700/pexels-photo-3266700.jpeg?auto=compress&cs=tinysrgb&w=1600')",
+            backgroundSize: "cover",
+            backgroundPosition: "center"
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-charcoal-900/80 to-charcoal-900/20 z-10" />
+        <div className="container mx-auto px-4 h-full flex items-center relative z-20">
+          <div className="max-w-3xl">
+            <h1 className="font-serif text-4xl md:text-5xl text-white leading-tight">
+              Frequently Asked Questions
+            </h1>
+            <p className="mt-4 text-lg text-cream-100 max-w-xl">
+              Find answers to common questions about our products and services.
+            </p>
+          </div>
+        </div>
+      </div>
+      
       <Breadcrumbs
         items={[
           { label: 'Home', href: '/' },
@@ -188,6 +205,7 @@ export default function FAQsPage() {
             href="tel:+91 9925902377"
             className="inline-flex items-center justify-center py-3 px-6 bg-white border border-gold-400 text-gold-500 hover:bg-gold-50 rounded-md transition-colors"
           >
+            <Phone className="h-4 w-4 mr-2" />
             Call Us
           </a>
         </div>

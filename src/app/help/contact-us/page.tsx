@@ -1,17 +1,33 @@
-import { Metadata } from 'next';
 import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import PageHeader from '@/components/help/PageHeader';
 import ContactForm from '@/components/help/ContactForm';
 
-export const metadata: Metadata = {
-  title: 'Contact Us | AXELS Luxury Jewelry',
-  description: 'Get in touch with our customer service team for any questions, concerns, or feedback about your AXELS jewelry purchase.',
-};
-
 export default function ContactUsPage() {
   return (
     <div>
+      {/* Hero Section */}
+      <div className="relative bg-charcoal-800 h-64 mb-8 overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-60"
+          style={{
+            backgroundImage: "url('https://images.pexels.com/photos/3266700/pexels-photo-3266700.jpeg?auto=compress&cs=tinysrgb&w=1600')",
+            backgroundSize: "cover",
+            backgroundPosition: "center"
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-charcoal-900/80 to-charcoal-900/20 z-10" />
+        <div className="container mx-auto px-4 h-full flex items-center relative z-20">
+          <div className="max-w-3xl">
+            <h1 className="font-serif text-4xl md:text-5xl text-white leading-tight">
+              Contact Us
+            </h1>
+            <p className="mt-4 text-lg text-cream-100 max-w-xl">
+              We're here to help with any questions or concerns about your AXELS jewelry.
+            </p>
+          </div>
+        </div>
+      </div>
+      
       <Breadcrumbs
         items={[
           { label: 'Home', href: '/' },
@@ -107,7 +123,7 @@ export default function ContactUsPage() {
                   <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
                 </svg>
               </a>
-             
+              
               <a href="https://pinterest.com" target="_blank" rel="noopener noreferrer" className="bg-white p-3 rounded-full shadow-sm hover:shadow-md transition-shadow">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gold-500">
                   <path d="M8 12h8"></path>
