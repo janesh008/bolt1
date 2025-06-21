@@ -31,6 +31,7 @@ const AccountPage = () => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isLoading, setIsLoading] = useState(true);
   const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addressesLoading, setAddressesLoading] = useState(true);
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
   const [profileData, setProfileData] = useState<{name?: string, email?: string, phone?: string}>({});
   const [orders, setOrders] = useState<any[]>([]);
@@ -90,16 +91,18 @@ const AccountPage = () => {
       } else if (profile) {
         setProfileData({
           name: profile.full_name || '',
-          email: profile.email || '',
+          email: profile.email || user.email || '',
           phone: profile.phone || ''
         });
       }
       
       // Fetch addresses
+      setAddressesLoading(true);
       const { data: addressData, error: addressError } = await supabase
         .from('addresses')
         .select('*')
         .eq('user_id', user.id);
+      setAddressesLoading(false);
         
       if (addressError) {
         console.error('Error fetching addresses:', addressError);
@@ -257,7 +260,7 @@ const AccountPage = () => {
               </TabsContent>
               
               <TabsContent value="addresses">
-                <AddressesTab addresses={addresses} />
+                <AddressesTab />
               </TabsContent>
               
               <TabsContent value="settings">
