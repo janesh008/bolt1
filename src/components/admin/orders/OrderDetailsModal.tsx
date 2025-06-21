@@ -136,6 +136,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="flex justify-between">
                   <span>Payment Status:</span>
                   {getPaymentStatusBadge(selectedOrder.payment_status)}
                 </div>
