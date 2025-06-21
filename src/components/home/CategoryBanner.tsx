@@ -6,7 +6,7 @@ const categories = [
     id: 'gold',
     name: 'Gold Collection',
     description: 'Timeless elegance crafted in 18K and 24K gold',
-    image: 'https://images.pexels.com/photos/10187727/pexels-photo-10187727.jpeg?auto=compress&cs=tinysrgb&w=1600',
+    image: 'https://images.pexels.com/photos/1446161/pexels-photo-1446161.jpeg',
     link: '/products/gold'
   },
   {
