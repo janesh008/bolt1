@@ -71,34 +71,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
                     >
                       Shop All
                     </Link>
-                    <Link 
-                      to="/products/gold" 
-                      className="text-lg font-medium text-charcoal-800 py-2 border-b border-cream-200"
-                      onClick={onClose}
-                    >
-                      Gold
-                    </Link>
-                    <Link 
-                      to="/products/diamond" 
-                      className="text-lg font-medium text-charcoal-800 py-2 border-b border-cream-200"
-                      onClick={onClose}
-                    >
-                      Diamond
-                    </Link>
-                    <Link 
-                      to="/products/silver" 
-                      className="text-lg font-medium text-charcoal-800 py-2 border-b border-cream-200"
-                      onClick={onClose}
-                    >
-                      Silver
-                    </Link>
-                    <Link 
-                      to="/products/platinum" 
-                      className="text-lg font-medium text-charcoal-800 py-2 border-b border-cream-200"
-                      onClick={onClose}
-                    >
-                      Platinum
-                    </Link>
+                    
                     <Link 
                       to="/ai-designer" 
                       className="text-lg font-medium text-charcoal-800 py-2 border-b border-cream-200 flex items-center"
