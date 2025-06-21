@@ -215,21 +215,25 @@ const ProductDetailPage = () => {
 
       script.onload = async () => {
         try {
-          // Create order
-          const orderResponse = await fetch('/orders/create-order', {
+          // Create payment session using correct Supabase Edge Function endpoint
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError || !session) {
+            throw new Error('Authentication required');
+          }
+
+          const orderResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create_payment_session`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${user.access_token || ''}`
+              'Authorization': `Bearer ${session.access_token}`
             },
             body: JSON.stringify({
-              amount: (product.price || 0) * quantity,
-              currency: 'USD',
               items: [{
                 product_id: product.id,
                 quantity: quantity
               }],
-              shipping_address: {
+              shippingAddress: {
                 name: user.user_metadata?.full_name || user.email || 'Customer',
                 phone: user.user_metadata?.phone || '1234567890',
                 address_line1: 'Default Address',
@@ -242,8 +246,18 @@ const ProductDetailPage = () => {
           });
 
           if (!orderResponse.ok) {
-            const errorData = await orderResponse.json();
-            throw new Error(errorData.error || 'Failed to create order');
+            const errorText = await orderResponse.text();
+            let errorMessage = 'Failed to create payment session';
+            
+            try {
+              const errorData = JSON.parse(errorText);
+              errorMessage = errorData.error || errorMessage;
+            } catch {
+              // If response is not JSON, use the text as error message
+              errorMessage = errorText || errorMessage;
+            }
+            
+            throw new Error(errorMessage);
           }
 
           const orderData = await orderResponse.json();
@@ -259,14 +273,15 @@ const ProductDetailPage = () => {
             order_id: orderData.razorpay_order.id,
             handler: async (response: any) => {
               try {
-                // Verify payment
-                const verifyResponse = await fetch('/orders/verify-payment', {
+                // Verify payment using correct Supabase Edge Function endpoint
+                const verifyResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify_payment`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${user.access_token || ''}`
+                    'Authorization': `Bearer ${session.access_token}`
                   },
                   body: JSON.stringify({
+                    order_id: orderData.order_id,
                     razorpay_order_id: response.razorpay_order_id,
                     razorpay_payment_id: response.razorpay_payment_id,
                     razorpay_signature: response.razorpay_signature
@@ -274,8 +289,17 @@ const ProductDetailPage = () => {
                 });
 
                 if (!verifyResponse.ok) {
-                  const errorData = await verifyResponse.json();
-                  throw new Error(errorData.error || 'Payment verification failed');
+                  const errorText = await verifyResponse.text();
+                  let errorMessage = 'Payment verification failed';
+                  
+                  try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.error || errorMessage;
+                  } catch {
+                    errorMessage = errorText || errorMessage;
+                  }
+                  
+                  throw new Error(errorMessage);
                 }
 
                 const verifyData = await verifyResponse.json();
@@ -287,14 +311,14 @@ const ProductDetailPage = () => {
                 }
               } catch (error) {
                 console.error('Payment verification error:', error);
-                toast.error('Payment verification failed. Please contact support.');
+                toast.error(error instanceof Error ? error.message : 'Payment verification failed. Please contact support.');
               } finally {
                 setIsProcessingPayment(false);
               }
             },
             prefill: {
-              name: orderData.customer.name,
-              email: orderData.customer.email,
+              name: orderData.customer?.name || user.user_metadata?.full_name || user.email,
+              email: orderData.customer?.email || user.email,
             },
             notes: {
               product_id: product.id,
