@@ -1,13 +1,7 @@
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { Search, Phone, Mail, TruckIcon, HelpCircle, Heart, Ruler } from 'lucide-react';
-import { Metadata } from 'next';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import PageHeader from '@/components/help/PageHeader';
-
-export const metadata: Metadata = {
-  title: 'Help Center | AXELS Luxury Jewelry',
-  description: 'Get help with your AXELS jewelry purchases, shipping, returns, and more. Find answers to frequently asked questions and contact our support team.',
-};
 
 const helpCategories = [
   {
@@ -83,7 +77,7 @@ export default function HelpPage() {
         {helpCategories.map((category, index) => (
           <Link
             key={index}
-            href={category.href}
+            to={category.href}
             className="bg-cream-50 hover:bg-cream-100 rounded-lg p-6 transition-colors group"
           >
             <div className="flex items-start gap-4">
@@ -108,32 +102,32 @@ export default function HelpPage() {
         <h2 className="font-serif text-xl text-charcoal-800 mb-6">Popular Help Topics</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white border border-cream-200 rounded-lg p-4 hover:border-gold-300 transition-colors">
-            <Link href="/help/faqs#order-tracking" className="text-charcoal-800 hover:text-gold-500 font-medium">
+            <Link to="/help/faqs#order-tracking" className="text-charcoal-800 hover:text-gold-500 font-medium">
               How can I track my order?
             </Link>
           </div>
           <div className="bg-white border border-cream-200 rounded-lg p-4 hover:border-gold-300 transition-colors">
-            <Link href="/help/shipping-returns#return-policy" className="text-charcoal-800 hover:text-gold-500 font-medium">
+            <Link to="/help/shipping-returns#return-policy" className="text-charcoal-800 hover:text-gold-500 font-medium">
               What is your return policy?
             </Link>
           </div>
           <div className="bg-white border border-cream-200 rounded-lg p-4 hover:border-gold-300 transition-colors">
-            <Link href="/help/jewelry-care#cleaning" className="text-charcoal-800 hover:text-gold-500 font-medium">
+            <Link to="/help/jewelry-care#cleaning" className="text-charcoal-800 hover:text-gold-500 font-medium">
               How do I clean my jewelry?
             </Link>
           </div>
           <div className="bg-white border border-cream-200 rounded-lg p-4 hover:border-gold-300 transition-colors">
-            <Link href="/help/size-guide#ring-sizing" className="text-charcoal-800 hover:text-gold-500 font-medium">
+            <Link to="/help/size-guide#ring-sizing" className="text-charcoal-800 hover:text-gold-500 font-medium">
               How do I find my ring size?
             </Link>
           </div>
           <div className="bg-white border border-cream-200 rounded-lg p-4 hover:border-gold-300 transition-colors">
-            <Link href="/help/faqs#payment-methods" className="text-charcoal-800 hover:text-gold-500 font-medium">
+            <Link to="/help/faqs#payment-methods" className="text-charcoal-800 hover:text-gold-500 font-medium">
               What payment methods do you accept?
             </Link>
           </div>
           <div className="bg-white border border-cream-200 rounded-lg p-4 hover:border-gold-300 transition-colors">
-            <Link href="/help/shipping-returns#international" className="text-charcoal-800 hover:text-gold-500 font-medium">
+            <Link to="/help/shipping-returns#international" className="text-charcoal-800 hover:text-gold-500 font-medium">
               Do you ship internationally?
             </Link>
           </div>
@@ -149,18 +143,18 @@ export default function HelpPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/help/contact-us"
+              to="/help/contact-us"
               className="inline-flex items-center justify-center py-3 px-6 bg-gold-400 hover:bg-gold-500 text-white rounded-md transition-colors"
             >
               Contact Us
             </Link>
-            <Link
+            <a
               href="tel:+18001234567"
               className="inline-flex items-center justify-center py-3 px-6 bg-white border border-gold-400 text-gold-500 hover:bg-gold-50 rounded-md transition-colors"
             >
               <Phone className="h-4 w-4 mr-2" />
               Call Us
-            </Link>
+            </a>
           </div>
         </div>
       </div>
