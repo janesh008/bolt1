@@ -3,6 +3,7 @@ import { Search, Filter } from 'lucide-react';
 import { Card, CardContent } from '../../ui/card';
 import { Input } from '../../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { Button } from '../../ui/Button';
 
 interface OrderFiltersProps {
   searchTerm: string;
