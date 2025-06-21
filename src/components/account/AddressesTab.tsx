@@ -558,8 +558,8 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ initialAddresses = [] }) =>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>
