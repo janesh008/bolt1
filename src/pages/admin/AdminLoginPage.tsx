@@ -114,9 +114,7 @@ const AdminLoginPage = () => {
             <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
               <h3 className="text-blue-300 font-medium mb-2">Development Credentials</h3>
               <div className="text-sm text-blue-200 space-y-1">
-                <p><strong>SuperAdmin:</strong> admin@axels.com / admin123</p>
-                <p><strong>Admin:</strong> manager@axels.com / manager123</p>
-                <p><strong>Moderator:</strong> mod@axels.com / mod123</p>
+                <p><strong>SuperAdmin:</strong> test+admin@test.com / test123</p>
               </div>
             </div>
           </CardContent>
