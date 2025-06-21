@@ -72,6 +72,12 @@ serve(async (req) => {
         order_timeline(
           *,
           admin_users(name)
+        ),
+        users (
+        id,
+        full_name,
+        email,
+        phone
         )
       `)
       .eq("id", orderId);
