@@ -1,33 +1,18 @@
+import { Metadata } from 'next';
+import Image from 'next/image';
 import { TruckIcon, Package, RefreshCw, Clock, Globe, CreditCard, Download } from 'lucide-react';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import PageHeader from '@/components/help/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+export const metadata: Metadata = {
+  title: 'Shipping & Returns | AXELS Luxury Jewelry',
+  description: 'Learn about our shipping policies, delivery timeframes, and hassle-free return process for AXELS luxury jewelry.',
+};
+
 export default function ShippingReturnsPage() {
   return (
     <div>
-      {/* Hero Section */}
-      <div className="relative bg-charcoal-800 h-64 mb-8 overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-60"
-          style={{
-            backgroundImage: "url('https://images.pexels.com/photos/3266700/pexels-photo-3266700.jpeg?auto=compress&cs=tinysrgb&w=1600')",
-            backgroundSize: "cover",
-            backgroundPosition: "center"
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-charcoal-900/80 to-charcoal-900/20 z-10" />
-        <div className="container mx-auto px-4 h-full flex items-center relative z-20">
-          <div className="max-w-3xl">
-            <h1 className="font-serif text-4xl md:text-5xl text-white leading-tight">
-              Shipping & Returns
-            </h1>
-            <p className="mt-4 text-lg text-cream-100 max-w-xl">
-              Everything you need to know about our shipping and return policies.
-            </p>
-          </div>
-        </div>
-      </div>
-      
       <Breadcrumbs
         items={[
           { label: 'Home', href: '/' },
@@ -164,7 +149,7 @@ export default function ShippingReturnsPage() {
             
             <div className="bg-cream-50 rounded-lg p-6">
               <p className="text-charcoal-600 mb-4">
-                Most orders are processed within 1-2 business days after payment confirmation. Custom pieces and engraved items may require additional processing time before shipping.
+                Most orders are processed within 1-2 business days after payment confirmation. Custom pieces and engraved items may require additional processing time.
               </p>
               
               <div className="mt-6 space-y-4">
@@ -491,7 +476,7 @@ export default function ShippingReturnsPage() {
                       Contact Us
                     </a>
                     <a
-                      href="tel:+91 9925902377"
+                      href="tel:+18001234567"
                       className="inline-flex items-center justify-center py-3 px-6 bg-white border border-gold-400 text-gold-500 hover:bg-gold-50 rounded-md transition-colors"
                     >
                       Call Us

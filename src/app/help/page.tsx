@@ -36,7 +36,7 @@ const helpCategories = [
   },
   {
     title: 'Customer Support',
-    description: 'Call us at +91 992590-2377',
+    description: 'Call us at +1 (800) 123-4567',
     icon: <Phone className="h-6 w-6 text-gold-500" />,
     href: '/help/contact-us',
   },
@@ -45,28 +45,6 @@ const helpCategories = [
 export default function HelpPage() {
   return (
     <div>
-      {/* Hero Section */}
-      <div className="relative bg-charcoal-800 h-64 mb-8 overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-60"
-          style={{
-            backgroundImage: "url('https://images.pexels.com/photos/3266700/pexels-photo-3266700.jpeg?auto=compress&cs=tinysrgb&w=1600')",
-            backgroundSize: "cover",
-            backgroundPosition: "center"
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-charcoal-900/80 to-charcoal-900/20 z-10" />
-        <div className="container mx-auto px-4 h-full flex items-center relative z-20">
-          <div className="max-w-3xl">
-            <h1 className="font-serif text-4xl md:text-5xl text-white leading-tight">
-              Help Center
-            </h1>
-            <p className="mt-4 text-lg text-cream-100 max-w-xl">
-              Find answers to your questions and get the support you need.
-            </p>
-          </div>
-        </div>
-      </div>
-      
       <Breadcrumbs
         items={[
           { label: 'Home', href: '/' },
@@ -171,7 +149,7 @@ export default function HelpPage() {
               Contact Us
             </Link>
             <a
-              href="tel:+91 9925902377"
+              href="tel:+18001234567"
               className="inline-flex items-center justify-center py-3 px-6 bg-white border border-gold-400 text-gold-500 hover:bg-gold-50 rounded-md transition-colors"
             >
               <Phone className="h-4 w-4 mr-2" />

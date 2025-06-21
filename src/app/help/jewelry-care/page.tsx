@@ -1,33 +1,17 @@
+import { Metadata } from 'next';
 import { Heart, Droplet, Sun, Sparkles, AlertTriangle, Info } from 'lucide-react';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import PageHeader from '@/components/help/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+export const metadata: Metadata = {
+  title: 'Jewelry Care Guide | AXELS Luxury Jewelry',
+  description: 'Learn how to properly care for and maintain your fine jewelry to ensure its beauty and longevity for generations to come.',
+};
+
 export default function JewelryCarePage() {
   return (
     <div>
-      {/* Hero Section */}
-      <div className="relative bg-charcoal-800 h-64 mb-8 overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-60"
-          style={{
-            backgroundImage: "url('https://images.pexels.com/photos/3266700/pexels-photo-3266700.jpeg?auto=compress&cs=tinysrgb&w=1600')",
-            backgroundSize: "cover",
-            backgroundPosition: "center"
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-charcoal-900/80 to-charcoal-900/20 z-10" />
-        <div className="container mx-auto px-4 h-full flex items-center relative z-20">
-          <div className="max-w-3xl">
-            <h1 className="font-serif text-4xl md:text-5xl text-white leading-tight">
-              Jewelry Care Guide
-            </h1>
-            <p className="mt-4 text-lg text-cream-100 max-w-xl">
-              Learn how to properly care for and maintain your fine jewelry.
-            </p>
-          </div>
-        </div>
-      </div>
-      
       <Breadcrumbs
         items={[
           { label: 'Home', href: '/' },
