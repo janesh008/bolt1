@@ -254,15 +254,7 @@ const ProductCard = ({ product, viewMode = 'grid', showQuickActions = true }: Pr
                 Add to Cart
               </Button>
               
-              <Button
-                size="sm"
-                onClick={handleBuyNow}
-                isLoading={isProcessingPayment}
-                disabled={!product.availability}
-                className="flex-1 bg-gold-500 hover:bg-gold-600"
-              >
-                Buy Now
-              </Button>
+
             </motion.div>
           </>
         )}
