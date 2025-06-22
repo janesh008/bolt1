@@ -32,8 +32,10 @@ const AIAssistant: React.FC = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showVideo, setShowVideo] = useState(true); // Default to showing video
+  const [conversationUrl, setConversationUrl] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLIFrameElement>(null);
@@ -198,6 +200,7 @@ const AIAssistant: React.FC = () => {
       // Check if we should generate a video
       if (data.generateVideo && user) {
         try {
+          setIsVideoLoading(true);
           const videoResponse = await fetch('/api/video', {
             method: 'POST',
             headers: {
@@ -211,11 +214,14 @@ const AIAssistant: React.FC = () => {
           
           if (videoResponse.ok) {
             const videoData = await videoResponse.json();
-            assistantMessage.videoUrl = videoData.videoUrl;
+            assistantMessage.videoUrl = videoData.conversationUrl;
+            setConversationUrl(videoData.conversationUrl);
             setShowVideo(true);
           }
         } catch (error) {
           console.error('Error generating video:', error);
+        } finally {
+          setIsVideoLoading(false);
         }
       }
       
@@ -320,13 +326,28 @@ const AIAssistant: React.FC = () => {
                 {/* Video area */}
                 <div className="w-full md:w-1/2 bg-black flex items-center justify-center">
                   {showVideo ? (
-                    <iframe
-                      ref={videoRef}
-                      src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1"
-                      className="w-full aspect-video md:h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    ></iframe>
+                    isVideoLoading ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center">
+                        <div className="w-12 h-12 border-4 border-gold-200 border-t-gold-500 rounded-full animate-spin mb-4"></div>
+                        <p className="text-white text-sm">Connecting to video chat...</p>
+                      </div>
+                    ) : conversationUrl ? (
+                      <iframe
+                        ref={videoRef}
+                        src={conversationUrl}
+                        className="w-full aspect-video md:h-full"
+                        allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    ) : (
+                      <iframe
+                        ref={videoRef}
+                        src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1"
+                        className="w-full aspect-video md:h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    )
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Video className="h-16 w-16 text-gray-700 opacity-30" />
@@ -481,9 +502,9 @@ const AIAssistant: React.FC = () => {
             
             <div className="bg-black aspect-video">
               <iframe
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1"
+                src={conversationUrl || "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1"}
                 className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               ></iframe>
             </div>
