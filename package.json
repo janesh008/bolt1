@@ -36,6 +36,7 @@
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.21.3",
     "react-speech-recognition": "^3.10.0",
+    "regenerator-runtime": "^0.14.0",
     "regenerator-runtime": "^0.14.1",
     "tailwind-merge": "^2.2.1",
     "uuid": "^9.0.1",
