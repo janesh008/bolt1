@@ -339,8 +339,16 @@ const AIAssistant: React.FC = () => {
                         allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       ></iframe>
+                    ) : (
+                      <iframe
+                        ref={videoRef}
+                        src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1"
+                        className="w-full aspect-video md:h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
                     )
-                  ) : (
+                   : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Video className="h-16 w-16 text-gray-700 opacity-30" />
                     </div>
