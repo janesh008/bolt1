@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Mic, MicOff, X, Volume2, ShoppingBag, Send } from 'lucide-react';
+import { MessageSquare, Mic, MicOff, X, Volume2, ShoppingBag, Send, Video, Minimize2, Maximize2 } from 'lucide-react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../ui/Button';
@@ -29,12 +29,14 @@ interface Product {
 const AIAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
+  const [showVideo, setShowVideo] = useState(true); // Default to showing video
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const videoRef = useRef<HTMLIFrameElement>(null);
   const { user } = useAuth();
 
   const {
@@ -70,9 +72,14 @@ const AIAssistant: React.FC = () => {
 
   const toggleAssistant = () => {
     setIsOpen(!isOpen);
+    setIsMinimized(false);
     if (!isOpen) {
       loadChatHistory();
     }
+  };
+  
+  const toggleMinimize = () => {
+    setIsMinimized(!isMinimized);
   };
 
   const loadChatHistory = async () => {
@@ -183,7 +190,7 @@ const AIAssistant: React.FC = () => {
       const assistantMessage: Message = {
         role: 'assistant',
         content: data.reply,
-        audioUrl: `data:audio/mp3;base64,${data.audioBase64}`,
+        audioUrl: data.audioBase64 ? `data:audio/mp3;base64,${data.audioBase64}` : undefined,
         products: products.length > 0 ? products : undefined,
         timestamp: new Date()
       };
@@ -262,7 +269,7 @@ const AIAssistant: React.FC = () => {
         className="fixed bottom-6 right-6 z-50 p-4 bg-gold-400 hover:bg-gold-500 text-white rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
         aria-label="Open AI Assistant"
       >
-        <MessageSquare className="h-6 w-6" />
+        <Video className="h-6 w-6" />
       </button>
       
       {/* Audio element for speech */}
@@ -274,7 +281,7 @@ const AIAssistant: React.FC = () => {
       
       {/* Assistant Modal */}
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && !isMinimized && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -290,135 +297,229 @@ const AIAssistant: React.FC = () => {
               {/* Header */}
               <div className="bg-gold-400 text-white p-4 flex items-center justify-between">
                 <h2 className="text-xl font-serif">AXELS Jewelry Assistant</h2>
-                <button 
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={toggleMinimize}
+                    className="p-1 hover:bg-gold-500 rounded-full transition-colors"
+                    aria-label="Minimize assistant"
+                  >
+                    <Minimize2 className="h-5 w-5" />
+                  </button>
+                  <button 
+                    onClick={toggleAssistant}
+                    className="p-1 hover:bg-gold-500 rounded-full transition-colors"
+                    aria-label="Close assistant"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* Main content area with video and chat */}
+              <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                {/* Video area */}
+                <div className="w-full md:w-1/2 bg-black flex items-center justify-center">
+                  {showVideo ? (
+                    <iframe
+                      ref={videoRef}
+                      src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1"
+                      className="w-full aspect-video md:h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Video className="h-16 w-16 text-gray-700 opacity-30" />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Chat area */}
+                <div className="w-full md:w-1/2 flex flex-col">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {messages.map((message, index) => (
+                      <div 
+                        key={index} 
+                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div 
+                          className={`max-w-[90%] rounded-lg p-4 ${
+                            message.role === 'user' 
+                              ? 'bg-gold-100 text-charcoal-800' 
+                              : 'bg-white shadow-soft border border-cream-200'
+                          }`}
+                        >
+                          <p className="whitespace-pre-wrap">{message.content}</p>
+                          
+                          {message.audioUrl && message.role === 'assistant' && (
+                            <button
+                              onClick={() => playAudio(message.audioUrl!)}
+                              className="mt-2 text-gold-500 hover:text-gold-600 transition-colors flex items-center text-sm"
+                            >
+                              <Volume2 className="h-4 w-4 mr-1" />
+                              {isPlaying && audioRef.current?.src === message.audioUrl 
+                                ? 'Playing...' 
+                                : 'Play audio response'}
+                            </button>
+                          )}
+                          
+                          {message.products && message.products.length > 0 && (
+                            <div className="mt-4">
+                              <h4 className="font-medium text-charcoal-700 mb-2">Recommended for you:</h4>
+                              <ProductCarousel products={message.products} />
+                            </div>
+                          )}
+                          
+                          <div className="text-xs text-right mt-2 text-charcoal-400">
+                            {new Date(message.timestamp).toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {isLoading && (
+                      <div className="flex justify-start">
+                        <div className="bg-white shadow-soft border border-cream-200 rounded-lg p-4 max-w-[80%]">
+                          <div className="flex space-x-2">
+                            <div className="w-2 h-2 bg-gold-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-2 h-2 bg-gold-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-2 h-2 bg-gold-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div ref={messagesEndRef} />
+                  </div>
+                  
+                  {/* Input area */}
+                  <div className="border-t border-cream-200 p-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={toggleMic}
+                        className={`p-2 rounded-full ${
+                          listening 
+                            ? 'bg-red-100 text-red-600' 
+                            : 'bg-cream-100 text-charcoal-600 hover:bg-cream-200'
+                        } transition-colors`}
+                        disabled={!browserSupportsSpeechRecognition}
+                        title={browserSupportsSpeechRecognition ? 'Toggle microphone' : 'Browser does not support speech recognition'}
+                      >
+                        {listening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                      </button>
+                      
+                      <div className="relative flex-1">
+                        <textarea
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          onKeyDown={handleKeyPress}
+                          placeholder="Ask about jewelry, styles, or recommendations..."
+                          className="w-full px-4 py-3 pr-12 border border-cream-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-400 resize-none"
+                          rows={1}
+                          disabled={isLoading}
+                        />
+                        {listening && (
+                          <div className="absolute right-3 top-3 flex items-center">
+                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <Button
+                        onClick={handleSendMessage}
+                        disabled={!input.trim() || isLoading}
+                        className="bg-gold-400 hover:bg-gold-500 text-white"
+                      >
+                        <Send className="h-5 w-5" />
+                      </Button>
+                    </div>
+                    
+                    {listening && (
+                      <div className="mt-2 text-xs text-charcoal-500">
+                        Listening... {transcript ? `"${transcript}"` : ''}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Minimized Video Chat */}
+      <AnimatePresence>
+        {isOpen && isMinimized && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-20 right-6 z-50 w-72 rounded-lg shadow-lg overflow-hidden"
+          >
+            <div className="bg-gold-400 text-white p-2 flex items-center justify-between">
+              <h3 className="text-sm font-medium">AXELS AI Assistant</h3>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={toggleMinimize}
+                  className="p-1 hover:bg-gold-500 rounded-full transition-colors"
+                  aria-label="Maximize assistant"
+                >
+                  <Maximize2 className="h-4 w-4" />
+                </button>
+                <button
                   onClick={toggleAssistant}
                   className="p-1 hover:bg-gold-500 rounded-full transition-colors"
                   aria-label="Close assistant"
                 >
-                  <X className="h-6 w-6" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
+            </div>
+            
+            <div className="bg-black aspect-video">
+              <iframe
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1"
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+            
+            <div className="bg-white p-2 flex items-center gap-2">
+              <button
+                onClick={toggleMic}
+                className={`p-2 rounded-full ${
+                  listening 
+                    ? 'bg-red-100 text-red-600' 
+                    : 'bg-cream-100 text-charcoal-600 hover:bg-cream-200'
+                } transition-colors`}
+                disabled={!browserSupportsSpeechRecognition}
+              >
+                {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </button>
               
-              {/* Chat area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((message, index) => (
-                  <div 
-                    key={index} 
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div 
-                      className={`max-w-[80%] rounded-lg p-4 ${
-                        message.role === 'user' 
-                          ? 'bg-gold-100 text-charcoal-800' 
-                          : 'bg-white shadow-soft border border-cream-200'
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap">{message.content}</p>
-                      
-                      {message.audioUrl && message.role === 'assistant' && (
-                        <button
-                          onClick={() => playAudio(message.audioUrl!)}
-                          className="mt-2 text-gold-500 hover:text-gold-600 transition-colors flex items-center text-sm"
-                        >
-                          <Volume2 className="h-4 w-4 mr-1" />
-                          {isPlaying && audioRef.current?.src === message.audioUrl 
-                            ? 'Playing...' 
-                            : 'Play audio response'}
-                        </button>
-                      )}
-                      
-                      {message.videoUrl && message.role === 'assistant' && (
-                        <div className="mt-3">
-                          <iframe
-                            src={message.videoUrl}
-                            className="w-full h-48 rounded-lg"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          ></iframe>
-                        </div>
-                      )}
-                      
-                      {message.products && message.products.length > 0 && (
-                        <div className="mt-4">
-                          <h4 className="font-medium text-charcoal-700 mb-2">Recommended for you:</h4>
-                          <ProductCarousel products={message.products} />
-                        </div>
-                      )}
-                      
-                      <div className="text-xs text-right mt-2 text-charcoal-400">
-                        {new Date(message.timestamp).toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-white shadow-soft border border-cream-200 rounded-lg p-4 max-w-[80%]">
-                      <div className="flex space-x-2">
-                        <div className="w-2 h-2 bg-gold-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                        <div className="w-2 h-2 bg-gold-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                        <div className="w-2 h-2 bg-gold-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <div ref={messagesEndRef} />
-              </div>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Ask something..."
+                className="flex-1 text-sm px-2 py-1 border border-cream-200 rounded focus:outline-none focus:ring-1 focus:ring-gold-400"
+                disabled={isLoading}
+              />
               
-              {/* Input area */}
-              <div className="border-t border-cream-200 p-4">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={toggleMic}
-                    className={`p-2 rounded-full ${
-                      listening 
-                        ? 'bg-red-100 text-red-600' 
-                        : 'bg-cream-100 text-charcoal-600 hover:bg-cream-200'
-                    } transition-colors`}
-                    disabled={!browserSupportsSpeechRecognition}
-                    title={browserSupportsSpeechRecognition ? 'Toggle microphone' : 'Browser does not support speech recognition'}
-                  >
-                    {listening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                  </button>
-                  
-                  <div className="relative flex-1">
-                    <textarea
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      placeholder="Ask about jewelry, styles, or recommendations..."
-                      className="w-full px-4 py-3 pr-12 border border-cream-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-400 resize-none"
-                      rows={1}
-                      disabled={isLoading}
-                    />
-                    {listening && (
-                      <div className="absolute right-3 top-3 flex items-center">
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!input.trim() || isLoading}
-                    className="bg-gold-400 hover:bg-gold-500 text-white"
-                  >
-                    <Send className="h-5 w-5" />
-                  </Button>
-                </div>
-                
-                {listening && (
-                  <div className="mt-2 text-xs text-charcoal-500">
-                    Listening... {transcript ? `"${transcript}"` : ''}
-                  </div>
-                )}
-              </div>
-            </motion.div>
+              <Button
+                onClick={handleSendMessage}
+                disabled={!input.trim() || isLoading}
+                className="bg-gold-400 hover:bg-gold-500 text-white p-1"
+                size="sm"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
