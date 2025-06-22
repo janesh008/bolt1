@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     
     // Get response from OpenAI
     const completion = await openai.chat.completions.create({
-      model: process.env.OPENROUTER_KEY ? 'openai/gpt-4-turbo' : 'gpt-4-turbo',
+      model: process.env.OPENROUTER_KEY ? 'openai/gpt-4o-mini-high' : 'gpt-4o',
       messages: messages as any,
       temperature: 0.7,
       max_tokens: 500,

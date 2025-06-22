@@ -13,10 +13,8 @@ export async function POST(req: NextRequest) {
     }
     
     // In a real implementation, you would call the Tavus API here
-    // For this example, we'll simulate a response
     
-    // Simulated API call to Tavus
-    /*
+    // Call Tavus API to generate personalized video
     const response = await axios.post(
       'https://api.tavus.io/v1/videos',
       {
@@ -24,9 +22,10 @@ export async function POST(req: NextRequest) {
           name: user_name
         },
         variables: {
-          product_name: product_name
+          product_name: product_name,
+          user_greeting: `Hello ${user_name}, I'd like to show you this beautiful ${product_name}`
         },
-        template_id: 'your-tavus-template-id'
+        template_id: process.env.TAVUS_TEMPLATE_ID || 'default-template-id'
       },
       {
         headers: {
@@ -36,11 +35,8 @@ export async function POST(req: NextRequest) {
       }
     );
     
-    const videoUrl = response.data.video_url;
-    */
-    
-    // For demo purposes, return a placeholder video URL
-    const videoUrl = 'https://www.youtube.com/embed/dQw4w9WgXcQ'; // Replace with actual Tavus embed URL in production
+    // Extract video URL from Tavus response
+    const videoUrl = response.data.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ';
     
     return NextResponse.json({ videoUrl });
     
