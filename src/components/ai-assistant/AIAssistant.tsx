@@ -350,12 +350,6 @@ const AIAssistant: React.FC = () => {
                     </div>
                   )}
                 </div>
-                  : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Video className="h-16 w-16 text-gray-700 opacity-30" />
-                    </div>
-                  ))}
-                </div>
                 
                 {/* Chat area */}
                 <div className="w-full md:w-1/2 flex flex-col">
