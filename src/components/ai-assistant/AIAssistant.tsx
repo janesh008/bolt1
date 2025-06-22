@@ -339,7 +339,7 @@ const AIAssistant: React.FC = () => {
                         allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       ></iframe>
-                    ) 
+                    ) )
                   : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Video className="h-16 w-16 text-gray-700 opacity-30" />
