@@ -340,7 +340,7 @@ const AIAssistant: React.FC = () => {
                         allowFullScreen
                       ></iframe>
                     ) 
-                 )  : (
+                  : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Video className="h-16 w-16 text-gray-700 opacity-30" />
                     </div>
