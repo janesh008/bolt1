@@ -502,7 +502,7 @@ const AIAssistant: React.FC = () => {
             
             <div className="bg-black aspect-video">
               <iframe
-                src={conversationUrl || "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&controls=0&loop=1"}
+                src={conversationUrl}
                 className="w-full h-full"
                 allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
