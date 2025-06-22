@@ -70,6 +70,9 @@ export async function POST(req: NextRequest) {
       }
     });
     
+    // Declare conversationData variable at this scope level
+    let conversationData: TavusConversationResponse;
+    
     try {
       const response = await axios.post(
         'https://tavusapi.com/v2/conversations',
@@ -85,13 +88,12 @@ export async function POST(req: NextRequest) {
       console.log('Tavus API response:', response.data);
     
       // Extract conversation URL from Tavus response
-      const conversationData = response.data as TavusConversationResponse;
+      conversationData = response.data as TavusConversationResponse;
     } catch (apiError: any) {
       console.error('Tavus API error details:', apiError.response?.data || apiError.message);
       throw new Error(apiError.response?.data?.message || apiError.message || 'Tavus API error');
     }
     
-    const conversationData = response.data as TavusConversationResponse;
     const conversationUrl = conversationData.conversation_url;
     
     if (!conversationUrl) {
