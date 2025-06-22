@@ -389,7 +389,7 @@ const AIAssistant: React.FC = () => {
                       <div className="w-full h-full flex items-center justify-center">
                         <div className="text-center">
                           <Video className="h-16 w-16 text-gray-700 opacity-30 mx-auto mb-4" />
-                          <p className="text-gray-500 text-sm">Video chat will appear here when available</p>
+                          <a link="https://tavus.daily.co/c9bced4bb411d4cd" />
                         </div>
                       </div>
                     )
