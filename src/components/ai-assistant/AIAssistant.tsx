@@ -36,6 +36,8 @@ const AIAssistant: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showVideo, setShowVideo] = useState(true); // Default to showing video
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [videoError, setVideoError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLIFrameElement>(null);
@@ -200,26 +202,54 @@ const AIAssistant: React.FC = () => {
       // Check if we should generate a video
       if (data.generateVideo && user) {
         try {
+          // Reset any previous video errors
+          setVideoError(null);
           setIsVideoLoading(true);
+          
+          // Get user's name from metadata or use a default
+          const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'valued customer';
+          
+          // Get product name if available
+          const productName = products.length > 0 
+            ? products[0].name 
+            : category 
+              ? `${category} jewelry` 
+              : 'jewelry piece';
+          
           const videoResponse = await fetch('/api/video', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ 
-              user_name: user.user_metadata?.full_name || 'valued customer',
-              product_name: products[0]?.name || 'jewelry piece'
+              user_name: userName,
+              product_name: productName
             }),
           });
           
-          if (videoResponse.ok) {
+          if (!videoResponse.ok) {
+            const errorData = await videoResponse.json();
+            throw new Error(errorData.error || 'Failed to create video conversation');
+          } else {
             const videoData = await videoResponse.json();
-            assistantMessage.videoUrl = videoData.conversationUrl;
-            setConversationUrl(videoData.conversationUrl);
-            setShowVideo(true);
+            
+            if (videoData.conversationUrl) {
+              assistantMessage.videoUrl = videoData.conversationUrl;
+              setConversationUrl(videoData.conversationUrl);
+              setConversationId(videoData.conversationId);
+              setShowVideo(true);
+              
+              toast.success('Video chat is ready!');
+            } else {
+              throw new Error('No conversation URL returned from video service');
+            }
           }
         } catch (error) {
-          console.error('Error generating video:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Failed to create video chat';
+          console.error('Error generating video:', errorMessage);
+          setVideoError(errorMessage);
+          toast.error('Could not start video chat. Using text chat instead.');
+          setShowVideo(false);
         } finally {
           setIsVideoLoading(false);
         }
@@ -326,7 +356,19 @@ const AIAssistant: React.FC = () => {
                 {/* Video area */}
                 <div className="w-full md:w-1/2 bg-black flex items-center justify-center">
                   {showVideo ? (
-                    isVideoLoading ? (
+                    videoError ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center">
+                        <Video className="h-16 w-16 text-red-500 opacity-50 mb-4" />
+                        <p className="text-white text-sm mb-2">Video chat unavailable</p>
+                        <p className="text-gray-400 text-xs">{videoError}</p>
+                        <button 
+                          onClick={() => {setShowVideo(false); setVideoError(null);}}
+                          className="mt-4 px-3 py-1 bg-gold-400 hover:bg-gold-500 text-white rounded-md text-sm"
+                        >
+                          Continue with Text Chat
+                        </button>
+                      </div>
+                    ) : isVideoLoading ? (
                       <div className="w-full h-full flex flex-col items-center justify-center">
                         <div className="w-12 h-12 border-4 border-gold-200 border-t-gold-500 rounded-full animate-spin mb-4"></div>
                         <p className="text-white text-sm">Connecting to video chat...</p>
@@ -335,18 +377,34 @@ const AIAssistant: React.FC = () => {
                       <iframe
                         ref={videoRef}
                         src={conversationUrl}
-                        className="w-full aspect-video md:h-full"
+                        className="w-full h-full"
                         allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
-                      ></iframe>
+                        onError={() => {
+                          setVideoError('Failed to load video chat');
+                          setShowVideo(false);
+                        }}
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Video className="h-16 w-16 text-gray-700 opacity-30" />
+                        <div className="text-center">
+                          <Video className="h-16 w-16 text-gray-700 opacity-30 mx-auto mb-4" />
+                          <p className="text-gray-500 text-sm">Video chat will appear here when available</p>
+                        </div>
                       </div>
                     )
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Video className="h-16 w-16 text-gray-700 opacity-30" />
+                      <div className="text-center">
+                        <Video className="h-16 w-16 text-gray-700 opacity-30 mx-auto mb-4" />
+                        <p className="text-gray-500 text-sm">Video chat disabled</p>
+                        <button 
+                          onClick={() => setShowVideo(true)}
+                          className="mt-4 px-3 py-1 bg-gold-400 hover:bg-gold-500 text-white rounded-md text-sm"
+                        >
+                          Enable Video Chat
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -499,10 +557,15 @@ const AIAssistant: React.FC = () => {
             <div className="bg-black aspect-video">
               <iframe
                 src={conversationUrl}
-                className="w-full h-full"
+                className="w-full h-full border-0"
                 allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-              ></iframe>
+                onError={() => {
+                  setVideoError('Failed to load video chat');
+                  setShowVideo(false);
+                  setIsMinimized(false);
+                }}
+              />
             </div>
             
             <div className="bg-white p-2 flex items-center gap-2">
