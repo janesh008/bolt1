@@ -266,10 +266,14 @@ const AIAssistant: React.FC = () => {
       {/* Floating button */}
       <button
         onClick={toggleAssistant}
-        className="fixed bottom-6 right-6 z-50 p-4 bg-gold-400 hover:bg-gold-500 text-white rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
+        className="fixed bottom-6 right-6 z-50 p-4 bg-gold-400 hover:bg-gold-500 text-white rounded-full shadow-lg transition-all duration-300 flex items-center justify-center animate-pulse hover:animate-none group overflow-hidden"
         aria-label="Open AI Assistant"
       >
-        <Video className="h-6 w-6" />
+        <div className="relative">
+          <Video className="h-6 w-6 group-hover:scale-110 transition-transform" />
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+        </div>
+        <span className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-20 transition-opacity"></span>
       </button>
       
       {/* Audio element for speech */}
