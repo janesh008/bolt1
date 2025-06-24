@@ -216,7 +216,7 @@ const AIAssistant: React.FC = () => {
               ? `${category} jewelry` 
               : 'jewelry piece';
           
-          const videoResponse = await fetch('/api/video', {
+          const videoResponse = await fetch('../../api/video', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
