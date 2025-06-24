@@ -73,21 +73,8 @@ const Header = () => {
           </Link>
         </nav>
         
-        <div className="flex items-center space-x-5">
-          <button className="text-charcoal-600 hover:text-charcoal-800 transition-colors">
-            <Search className="h-5 w-5" />
-          </button>
-          
-          {user ? (
-            <Link to="/account" className="text-charcoal-600 hover:text-charcoal-800 transition-colors">
-              <User className="h-5 w-5" />
-            </Link>
-          ) : (
-            <Link to="/login" className="text-charcoal-600 hover:text-charcoal-800 transition-colors">
-              <User className="h-5 w-5" />
-            </Link>
-          )}
-          
+        <div className="flex items-center space-x-5">          
+                  
           <Link to="/wishlist" className="relative text-charcoal-600 hover:text-charcoal-800 transition-colors">
             <Heart className="h-5 w-5" />
             {wishlistItems.length > 0 && (
@@ -105,6 +92,16 @@ const Header = () => {
               </span>
             )}
           </Link>
+
+           {user ? (
+            <Link to="/account" className="text-charcoal-600 hover:text-charcoal-800 transition-colors">
+              <User className="h-5 w-5" />
+            </Link>
+          ) : (
+            <Link to="/login" className="text-charcoal-600 hover:text-charcoal-800 transition-colors">
+              <User className="h-5 w-5" />
+            </Link>
+          )}
         </div>
       </div>
       
