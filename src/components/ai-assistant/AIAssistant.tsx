@@ -390,7 +390,7 @@ const AIAssistant: React.FC = () => {
                       <div className="w-full h-full flex items-center justify-center">
                         <div className="text-center">
                           <Video className="h-16 w-16 text-gray-700 opacity-30 mx-auto mb-4" />
-                          <a link="https://tavus.daily.co/c9bced4bb411d4cd" />
+                          <a link="https://tavus.daily.co/c32d0226f5eb949c" />
                         </div>
                       </div>
                     )
