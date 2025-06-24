@@ -233,6 +233,7 @@ const AIAssistant: React.FC = () => {
           } else {
             const videoData = await videoResponse.json();
             
+            console.log("🎥 Tavus response", videoData);
             if (videoData.conversationUrl) {
               assistantMessage.videoUrl = videoData.conversationUrl;
               setConversationUrl(videoData.conversationUrl);
