@@ -199,8 +199,8 @@ const AIAssistant: React.FC = () => {
         timestamp: new Date()
       };
       
-      // Check if we should generate a video
-      if (data.generateVideo && user) {
+      // Check if we should generate a video -- data.generateVideo && 
+      if (user) {
         try {
           // Reset any previous video errors
           setVideoError(null);
