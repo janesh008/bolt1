@@ -480,7 +480,11 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
       {canRequestRefund() && !showCancellationInstructions && (
         <div className="mt-4 p-4 bg-black text-white rounded-lg">
           <div className="flex items-center justify-between">
-            
+            <div className="flex items-center gap-2">
+              <div>
+                <p>You can request a refund for this order.</p>
+              </div>
+            </div>
             <Button 
               onClick={handleShowCancellationInstructions}
               className="bg-gold-400 hover:bg-gold-500 text-black"
