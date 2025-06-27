@@ -46,7 +46,7 @@ const VideoChat: React.FC<VideoChatProps> = ({
             {console.log("Rendering iframe with URL:", conversationUrl)}
             <iframe
               ref={videoRef}
-              src={conversationUrl}
+              src={conversationUrl || "https://tavus.daily.co/c92d67ed8c787437"}
               className="w-full h-full"
               allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
