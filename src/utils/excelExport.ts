@@ -183,3 +183,57 @@ export const exportRefundsToExcel = async (refunds: any[], options?: ExportOptio
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   saveAs(blob, `AXELS_Refunds_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
 };
+
+// Function to export users to Excel
+export const exportUsersToExcel = async (users: any[]) => {
+  // Create a new workbook and worksheet
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Users');
+
+  // Define columns
+  worksheet.columns = [
+    { header: 'User ID', key: 'userId', width: 15 },
+    { header: 'Full Name', key: 'fullName', width: 25 },
+    { header: 'Email', key: 'email', width: 30 },
+    { header: 'Phone', key: 'phone', width: 15 },
+    { header: 'Role', key: 'role', width: 15 },
+    { header: 'Status', key: 'status', width: 15 },
+    { header: 'Created Date', key: 'createdDate', width: 20 },
+    { header: 'Last Login', key: 'lastLogin', width: 20 },
+  ];
+
+  // Add rows
+  users.forEach(user => {
+    worksheet.addRow({
+      userId: user.id.slice(0, 8),
+      fullName: user.full_name || 'Unknown',
+      email: user.email || 'No email',
+      phone: user.phone || 'No phone',
+      role: user.role,
+      status: user.status,
+      createdDate: format(new Date(user.created_at), 'yyyy-MM-dd HH:mm:ss'),
+      lastLogin: user.last_login ? format(new Date(user.last_login), 'yyyy-MM-dd HH:mm:ss') : 'Never',
+    });
+  });
+
+  // Style the header row
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFD4AF37' } // Gold color
+  };
+  headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+  // Auto-filter
+  worksheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: 1, column: 8 }
+  };
+
+  // Generate Excel file
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  saveAs(blob, `AXELS_Users_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+};
