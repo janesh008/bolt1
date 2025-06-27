@@ -38,9 +38,11 @@ interface Refund {
   orders: {
     order_number: string;
   };
-  user_profiles?: {
-    full_name: string;
-    email: string;
+  users?: {
+    user_profiles: {
+      full_name: string;
+      email: string;
+    };
   };
 }
 
@@ -116,22 +118,21 @@ const AdminRefundManagement: React.FC = () => {
           orders (
             order_number
           ),
-          user_profiles (
-            full_name,
-            email
+          users (
+            user_profiles (
+              full_name,
+              email
+            )
           )
         `)
         .order('created_at', { ascending: false });
       
-      // Apply filters
-      if (searchTerm) {
-        query = query.or(`orders.order_number.ilike.%${searchTerm}%,user_profiles.email.ilike.%${searchTerm}%,user_profiles.full_name.ilike.%${searchTerm}%`);
-      }
-      
+      // Apply status filter
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
       }
       
+      // Apply date filter
       if (dateFilter !== 'all') {
         const now = new Date();
         let startDate: Date;
@@ -157,10 +158,26 @@ const AdminRefundManagement: React.FC = () => {
       
       if (error) throw error;
       
-      setRefunds(data || []);
+      let filteredData = data || [];
+      
+      // Apply search filter on the client side since we can't do complex joins with search
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        filteredData = filteredData.filter(refund => {
+          const orderNumber = refund.orders?.order_number?.toLowerCase() || '';
+          const fullName = refund.users?.user_profiles?.full_name?.toLowerCase() || '';
+          const email = refund.users?.user_profiles?.email?.toLowerCase() || '';
+          
+          return orderNumber.includes(searchLower) || 
+                 fullName.includes(searchLower) || 
+                 email.includes(searchLower);
+        });
+      }
+      
+      setRefunds(filteredData);
       
       // Count pending refunds
-      const pendingRefunds = (data || []).filter(refund => refund.status === 'pending');
+      const pendingRefunds = filteredData.filter(refund => refund.status === 'pending');
       setPendingCount(pendingRefunds.length);
     } catch (error) {
       console.error('Error fetching refunds:', error);
@@ -389,8 +406,8 @@ const AdminRefundManagement: React.FC = () => {
                         <div className="font-medium">{refund.orders?.order_number}</div>
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium">{refund.user_profiles?.full_name || 'Unknown'}</div>
-                        <div className="text-sm text-gray-500">{refund.user_profiles?.email || 'No email'}</div>
+                        <div className="font-medium">{refund.users?.user_profiles?.full_name || 'Unknown'}</div>
+                        <div className="text-sm text-gray-500">{refund.users?.user_profiles?.email || 'No email'}</div>
                       </TableCell>
                       <TableCell>
                         <div className="font-medium text-green-600">{formatCurrency(refund.amount)}</div>
