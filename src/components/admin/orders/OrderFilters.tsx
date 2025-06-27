@@ -79,11 +79,6 @@ const OrderFilters: React.FC<OrderFiltersProps> = ({
               <SelectItem value="month">This Month</SelectItem>
             </SelectContent>
           </Select>
-
-          <Button variant="outline" className="w-full">
-            <Filter className="h-4 w-4 mr-2" />
-            More Filters
-          </Button>
         </div>
       </CardContent>
     </Card>
