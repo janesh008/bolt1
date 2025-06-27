@@ -8,6 +8,10 @@ import ProductCarousel from './ProductCarousel';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import 'regenerator-runtime/runtime';
+import VideoChat from './VideoChat';
+import MessageList from './MessageList';
+import MessageInput from './MessageInput';
+import MinimizedChat from './MinimizedChat';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -40,7 +44,6 @@ const AIAssistant: React.FC = () => {
   const [videoError, setVideoError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const videoRef = useRef<HTMLIFrameElement>(null);
   const { user } = useAuth();
 
   const {
@@ -199,7 +202,7 @@ const AIAssistant: React.FC = () => {
         timestamp: new Date()
       };
       
-      // Check if we should generate a video -- data.generateVideo && 
+      // Check if we should generate a video
       if (user) {
         try {
           // Reset any previous video errors
@@ -246,10 +249,10 @@ const AIAssistant: React.FC = () => {
               setConversationId(videoData.conversationId);
               setShowVideo(true);
               
-              toast.success('Video chat is ready!');
-              
               // Log the URL right after setting it
               console.log("Set conversation URL to:", videoData.conversationUrl);
+              
+              toast.success('Video chat is ready!');
             } else {
               throw new Error('No conversation URL returned from video service');
             }
@@ -289,13 +292,6 @@ const AIAssistant: React.FC = () => {
     } else {
       resetTranscript();
       SpeechRecognition.startListening({ continuous: true });
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
     }
   };
 
@@ -365,175 +361,38 @@ const AIAssistant: React.FC = () => {
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Video area */}
                 <div className="w-full md:w-1/2 bg-black flex items-center justify-center">
-                  {showVideo ? (
-                    videoError ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center">
-                        <Video className="h-16 w-16 text-red-500 opacity-50 mb-4" />
-                        <p className="text-white text-sm mb-2">Video chat unavailable</p>
-                        <p className="text-gray-400 text-xs">{videoError}</p>
-                        <button 
-                          onClick={() => {setShowVideo(false); setVideoError(null);}}
-                          className="mt-4 px-3 py-1 bg-gold-400 hover:bg-gold-500 text-white rounded-md text-sm"
-                        >
-                          Continue with Text Chat
-                        </button>
-                      </div>
-                    ) : isVideoLoading ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center">
-                        <div className="w-12 h-12 border-4 border-gold-200 border-t-gold-500 rounded-full animate-spin mb-4"></div>
-                        <p className="text-white text-sm">Connecting to video chat...</p>
-                      </div>
-                    ) : conversationUrl ? (
-                      <>
-                        {/* Log the conversation URL right before rendering the iframe */}
-                        {console.log("Rendering iframe with URL:", conversationUrl)}
-                        <iframe
-                          ref={videoRef}
-                          src={conversationUrl}
-                          className="w-full h-full"
-                          allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          onError={(e) => {
-                            console.error("iframe error event:", e);
-                            setVideoError('Failed to load video chat');
-                            setShowVideo(false);
-                          }}
-                        />
-                      </>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="text-center">
-                          <Video className="h-16 w-16 text-gray-700 opacity-30 mx-auto mb-4" />
-                          <p className="text-gray-500">Waiting for conversation to start...</p>
-                          {console.log("Waiting for conversation URL - current value:", conversationUrl)}
-                        </div>
-                      </div>
-                    )
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="text-center">
-                        <Video className="h-16 w-16 text-gray-700 opacity-30 mx-auto mb-4" />
-                        <p className="text-gray-500 text-sm">Video chat disabled</p>
-                        <button 
-                          onClick={() => setShowVideo(true)}
-                          className="mt-4 px-3 py-1 bg-gold-400 hover:bg-gold-500 text-white rounded-md text-sm"
-                        >
-                          Enable Video Chat
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  <VideoChat 
+                    showVideo={showVideo}
+                    videoError={videoError}
+                    isVideoLoading={isVideoLoading}
+                    conversationUrl={conversationUrl}
+                    setVideoError={setVideoError}
+                    setShowVideo={setShowVideo}
+                  />
                 </div>
                 
                 {/* Chat area */}
                 <div className="w-full md:w-1/2 flex flex-col">
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {messages.map((message, index) => (
-                      <div 
-                        key={index} 
-                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div 
-                          className={`max-w-[90%] rounded-lg p-4 ${
-                            message.role === 'user' 
-                              ? 'bg-gold-100 text-charcoal-800' 
-                              : 'bg-white shadow-soft border border-cream-200'
-                          }`}
-                        >
-                          <p className="whitespace-pre-wrap">{message.content}</p>
-                          
-                          {message.audioUrl && message.role === 'assistant' && (
-                            <button
-                              onClick={() => playAudio(message.audioUrl!)}
-                              className="mt-2 text-gold-500 hover:text-gold-600 transition-colors flex items-center text-sm"
-                            >
-                              <Volume2 className="h-4 w-4 mr-1" />
-                              {isPlaying && audioRef.current?.src === message.audioUrl 
-                                ? 'Playing...' 
-                                : 'Play audio response'}
-                            </button>
-                          )}
-                          
-                          {message.products && message.products.length > 0 && (
-                            <div className="mt-4">
-                              <h4 className="font-medium text-charcoal-700 mb-2">Recommended for you:</h4>
-                              <ProductCarousel products={message.products} />
-                            </div>
-                          )}
-                          
-                          <div className="text-xs text-right mt-2 text-charcoal-400">
-                            {new Date(message.timestamp).toLocaleTimeString([], { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {isLoading && (
-                      <div className="flex justify-start">
-                        <div className="bg-white shadow-soft border border-cream-200 rounded-lg p-4 max-w-[80%]">
-                          <div className="flex space-x-2">
-                            <div className="w-2 h-2 bg-gold-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                            <div className="w-2 h-2 bg-gold-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                            <div className="w-2 h-2 bg-gold-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div ref={messagesEndRef} />
-                  </div>
+                  <MessageList 
+                    messages={messages}
+                    isLoading={isLoading}
+                    playAudio={playAudio}
+                    isPlaying={isPlaying}
+                    audioRef={audioRef}
+                    messagesEndRef={messagesEndRef}
+                  />
                   
                   {/* Input area */}
-                  <div className="border-t border-cream-200 p-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={toggleMic}
-                        className={`p-2 rounded-full ${
-                          listening 
-                            ? 'bg-red-100 text-red-600' 
-                            : 'bg-cream-100 text-charcoal-600 hover:bg-cream-200'
-                        } transition-colors`}
-                        disabled={!browserSupportsSpeechRecognition}
-                        title={browserSupportsSpeechRecognition ? 'Toggle microphone' : 'Browser does not support speech recognition'}
-                      >
-                        {listening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                      </button>
-                      
-                      <div className="relative flex-1">
-                        <textarea
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          onKeyDown={handleKeyPress}
-                          placeholder="Ask about jewelry, styles, or recommendations..."
-                          className="w-full px-4 py-3 pr-12 border border-cream-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-400 resize-none"
-                          rows={1}
-                          disabled={isLoading}
-                        />
-                        {listening && (
-                          <div className="absolute right-3 top-3 flex items-center">
-                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <Button
-                        onClick={handleSendMessage}
-                        disabled={!input.trim() || isLoading}
-                        className="bg-gold-400 hover:bg-gold-500 text-white"
-                      >
-                        <Send className="h-5 w-5" />
-                      </Button>
-                    </div>
-                    
-                    {listening && (
-                      <div className="mt-2 text-xs text-charcoal-500">
-                        Listening... {transcript ? `"${transcript}"` : ''}
-                      </div>
-                    )}
-                  </div>
+                  <MessageInput 
+                    input={input}
+                    setInput={setInput}
+                    handleSendMessage={handleSendMessage}
+                    isLoading={isLoading}
+                    listening={listening}
+                    toggleMic={toggleMic}
+                    transcript={transcript}
+                    browserSupportsSpeechRecognition={browserSupportsSpeechRecognition}
+                  />
                 </div>
               </div>
             </motion.div>
@@ -544,81 +403,21 @@ const AIAssistant: React.FC = () => {
       {/* Minimized Video Chat */}
       <AnimatePresence>
         {isOpen && isMinimized && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-20 right-6 z-50 w-72 rounded-lg shadow-lg overflow-hidden"
-          >
-            <div className="bg-gold-400 text-white p-2 flex items-center justify-between">
-              <h3 className="text-sm font-medium">AXELS AI Assistant</h3>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={toggleMinimize}
-                  className="p-1 hover:bg-gold-500 rounded-full transition-colors"
-                  aria-label="Maximize assistant"
-                >
-                  <Maximize2 className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={toggleAssistant}
-                  className="p-1 hover:bg-gold-500 rounded-full transition-colors"
-                  aria-label="Close assistant"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="bg-black aspect-video">
-              {console.log("Minimized iframe with URL:", conversationUrl)}
-              <iframe
-                src={conversationUrl}
-                className="w-full h-full border-0"
-                allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                onError={() => {
-                  console.error("Minimized iframe error");
-                  setVideoError('Failed to load video chat');
-                  setShowVideo(false);
-                  setIsMinimized(false);
-                }}
-              />
-            </div>
-            
-            <div className="bg-white p-2 flex items-center gap-2">
-              <button
-                onClick={toggleMic}
-                className={`p-2 rounded-full ${
-                  listening 
-                    ? 'bg-red-100 text-red-600' 
-                    : 'bg-cream-100 text-charcoal-600 hover:bg-cream-200'
-                } transition-colors`}
-                disabled={!browserSupportsSpeechRecognition}
-              >
-                {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </button>
-              
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder="Ask something..."
-                className="flex-1 text-sm px-2 py-1 border border-cream-200 rounded focus:outline-none focus:ring-1 focus:ring-gold-400"
-                disabled={isLoading}
-              />
-              
-              <Button
-                onClick={handleSendMessage}
-                disabled={!input.trim() || isLoading}
-                className="bg-gold-400 hover:bg-gold-500 text-white p-1"
-                size="sm"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </motion.div>
+          <MinimizedChat 
+            conversationUrl={conversationUrl}
+            toggleMinimize={toggleMinimize}
+            toggleAssistant={toggleAssistant}
+            input={input}
+            setInput={setInput}
+            handleSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            listening={listening}
+            toggleMic={toggleMic}
+            browserSupportsSpeechRecognition={browserSupportsSpeechRecognition}
+            setVideoError={setVideoError}
+            setShowVideo={setShowVideo}
+            setIsMinimized={setIsMinimized}
+          />
         )}
       </AnimatePresence>
     </>
