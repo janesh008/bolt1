@@ -1,6 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Video } from 'lucide-react';
 import Button from '../ui/Button';
+import { isValidConversationUrl } from '../../utils/videoUtils';
 
 interface VideoChatProps {
   showVideo: boolean;
@@ -20,6 +21,20 @@ const VideoChat: React.FC<VideoChatProps> = ({
   setShowVideo
 }) => {
   const videoRef = useRef<HTMLIFrameElement>(null);
+  
+  // Validate conversation URL when it changes
+  useEffect(() => {
+    if (conversationUrl) {
+      console.log("Validating conversation URL:", conversationUrl);
+      const isValid = isValidConversationUrl(conversationUrl);
+      console.log("URL is valid:", isValid);
+      
+      if (!isValid) {
+        console.error("Invalid conversation URL format:", conversationUrl);
+        setVideoError('Invalid video chat URL format');
+      }
+    }
+  }, [conversationUrl, setVideoError]);
 
   return (
     <>
@@ -41,9 +56,9 @@ const VideoChat: React.FC<VideoChatProps> = ({
             <div className="w-12 h-12 border-4 border-gold-200 border-t-gold-500 rounded-full animate-spin mb-4"></div>
             <p className="text-white text-sm">Connecting to video chat...</p>
           </div>
-        ) : conversationUrl ? (
+        ) : conversationUrl && isValidConversationUrl(conversationUrl) ? (
           <>
-            {console.log("Rendering iframe with URL:", conversationUrl)}
+            {console.log("Rendering iframe with validated URL:", conversationUrl)}
             <iframe
               ref={videoRef}
               src={conversationUrl}
@@ -62,7 +77,7 @@ const VideoChat: React.FC<VideoChatProps> = ({
             <div className="text-center">
               <Video className="h-16 w-16 text-gray-700 opacity-30 mx-auto mb-4" />
               <p className="text-gray-500">Waiting for conversation to start...</p>
-              {console.log("Waiting for conversation URL - current value:", conversationUrl)}
+              {console.log("Waiting for valid conversation URL - current value:", conversationUrl)}
             </div>
           </div>
         )

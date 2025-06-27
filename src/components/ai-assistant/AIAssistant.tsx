@@ -12,6 +12,7 @@ import VideoChat from './VideoChat';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import MinimizedChat from './MinimizedChat';
+import { getConversationUrl, isValidConversationUrl } from '../../utils/videoUtils';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -219,43 +220,22 @@ const AIAssistant: React.FC = () => {
               ? `${data.category} jewelry` 
               : 'jewelry piece';
           
-          console.log("Calling video API with:", { userName, productName });
+          console.log("Starting conversation URL retrieval with retry logic");
           
-          const videoResponse = await fetch('/api/video', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-              user_name: userName,
-              product_name: productName
-            }),
-          });
+          // Use the utility function with retry logic
+          const { conversationUrl: newConversationUrl, conversationId: newConversationId } = 
+            await getConversationUrl(userName, productName);
           
-          console.log("Video API response status:", videoResponse.status);
-          
-          if (!videoResponse.ok) {
-            const errorData = await videoResponse.json();
-            throw new Error(errorData.error || 'Failed to create video conversation');
+          if (newConversationUrl && isValidConversationUrl(newConversationUrl)) {
+            assistantMessage.videoUrl = newConversationUrl;
+            setConversationUrl(newConversationUrl);
+            setConversationId(newConversationId);
+            setShowVideo(true);
+            
+            console.log("Successfully set conversation URL:", newConversationUrl);
+            toast.success('Video chat is ready!');
           } else {
-            const videoData = await videoResponse.json();
-            
-            console.log("🎥 Tavus response", videoData);
-            console.log("Conversation URL:", videoData.conversationUrl);
-            
-            if (videoData.conversationUrl) {
-              assistantMessage.videoUrl = videoData.conversationUrl;
-              setConversationUrl(videoData.conversationUrl);
-              setConversationId(videoData.conversationId);
-              setShowVideo(true);
-              
-              // Log the URL right after setting it
-              console.log("Set conversation URL to:", videoData.conversationUrl);
-              
-              toast.success('Video chat is ready!');
-            } else {
-              throw new Error('No conversation URL returned from video service');
-            }
+            throw new Error('Could not obtain a valid conversation URL after multiple attempts');
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Failed to create video chat';

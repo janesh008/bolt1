@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
     
     // Validate required fields
     if (!user_name || !product_name) {
+      console.error('Missing required fields:', { user_name, product_name });
       return NextResponse.json(
         { error: 'User name and product name are required' },
         { status: 400 }
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
       }
     });
     
-    // Declare conversationData variable at this scope level
+    // Make the API call with proper error handling
     let conversationData: TavusConversationResponse;
     
     try {
@@ -84,7 +85,8 @@ export async function POST(req: NextRequest) {
           headers: {
             'Authorization': `Bearer ${tavusApiKey}`,
             'Content-Type': 'application/json'
-          }
+          },
+          timeout: 10000 // 10 second timeout
         }
       );
       
@@ -92,6 +94,10 @@ export async function POST(req: NextRequest) {
     
       // Extract conversation URL from Tavus response
       conversationData = response.data as TavusConversationResponse;
+      
+      if (!conversationData || !conversationData.conversation_url) {
+        throw new Error('Invalid response from Tavus API - missing conversation URL');
+      }
     } catch (apiError: any) {
       console.error('Tavus API error details:', apiError.response?.data || apiError.message);
       throw new Error(apiError.response?.data?.message || apiError.message || 'Tavus API error');
@@ -102,6 +108,12 @@ export async function POST(req: NextRequest) {
     if (!conversationUrl) {
       throw new Error('No conversation URL returned from Tavus API');
     }
+    
+    console.log('Successfully created conversation:', {
+      id: conversationData.conversation_id,
+      url: conversationUrl,
+      status: conversationData.status
+    });
     
     return NextResponse.json({ 
       conversationUrl,

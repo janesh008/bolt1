@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Maximize2, X, Mic, MicOff, Send } from 'lucide-react';
 import Button from '../ui/Button';
+import { isValidConversationUrl } from '../../utils/videoUtils';
 
 interface MinimizedChatProps {
   conversationUrl: string | null;
@@ -70,7 +71,7 @@ const MinimizedChat: React.FC<MinimizedChatProps> = ({
       
       <div className="bg-black aspect-video">
         {console.log("Minimized iframe with URL:", conversationUrl)}
-        {conversationUrl && (
+        {conversationUrl && isValidConversationUrl(conversationUrl) && (
           <iframe
             src={conversationUrl}
             className="w-full h-full border-0"
