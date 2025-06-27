@@ -212,11 +212,13 @@ const AIAssistant: React.FC = () => {
           // Get product name if available
           const productName = products.length > 0 
             ? products[0].name 
-            : category 
-              ? `${category} jewelry` 
+            : data.category 
+              ? `${data.category} jewelry` 
               : 'jewelry piece';
           
-          const videoResponse = await fetch('../../pages/api/video', {
+          console.log("Calling video API with:", { userName, productName });
+          
+          const videoResponse = await fetch('/api/video', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -227,6 +229,8 @@ const AIAssistant: React.FC = () => {
             }),
           });
           
+          console.log("Video API response status:", videoResponse.status);
+          
           if (!videoResponse.ok) {
             const errorData = await videoResponse.json();
             throw new Error(errorData.error || 'Failed to create video conversation');
@@ -234,6 +238,8 @@ const AIAssistant: React.FC = () => {
             const videoData = await videoResponse.json();
             
             console.log("🎥 Tavus response", videoData);
+            console.log("Conversation URL:", videoData.conversationUrl);
+            
             if (videoData.conversationUrl) {
               assistantMessage.videoUrl = videoData.conversationUrl;
               setConversationUrl(videoData.conversationUrl);
@@ -241,6 +247,9 @@ const AIAssistant: React.FC = () => {
               setShowVideo(true);
               
               toast.success('Video chat is ready!');
+              
+              // Log the URL right after setting it
+              console.log("Set conversation URL to:", videoData.conversationUrl);
             } else {
               throw new Error('No conversation URL returned from video service');
             }
@@ -375,22 +384,28 @@ const AIAssistant: React.FC = () => {
                         <p className="text-white text-sm">Connecting to video chat...</p>
                       </div>
                     ) : conversationUrl ? (
-                      <iframe
-                        ref={videoRef}
-                        src={conversationUrl}
-                        className="w-full h-full"
-                        allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        onError={() => {
-                          setVideoError('Failed to load video chat');
-                          setShowVideo(false);
-                        }}
-                      />
+                      <>
+                        {/* Log the conversation URL right before rendering the iframe */}
+                        {console.log("Rendering iframe with URL:", conversationUrl)}
+                        <iframe
+                          ref={videoRef}
+                          src={conversationUrl}
+                          className="w-full h-full"
+                          allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          onError={(e) => {
+                            console.error("iframe error event:", e);
+                            setVideoError('Failed to load video chat');
+                            setShowVideo(false);
+                          }}
+                        />
+                      </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <div className="text-center">
                           <Video className="h-16 w-16 text-gray-700 opacity-30 mx-auto mb-4" />
-                          <a link="https://tavus.daily.co/c32d0226f5eb949c" />
+                          <p className="text-gray-500">Waiting for conversation to start...</p>
+                          {console.log("Waiting for conversation URL - current value:", conversationUrl)}
                         </div>
                       </div>
                     )
@@ -555,13 +570,15 @@ const AIAssistant: React.FC = () => {
               </div>
             </div>
             
-            <div className="bg-red aspect-video">
+            <div className="bg-black aspect-video">
+              {console.log("Minimized iframe with URL:", conversationUrl)}
               <iframe
                 src={conversationUrl}
                 className="w-full h-full border-0"
                 allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 onError={() => {
+                  console.error("Minimized iframe error");
                   setVideoError('Failed to load video chat');
                   setShowVideo(false);
                   setIsMinimized(false);
