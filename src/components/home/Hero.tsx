@@ -47,11 +47,7 @@ const Hero = () => {
                 Shop Collection
               </Button>
             </Link>
-            <Link to="/products/diamond">
-              <Button variant="outline" size="lg" className="border-cream-100 text-cream-100 hover:bg-cream-100/10">
-                Explore Diamonds
-              </Button>
-            </Link>
+
           </motion.div>
         </div>
       </div>
