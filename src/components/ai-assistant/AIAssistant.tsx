@@ -243,7 +243,7 @@ const AIAssistant: React.FC = () => {
             console.log("🎥 Tavus response", videoData);
             console.log("Conversation URL:", videoData.conversationUrl);
             
-            if (videoData.conversationUrl) {
+            if (true) {
               assistantMessage.videoUrl = "https://tavus.daily.co/c92d67ed8c787437"; //videoData.conversationUrl;
               setConversationUrl("https://tavus.daily.co/c92d67ed8c787437"); //(videoData.conversationUrl);
               setConversationId(videoData.conversationId);
