@@ -13,6 +13,7 @@ import OrderFilters from '../../components/admin/orders/OrderFilters';
 import OrderTable from '../../components/admin/orders/OrderTable';
 import OrderPagination from '../../components/admin/orders/OrderPagination';
 import OrderDetailsModal from '../../components/admin/orders/OrderDetailsModal';
+import ExportModal from '../../components/admin/ExportModal';
 import { 
   Order, 
   getStatusBadge, 
@@ -21,6 +22,7 @@ import {
   getOrderProgress, 
   getPaymentMethodDisplay 
 } from '../../components/admin/orders/OrderUtils';
+import { exportOrdersToExcel } from '../../utils/excelExport';
 
 const AdminOrdersPage = () => {
   const { user } = useAuth();
@@ -35,6 +37,7 @@ const AdminOrdersPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const ordersPerPage = 10;
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -61,13 +64,19 @@ const AdminOrdersPage = () => {
           order_items (
             id,
             quantity
+          ),
+          users (
+            id,
+            full_name,
+            email,
+            phone
           )
         `)
         .order('created_at', { ascending: false });
       
       // Apply filters
       if (debouncedSearchTerm) {
-        query = query.or(`order_number.ilike.%${debouncedSearchTerm}%,customers.email.ilike.%${debouncedSearchTerm}%`);
+        query = query.or(`order_number.ilike.%${debouncedSearchTerm}%,customers.email.ilike.%${debouncedSearchTerm}%,users.email.ilike.%${debouncedSearchTerm}%`);
       }
       
       if (statusFilter !== 'all') {
@@ -158,6 +167,65 @@ const AdminOrdersPage = () => {
     }
   };
 
+  const handleExportOrders = async (options: any) => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch all orders for export
+      let query = supabase
+        .from('orders')
+        .select(`
+          *,
+          users (
+            id,
+            full_name,
+            email,
+            phone
+          ),
+          order_items (
+            *,
+            products (
+              *,
+              product_images (*)
+            )
+          ),
+          shipping_addresses(*)
+        `)
+        .order('created_at', { ascending: false });
+      
+      // Apply date range filter if provided
+      if (options.dateRange) {
+        query = query
+          .gte('created_at', options.dateRange.startDate.toISOString())
+          .lte('created_at', options.dateRange.endDate.toISOString());
+      }
+      
+      // Apply status filters if provided
+      if (options.statuses && options.statuses.length > 0) {
+        query = query.in('status', options.statuses);
+      }
+      
+      // Apply payment status filters if provided
+      if (options.paymentStatuses && options.paymentStatuses.length > 0) {
+        query = query.in('payment_status', options.paymentStatuses);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      // Export to Excel
+      await exportOrdersToExcel(data || [], options);
+      
+      toast.success('Orders exported successfully');
+    } catch (error) {
+      console.error('Error exporting orders:', error);
+      toast.error('Failed to export orders');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -171,7 +239,7 @@ const AdminOrdersPage = () => {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setShowExportModal(true)}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -235,6 +303,14 @@ const AdminOrdersPage = () => {
         formatDate={formatDate}
         handleStatusUpdate={handleStatusUpdate}
         hasRole={hasRole}
+      />
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        onExport={handleExportOrders}
+        type="orders"
       />
     </div>
   );

@@ -12,7 +12,8 @@ import {
   MapPin,
   CreditCard,
   DollarSign,
-  ExternalLink
+  ExternalLink,
+  Download
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../ui/dialog';
 import { Badge } from '../../ui/badge';
@@ -22,6 +23,7 @@ import OrderStatusUpdater from './OrderStatusUpdater';
 import { formatCurrency } from '../../../lib/utils';
 import { Order } from './OrderUtils';
 import toast from 'react-hot-toast';
+import { exportOrdersToExcel } from '../../../utils/excelExport';
 
 interface OrderDetailsModalProps {
   showOrderDetails: boolean;
@@ -45,6 +47,17 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   hasRole
 }) => {
   if (!selectedOrder) return null;
+
+  const handleExportSingleOrder = async () => {
+    try {
+      // Export just this order to Excel
+      await exportOrdersToExcel([selectedOrder]);
+      toast.success('Order exported successfully');
+    } catch (error) {
+      console.error('Error exporting order:', error);
+      toast.error('Failed to export order');
+    }
+  };
 
   return (
     <Dialog open={showOrderDetails} onOpenChange={setShowOrderDetails}>
@@ -266,6 +279,14 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-2 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={handleExportSingleOrder}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export Order
+            </Button>
+            
             {hasRole('Admin') && selectedOrder.payment_status === 'completed' && (
               <Button
                 variant="outline"

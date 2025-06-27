@@ -20,6 +20,8 @@ import { supabase } from '../../lib/supabase';
 import { formatCurrency } from '../../lib/utils';
 import toast from 'react-hot-toast';
 import AdminRefundModal from './AdminRefundModal';
+import ExportModal from './ExportModal';
+import { exportRefundsToExcel } from '../../utils/excelExport';
 
 interface Refund {
   id: string;
@@ -55,6 +57,7 @@ const AdminRefundManagement: React.FC = () => {
   const [selectedRefund, setSelectedRefund] = useState<Refund | null>(null);
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   useEffect(() => {
     fetchRefunds();
@@ -226,6 +229,44 @@ const AdminRefundManagement: React.FC = () => {
     return '-';
   };
 
+  const handleExportRefunds = async (options: any) => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch all refunds for export
+      let query = supabase
+        .from('refunds_with_user_info')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      // Apply date range filter if provided
+      if (options.dateRange) {
+        query = query
+          .gte('created_at', options.dateRange.startDate.toISOString())
+          .lte('created_at', options.dateRange.endDate.toISOString());
+      }
+      
+      // Apply status filters if provided
+      if (options.refundStatuses && options.refundStatuses.length > 0) {
+        query = query.in('status', options.refundStatuses);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      // Export to Excel
+      await exportRefundsToExcel(data || [], options);
+      
+      toast.success('Refunds exported successfully');
+    } catch (error) {
+      console.error('Error exporting refunds:', error);
+      toast.error('Failed to export refunds');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -239,7 +280,7 @@ const AdminRefundManagement: React.FC = () => {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setShowExportModal(true)}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -440,6 +481,14 @@ const AdminRefundManagement: React.FC = () => {
           onRefundProcessed={handleRefundProcessed}
         />
       )}
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        onExport={handleExportRefunds}
+        type="refunds"
+      />
     </div>
   );
 };
