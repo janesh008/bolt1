@@ -21,6 +21,7 @@ const AccountPage = lazy(() => import('./pages/AccountPage'));
 const WishlistPage = lazy(() => import('./pages/WishlistPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const SignUpPage = lazy(() => import('./pages/SignUpPage'));
+const UnsubscribePage = lazy(() => import('./pages/unsubscribe'));
 const CallbackPage = lazy(() => import('./pages/auth/CallbackPage'));
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
@@ -33,6 +34,7 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
 const AdminProductsPageNew = lazy(() => import('./pages/admin/AdminProductsPageNew'));
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
+const NewsletterSubscribersPage = lazy(() => import('./pages/admin/NewsletterSubscribersPage'));
 const ProductFormNew = lazy(() => import('./components/admin/products/ProductFormNew'));
 
 // Help pages
@@ -76,6 +78,7 @@ function App() {
                   <Route path="/cart" element={<Layout><CartPage /></Layout>} />
                   <Route path="/login" element={<Layout><LoginPage /></Layout>} />
                   <Route path="/signup" element={<Layout><SignUpPage /></Layout>} />
+                  <Route path="/unsubscribe" element={<Layout><UnsubscribePage /></Layout>} />
                   
                   {/* Auth callback routes */}
                   <Route path="/auth/callback" element={<CallbackPage />} />
@@ -162,6 +165,7 @@ function App() {
                     <Route path="products/new" element={<ProductFormNew mode="create" />} />
                     <Route path="products/:id/edit" element={<ProductFormNew mode="edit" />} />
                     <Route path="orders" element={<AdminOrdersPage />} />
+                    <Route path="newsletter" element={<NewsletterSubscribersPage />} />
                     <Route path="settings" element={<div>Settings (Coming Soon)</div>} />
                   </Route>
 
