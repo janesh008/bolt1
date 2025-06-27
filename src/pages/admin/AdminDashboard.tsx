@@ -214,7 +214,7 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-3xl font-bold text-gray-900">${stats.totalRevenue.toLocaleString()}</p>
+              <p className="text-3xl font-bold text-gray-900">₹{stats.totalRevenue.toLocaleString()}</p>
             </div>
             <DollarSign className="h-8 w-8 text-yellow-600" />
           </div>
@@ -240,7 +240,7 @@ const AdminDashboard: React.FC = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-900">${parseFloat(order.total_amount).toFixed(2)}</p>
+                    <p className="font-medium text-gray-900">₹{parseFloat(order.total_amount).toFixed(2)}</p>
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       order.status === 'completed' ? 'bg-green-100 text-green-800' :
                       order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -273,7 +273,7 @@ const AdminDashboard: React.FC = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-900">${parseFloat(product.price).toFixed(2)}</p>
+                    <p className="font-medium text-gray-900">₹{parseFloat(product.price).toFixed(2)}</p>
                     {product.featured && (
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                         Featured
