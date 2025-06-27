@@ -293,60 +293,6 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
         </div>
       </div>
 
-      {/* Cancellation Instructions */}
-      {canRequestRefund() && showCancellationInstructions && (
-        <CancellationInstructions onRequestCancellation={handleRefundRequest} />
-      )}
-
-      {/* Refund/Cancel Options */}
-      {canRequestRefund() && !showCancellationInstructions && (
-        <div className="mt-4 p-4 bg-black text-white rounded-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <RefreshCw className="h-5 w-5" />
-              <div>
-                <p>You can request a refund for this order.</p>
-              </div>
-            </div>
-            <Button 
-              onClick={handleShowCancellationInstructions}
-              className="bg-gold-400 hover:bg-gold-500 text-black"
-            >
-              Cancel Order
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Active Refund Notice */}
-      {hasActiveRefund() && (
-        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="flex items-center gap-2">
-            <RefreshCw className="h-5 w-5 text-blue-600" />
-            <div>
-              <h3 className="font-medium text-blue-800">Refund In Progress</h3>
-              <p className="text-sm text-blue-700">
-                A refund request for this order is currently being processed. You can check the status in the Refunds tab.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Completed Refund Notice */}
-      {hasCompletedRefund() && (
-        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            <div>
-              <h3 className="font-medium text-green-800">Refund Completed</h3>
-              <p className="text-sm text-green-700">
-                A refund for this order has been processed. The funds should be credited to your original payment method.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Order Progress */}
       <div className="bg-white rounded-lg p-6 shadow-sm border border-cream-200">
@@ -523,7 +469,62 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
           </div>
         </div>
       </div>
+
       
+      {/* Cancellation Instructions */}
+      {canRequestRefund() && showCancellationInstructions && (
+        <CancellationInstructions onRequestCancellation={handleRefundRequest} />
+      )}
+
+      {/* Refund/Cancel Options */}
+      {canRequestRefund() && !showCancellationInstructions && (
+        <div className="mt-4 p-4 bg-black text-white rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="h-5 w-5" />
+              <div>
+                <p>You can request a refund for this order.</p>
+              </div>
+            </div>
+            <Button 
+              onClick={handleShowCancellationInstructions}
+              className="bg-gold-400 hover:bg-gold-500 text-black"
+            >
+              Cancel Order
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Active Refund Notice */}
+      {hasActiveRefund() && (
+        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-center gap-2">
+            <RefreshCw className="h-5 w-5 text-blue-600" />
+            <div>
+              <h3 className="font-medium text-blue-800">Refund In Progress</h3>
+              <p className="text-sm text-blue-700">
+                A refund request for this order is currently being processed. You can check the status in the Refunds tab.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Completed Refund Notice */}
+      {hasCompletedRefund() && (
+        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            <div>
+              <h3 className="font-medium text-green-800">Refund Completed</h3>
+              <p className="text-sm text-green-700">
+                A refund for this order has been processed. The funds should be credited to your original payment method.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Cancel Order Confirmation Dialog */}
       {showCancelDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
