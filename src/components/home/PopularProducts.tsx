@@ -8,6 +8,8 @@ import { Product } from '../../types';
 
 const PopularProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
+
+  
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
