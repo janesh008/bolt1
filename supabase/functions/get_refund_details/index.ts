@@ -58,13 +58,18 @@ serve(async (req) => {
     
     // Get refund details
     let query = supabase
-      .from("refunds")
-      .select(`
-          *,
-          orders(*),
-          refund_status_history(*, users(name)),
-          refund_notifications(*)
-          `)
+  .from("refunds")
+  .select(`
+    *,
+    orders (
+      *,
+      users (
+        user_profiles(full_name, email)
+      )
+    ),
+    refund_status_history(*, users(name)),
+    refund_notifications(*)
+  `)
       .eq("id", refundId);
     
     if (!isAdmin) {
