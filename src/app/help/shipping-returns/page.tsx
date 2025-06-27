@@ -55,19 +55,19 @@ export default function ShippingReturnsPage() {
                       <td className="px-4 py-3 text-sm text-charcoal-800">Standard Shipping</td>
                       <td className="px-4 py-3 text-sm text-charcoal-600">3-5 business days</td>
                       <td className="px-4 py-3 text-sm text-charcoal-600">
-                        Free on orders over $150<br />
-                        $9.95 for orders under $150
+                        Free on orders over ₹5000<br />
+                        ₹600 for orders under ₹5000
                       </td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 text-sm text-charcoal-800">Express Shipping</td>
                       <td className="px-4 py-3 text-sm text-charcoal-600">1-2 business days</td>
-                      <td className="px-4 py-3 text-sm text-charcoal-600">$19.95</td>
+                      <td className="px-4 py-3 text-sm text-charcoal-600">₹19.95</td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 text-sm text-charcoal-800">Next Day Delivery</td>
                       <td className="px-4 py-3 text-sm text-charcoal-600">Next business day</td>
-                      <td className="px-4 py-3 text-sm text-charcoal-600">$29.95</td>
+                      <td className="px-4 py-3 text-sm text-charcoal-600">₹29.95</td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 text-sm text-charcoal-800">International Shipping</td>
@@ -104,7 +104,7 @@ export default function ShippingReturnsPage() {
                 <li>Customs duties and taxes are not included in the purchase price or shipping cost</li>
                 <li>Delivery times may be affected by customs processing in your country</li>
                 <li>Some countries have restrictions on importing precious metals and gemstones</li>
-                <li>International orders over $1,000 require signature confirmation upon delivery</li>
+                <li>International orders over ₹10,000 require signature confirmation upon delivery</li>
                 <li>All international shipments are fully insured</li>
               </ul>
               
@@ -220,7 +220,7 @@ export default function ShippingReturnsPage() {
               <div className="bg-cream-50 rounded-lg p-5">
                 <h3 className="font-medium text-charcoal-800 mb-2">Is signature required for delivery?</h3>
                 <p className="text-charcoal-600">
-                  Signature confirmation is required for all orders over $500 and for all international shipments to ensure secure delivery of your valuable items.
+                  Signature confirmation is required for all orders over ₹500 and for all international shipments to ensure secure delivery of your valuable items.
                 </p>
               </div>
             </div>
