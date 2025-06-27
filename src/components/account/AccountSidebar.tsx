@@ -1,11 +1,12 @@
 import React from 'react';
-import { User, Package, Heart, CreditCard, Settings, LogOut } from 'lucide-react';
+import { User, Package, Heart, CreditCard, Settings, LogOut, RefreshCw } from 'lucide-react';
 
 interface AccountSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   ordersCount: number;
   wishlistCount: number;
+  refundsCount: number;
   onSignOut: () => Promise<void>;
 }
 
@@ -14,6 +15,7 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({
   onTabChange,
   ordersCount,
   wishlistCount,
+  refundsCount,
   onSignOut
 }) => {
   return (
@@ -43,6 +45,23 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({
         {ordersCount > 0 && (
           <span className="ml-auto bg-cream-200 text-charcoal-800 text-xs px-2 py-1 rounded-full">
             {ordersCount}
+          </span>
+        )}
+      </button>
+      
+      <button
+        onClick={() => onTabChange('refunds')}
+        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+          activeTab === 'refunds'
+            ? 'bg-gold-400 text-white'
+            : 'hover:bg-cream-100 text-charcoal-600'
+        }`}
+      >
+        <RefreshCw className="h-5 w-5" />
+        <span>Refunds</span>
+        {refundsCount > 0 && (
+          <span className="ml-auto bg-cream-200 text-charcoal-800 text-xs px-2 py-1 rounded-full">
+            {refundsCount}
           </span>
         )}
       </button>

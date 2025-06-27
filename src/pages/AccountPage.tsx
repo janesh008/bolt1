@@ -14,6 +14,7 @@ import OrdersTab from '../components/account/OrdersTab';
 import WishlistTab from '../components/account/WishlistTab';
 import AddressesTab from '../components/account/AddressesTab';
 import SettingsTab from '../components/account/SettingsTab';
+import RefundsTab from '../components/account/RefundsTab';
 
 interface Address {
   id: string;
@@ -27,6 +28,7 @@ const AccountPage = () => {
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'profile';
   const highlightedOrderId = searchParams.get('highlight');
+  const highlightedRefundId = searchParams.get('refund');
   
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,6 +37,7 @@ const AccountPage = () => {
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
   const [profileData, setProfileData] = useState<{name?: string, email?: string, phone?: string}>({});
   const [orders, setOrders] = useState<any[]>([]);
+  const [refunds, setRefunds] = useState<any[]>([]);
   
   useEffect(() => {
     document.title = 'My Account | AXELS';
@@ -52,7 +55,11 @@ const AccountPage = () => {
     if (highlightedOrderId) {
       setActiveTab('orders');
     }
-  }, [initialTab, highlightedOrderId]);
+
+    if (highlightedRefundId) {
+      setActiveTab('refunds');
+    }
+  }, [initialTab, highlightedOrderId, highlightedRefundId]);
 
   const fetchUserData = async () => {
     if (!user?.id) {
@@ -130,6 +137,26 @@ const AccountPage = () => {
         console.error('Error fetching orders:', orderError);
       } else {
         setOrders(orderData || []);
+      }
+
+      // Fetch refunds
+      const { data: refundData, error: refundError } = await supabase
+        .from('refunds')
+        .select(`
+          *,
+          orders (
+            order_number,
+            payment_method,
+            payment_status
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+        
+      if (refundError) {
+        console.error('Error fetching refunds:', refundError);
+      } else {
+        setRefunds(refundData || []);
       }
 
       // Fetch wishlist items
@@ -229,6 +256,7 @@ const AccountPage = () => {
             onTabChange={setActiveTab}
             ordersCount={orders.length}
             wishlistCount={wishlistItems.length}
+            refundsCount={refunds.length}
             onSignOut={handleSignOut}
           />
           
@@ -246,6 +274,13 @@ const AccountPage = () => {
                 <OrdersTab 
                   userId={user.id}
                   highlightedOrderId={highlightedOrderId}
+                />
+              </TabsContent>
+              
+              <TabsContent value="refunds">
+                <RefundsTab 
+                  userId={user.id}
+                  highlightedRefundId={highlightedRefundId}
                 />
               </TabsContent>
               

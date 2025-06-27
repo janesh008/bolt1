@@ -33,6 +33,7 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
 const AdminProductsPageNew = lazy(() => import('./pages/admin/AdminProductsPageNew'));
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
+const AdminRefundsPage = lazy(() => import('./pages/admin/AdminRefundsPage'));
 const ProductFormNew = lazy(() => import('./components/admin/products/ProductFormNew'));
 
 // Help pages
@@ -162,6 +163,7 @@ function App() {
                     <Route path="products/new" element={<ProductFormNew mode="create" />} />
                     <Route path="products/:id/edit" element={<ProductFormNew mode="edit" />} />
                     <Route path="orders" element={<AdminOrdersPage />} />
+                    <Route path="refunds" element={<AdminRefundsPage />} />
                     <Route path="settings" element={<div>Settings (Coming Soon)</div>} />
                   </Route>
 

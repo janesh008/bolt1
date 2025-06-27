@@ -11,7 +11,8 @@ import {
   CreditCard, 
   AlertTriangle,
   ChevronLeft,
-  ShoppingBag
+  ShoppingBag,
+  RefreshCw
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Badge } from '../ui/badge';
@@ -19,6 +20,7 @@ import Button from '../ui/Button';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { formatCurrency } from '../../lib/utils';
 import toast from 'react-hot-toast';
+import RefundRequestModal from './RefundRequestModal';
 
 interface OrderDetailsProps {
   orderId: string;
@@ -31,10 +33,19 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [refundHistory, setRefundHistory] = useState<any[]>([]);
+  const [isLoadingRefunds, setIsLoadingRefunds] = useState(false);
 
   useEffect(() => {
     fetchOrderDetails();
   }, [orderId]);
+
+  useEffect(() => {
+    if (order) {
+      fetchRefundHistory();
+    }
+  }, [order]);
 
   const fetchOrderDetails = async () => {
     try {
@@ -94,6 +105,26 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
     }
   };
 
+  const fetchRefundHistory = async () => {
+    try {
+      setIsLoadingRefunds(true);
+      
+      const { data, error } = await supabase
+        .from('refunds')
+        .select('*')
+        .eq('order_id', orderId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      setRefundHistory(data || []);
+    } catch (error) {
+      console.error('Error fetching refund history:', error);
+    } finally {
+      setIsLoadingRefunds(false);
+    }
+  };
+
   const handleCancelOrder = async () => {
     if (!order) return;
     
@@ -141,6 +172,10 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
     } finally {
       setIsCancelling(false);
     }
+  };
+
+  const handleRefundRequest = () => {
+    setShowRefundModal(true);
   };
 
   const getStatusIcon = (status: string) => {
@@ -206,6 +241,30 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
     });
   };
 
+  const canRequestRefund = () => {
+    if (!order) return false;
+    
+    // Can request refund if:
+    // 1. Order is not already cancelled
+    // 2. Payment is completed
+    // 3. Order is in pending, confirmed, or processing state
+    // 4. No refund has been requested yet
+    return (
+      order.status !== 'cancelled' &&
+      order.payment_status === 'completed' &&
+      ['pending', 'confirmed', 'processing'].includes(order.status) &&
+      refundHistory.length === 0
+    );
+  };
+
+  const hasActiveRefund = () => {
+    return refundHistory.some(refund => ['pending', 'processing'].includes(refund.status));
+  };
+
+  const hasCompletedRefund = () => {
+    return refundHistory.some(refund => refund.status === 'completed');
+  };
+
   if (isLoading) return <LoadingSpinner />;
   if (!order) return <div>Order not found</div>;
 
@@ -228,25 +287,55 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
         </div>
       </div>
 
-      {/* Cancel Order Button - Only show for pending/confirmed orders */}
-      {(order.status === 'pending' || order.status === 'confirmed') && (
+      {/* Refund/Cancel Options */}
+      {canRequestRefund() && (
         <div className="mt-4 p-4 bg-cream-50 rounded-lg border border-cream-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-charcoal-600" />
+              <RefreshCw className="h-5 w-5 text-charcoal-600" />
               <div>
                 <h3 className="font-medium text-charcoal-800">Need to cancel this order?</h3>
-                <p className="text-sm text-charcoal-500">You can cancel this order as it hasn't been processed yet.</p>
+                <p className="text-sm text-charcoal-500">You can request a refund for this order.</p>
               </div>
             </div>
             <Button 
               variant="outline" 
-              className="text-red-600 border-red-200 hover:bg-red-50"
-              onClick={() => setShowCancelDialog(true)}
+              className="text-gold-600 border-gold-200 hover:bg-gold-50"
+              onClick={handleRefundRequest}
             >
-              <X className="h-4 w-4 mr-2" />
-              Cancel Order
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Request Refund
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Active Refund Notice */}
+      {hasActiveRefund() && (
+        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-center gap-2">
+            <RefreshCw className="h-5 w-5 text-blue-600" />
+            <div>
+              <h3 className="font-medium text-blue-800">Refund In Progress</h3>
+              <p className="text-sm text-blue-700">
+                A refund request for this order is currently being processed. You can check the status in the Refunds tab.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Completed Refund Notice */}
+      {hasCompletedRefund() && (
+        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            <div>
+              <h3 className="font-medium text-green-800">Refund Completed</h3>
+              <p className="text-sm text-green-700">
+                A refund for this order has been processed. The funds should be credited to your original payment method.
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -463,9 +552,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
               </Button>
               <Button
                 variant="outline"
-                className="text-red-600 border-red-200 hover:bg-red-50"
                 onClick={handleCancelOrder}
                 isLoading={isCancelling}
+                className="text-red-600 border-red-200 hover:bg-red-50"
               >
                 {order.payment_status === 'completed' ? 'Cancel & Refund' : 'Cancel Order'}
               </Button>
@@ -473,6 +562,13 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
           </div>
         </div>
       )}
+
+      {/* Refund Request Modal */}
+      <RefundRequestModal
+        isOpen={showRefundModal}
+        onClose={() => setShowRefundModal(false)}
+        order={order}
+      />
     </div>
   );
 };

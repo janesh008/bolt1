@@ -11,7 +11,8 @@ import {
   LogOut,
   Bell,
   Search,
-  User
+  User,
+  RefreshCw
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { cn } from '../../lib/utils';
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+  { name: 'Refunds', href: '/admin/refunds', icon: RefreshCw },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
