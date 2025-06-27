@@ -72,7 +72,7 @@ serve(async (req) => {
       query = query.eq("user_id", user.id);
     }
     
-    const { data: refund, error: refundError } = await query.single();
+    const { data: refund, error: refundError } = await query.maybesingle();
     
     if (refundError) {
       console.error("Refund fetch error:", refundError);
