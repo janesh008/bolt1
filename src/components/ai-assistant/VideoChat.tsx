@@ -6,7 +6,7 @@ interface VideoChatProps {
   showVideo: boolean;
   videoError: string | null;
   isVideoLoading: boolean;
-  conversationUrl: "https://tavus.daily.co/c92d67ed8c787437" | null;
+  conversationUrl:string | null;
   setVideoError: (error: string | null) => void;
   setShowVideo: (show: boolean) => void;
 }
@@ -46,7 +46,7 @@ const VideoChat: React.FC<VideoChatProps> = ({
             {console.log("Rendering iframe with URL:", conversationUrl)}
             <iframe
               ref={videoRef}
-              src={"https://tavus.daily.co/c92d67ed8c787437"}
+              src={conversationUrl}
               className="w-full h-full"
               allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
