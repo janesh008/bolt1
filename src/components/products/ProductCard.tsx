@@ -146,7 +146,7 @@ const ProductCard = ({ product, viewMode = 'grid', showQuickActions = true }: Pr
             
             <div className="text-right ml-6">
               <p className="font-medium text-gold-500 text-xl mb-3">
-                ${product.price?.toLocaleString() || 'N/A'}
+                ₹{product.price?.toLocaleString() || 'N/A'}
               </p>
               
               {showQuickActions && (
@@ -292,7 +292,7 @@ const ProductCard = ({ product, viewMode = 'grid', showQuickActions = true }: Pr
         
         <div className="flex items-center justify-between">
           <p className="font-medium text-gold-500 text-lg">
-            ${product.price?.toLocaleString() || 'N/A'}
+            ₹{product.price?.toLocaleString() || 'N/A'}
           </p>
           {product.diamond_piece_count && product.diamond_piece_count > 0 && (
             <p className="text-xs text-charcoal-400">
