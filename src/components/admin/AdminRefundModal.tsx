@@ -33,7 +33,7 @@ interface Refund {
   created_at: string;
   updated_at: string;
   completed_at: string | null;
-  orders: {
+  orders?: {
     order_number: string;
   };
   users?: {
@@ -131,7 +131,7 @@ const AdminRefundModal: React.FC<AdminRefundModalProps> = ({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>Refund Details - Order #{refund.orders.order_number}</span>
+            <span>Refund Details - Order #{refund.orders?.order_number || 'Unknown'}</span>
             <div>
               {getStatusBadge(refund.status)}
             </div>
@@ -194,7 +194,7 @@ const AdminRefundModal: React.FC<AdminRefundModalProps> = ({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Order Number:</span>
-                  <span className="font-medium">#{refund.orders.order_number}</span>
+                  <span className="font-medium">#{refund.orders?.order_number || 'Unknown'}</span>
                 </div>
               </div>
               
