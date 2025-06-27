@@ -312,7 +312,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
               onClick={handleShowCancellationInstructions}
               className="bg-gold-400 hover:bg-gold-500 text-black"
             >
-              Request Cancellation
+              Cancel Order
             </Button>
           </div>
         </div>
