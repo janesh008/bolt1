@@ -91,7 +91,7 @@ const RefundDetails: React.FC<RefundDetailsProps> = ({ refundId, onBack }) => {
       setRefund(data.refund);
     } catch (error) {
       console.error('Error fetching refund details:', error);
-      toast.error('Failed to load refund details');
+      toast.error('Failed to load refund details2');
     } finally {
       setIsLoading(false);
     }
