@@ -208,7 +208,7 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
         <div className="space-y-3 mb-6">
           <div className="flex justify-between text-charcoal-600">
             <span>Subtotal</span>
-            <span>${orderData.amount.toLocaleString()}</span>
+            <span>₹{orderData.amount.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-charcoal-600">
             <span>Shipping</span>
@@ -285,7 +285,7 @@ const RazorpayCheckout: React.FC<RazorpayCheckoutProps> = ({
         ) : (
           <>
             <CreditCard className="h-5 w-5 mr-2" />
-            Pay ${orderData.amount.toLocaleString()} Securely
+            Pay ₹{orderData.amount.toLocaleString()} Securely
           </>
         )}
       </Button>
