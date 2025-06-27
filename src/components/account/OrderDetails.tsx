@@ -482,7 +482,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div>
-                <p>You can cancel the order here If you like other jewelry.</p>
+                <p>You can cancel the order here, If you like other jewelry.</p>
               </div>
             </div>
             <Button 
