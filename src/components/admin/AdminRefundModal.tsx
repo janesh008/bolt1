@@ -186,15 +186,15 @@ const AdminRefundModal: React.FC<AdminRefundModalProps> = ({
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Name:</span>
-                  <span>{refund.users?.full_name || 'Unknown'}</span>
+                  <span>{refund.full_name || 'Unknown'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Email:</span>
-                  <span>{refund.users?.email || 'Unknown'}</span>
+                  <span>{refund.email || 'Unknown'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Order Number:</span>
-                  <span className="font-medium">#{refund.orders?.order_number || 'Unknown'}</span>
+                  <span className="font-medium">#{refund.order_number || 'Unknown'}</span>
                 </div>
               </div>
               
