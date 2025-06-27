@@ -69,9 +69,7 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
       const result = await response.json();
       
       if (!response.ok) {
-        // Improved error message extraction
-        const errorMessage = result.error || result.message || result.details || `HTTP ${response.status}: ${response.statusText}` || 'Failed to subscribe';
-        throw new Error(errorMessage);
+        throw new Error(result.error || 'Failed to subscribe');
       }
       
       if (result.success) {
@@ -84,9 +82,7 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
           toast.success("Thank you for subscribing to our newsletter!");
         }
       } else {
-        // Improved error message extraction for non-success responses
-        const errorMessage = result.error || result.message || result.details || 'Failed to subscribe';
-        throw new Error(errorMessage);
+        throw new Error(result.error || 'Failed to subscribe');
       }
     } catch (err) {
       console.error('Newsletter subscription error:', err);
