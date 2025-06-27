@@ -62,6 +62,10 @@ serve(async (req) => {
       .select(`
         *,
         orders(*),
+        user_profiles(
+          full_name,
+          email
+        ),
         refund_status_history(
           *,
           admin_users(name)

@@ -38,7 +38,7 @@ interface Refund {
   orders: {
     order_number: string;
   };
-  users?: {
+  user_profiles?: {
     full_name: string;
     email: string;
   };
@@ -116,7 +116,7 @@ const AdminRefundManagement: React.FC = () => {
           orders (
             order_number
           ),
-          users (
+          user_profiles (
             full_name,
             email
           )
@@ -125,7 +125,7 @@ const AdminRefundManagement: React.FC = () => {
       
       // Apply filters
       if (searchTerm) {
-        query = query.or(`orders.order_number.ilike.%${searchTerm}%,users.email.ilike.%${searchTerm}%,users.full_name.ilike.%${searchTerm}%`);
+        query = query.or(`orders.order_number.ilike.%${searchTerm}%,user_profiles.email.ilike.%${searchTerm}%,user_profiles.full_name.ilike.%${searchTerm}%`);
       }
       
       if (statusFilter !== 'all') {
@@ -389,8 +389,8 @@ const AdminRefundManagement: React.FC = () => {
                         <div className="font-medium">{refund.orders?.order_number}</div>
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium">{refund.users?.full_name || 'Unknown'}</div>
-                        <div className="text-sm text-gray-500">{refund.users?.email || 'No email'}</div>
+                        <div className="font-medium">{refund.user_profiles?.full_name || 'Unknown'}</div>
+                        <div className="text-sm text-gray-500">{refund.user_profiles?.email || 'No email'}</div>
                       </TableCell>
                       <TableCell>
                         <div className="font-medium text-green-600">{formatCurrency(refund.amount)}</div>
