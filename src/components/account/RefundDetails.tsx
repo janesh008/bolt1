@@ -84,7 +84,7 @@ const RefundDetails: React.FC<RefundDetailsProps> = ({ refundId, onBack }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch refund details');
+        throw new Error(errorData.error || 'Failed to fetch refund details1');
       }
 
       const data = await response.json();
