@@ -58,18 +58,19 @@ serve(async (req) => {
     
     // Get refund details
     let query = supabase
-  .from("refunds")
-  .select(`
-    *,
-    orders (
-      *,
-      users (
-        user_profiles(full_name, email)
-      )
-    ),
-    refund_status_history(*, users(name)),
-    refund_notifications(*)
-  `)
+      .from("refunds")
+      .select(`
+        *,
+        orders (
+          *,
+          users (
+            full_name,
+            email
+          )
+        ),
+        refund_status_history(*, admin_users(name)),
+        refund_notifications(*)
+      `)
       .eq("id", refundId);
     
     if (!isAdmin) {
@@ -77,7 +78,7 @@ serve(async (req) => {
       query = query.eq("user_id", user.id);
     }
     
-    const { data: refund, error: refundError } = await query.maybesingle();
+    const { data: refund, error: refundError } = await query.maybeSingle();
     
     if (refundError) {
       console.error("Refund fetch error:", refundError);
@@ -89,7 +90,7 @@ serve(async (req) => {
     
     // Get admin user who processed the refund (if any)
     let processedBy = null;
-    if (refund.processed_by) {
+    if (refund?.processed_by) {
       const { data: admin } = await supabase
         .from("admin_users")
         .select("name, role")
