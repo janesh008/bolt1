@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Maximize2, X, Mic, MicOff, Send } from 'lucide-react';
 import Button from '../ui/Button';
 
