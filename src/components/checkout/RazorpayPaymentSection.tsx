@@ -208,7 +208,7 @@ const RazorpayPaymentSection: React.FC<RazorpayPaymentSectionProps> = ({
         <div className="space-y-3 mb-6">
           <div className="flex justify-between text-charcoal-600">
             <span>Subtotal</span>
-            <span>${orderData.amount.toLocaleString()}</span>
+            <span>₹{orderData.amount.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-charcoal-600">
             <span>Shipping</span>
@@ -221,7 +221,7 @@ const RazorpayPaymentSection: React.FC<RazorpayPaymentSectionProps> = ({
           <div className="border-t border-gold-200 pt-3">
             <div className="flex justify-between font-medium text-charcoal-800">
               <span>Total</span>
-              <span className="text-gold-600">${orderData.amount.toLocaleString()}</span>
+              <span className="text-gold-600">₹{orderData.amount.toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -285,7 +285,7 @@ const RazorpayPaymentSection: React.FC<RazorpayPaymentSectionProps> = ({
         ) : (
           <>
             <CreditCard className="h-5 w-5 mr-2" />
-            Pay ${orderData.amount.toLocaleString()} Securely
+            Pay ₹{orderData.amount.toLocaleString()} Securely
           </>
         )}
       </Button>
