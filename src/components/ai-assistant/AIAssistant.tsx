@@ -555,7 +555,7 @@ const AIAssistant: React.FC = () => {
               </div>
             </div>
             
-            <div className="bg-black aspect-video">
+            <div className="bg-red aspect-video">
               <iframe
                 src={conversationUrl}
                 className="w-full h-full border-0"
