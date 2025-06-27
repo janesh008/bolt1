@@ -110,21 +110,9 @@ const AdminRefundManagement: React.FC = () => {
   const fetchRefunds = async () => {
     try {
       setIsLoading(true);
-      let query = supabase
-      .from('refunds')
-      .select(`
-          *,
-           orders (
-            order_number,
-            users (
-            user_profile (
-               full_name,
-               email
-               )
-            )
-          )
-        `)
-     .order('created_at', { ascending: false });
+      let query = supabase.from('refunds_with_user_info')
+        .select('*')
+        .order('created_at', { ascending: false });
 
       // Apply status filter
       if (statusFilter !== 'all') {
