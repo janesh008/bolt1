@@ -21,6 +21,7 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import { formatCurrency } from '../../lib/utils';
 import toast from 'react-hot-toast';
 import RefundRequestModal from './RefundRequestModal';
+import CancellationInstructions from './CancellationInstructions';
 
 interface OrderDetailsProps {
   orderId: string;
@@ -36,6 +37,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [refundHistory, setRefundHistory] = useState<any[]>([]);
   const [isLoadingRefunds, setIsLoadingRefunds] = useState(false);
+  const [showCancellationInstructions, setShowCancellationInstructions] = useState(false);
 
   useEffect(() => {
     fetchOrderDetails();
@@ -178,6 +180,10 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
     setShowRefundModal(true);
   };
 
+  const handleShowCancellationInstructions = () => {
+    setShowCancellationInstructions(true);
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
@@ -287,24 +293,26 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
         </div>
       </div>
 
+      {/* Cancellation Instructions */}
+      {canRequestRefund() && showCancellationInstructions && (
+        <CancellationInstructions onRequestCancellation={handleRefundRequest} />
+      )}
+
       {/* Refund/Cancel Options */}
-      {canRequestRefund() && (
-        <div className="mt-4 p-4 bg-cream-50 rounded-lg border border-cream-200">
+      {canRequestRefund() && !showCancellationInstructions && (
+        <div className="mt-4 p-4 bg-black text-white rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <RefreshCw className="h-5 w-5 text-charcoal-600" />
+              <RefreshCw className="h-5 w-5" />
               <div>
-                <h3 className="font-medium text-charcoal-800">Need to cancel this order?</h3>
-                <p className="text-sm text-charcoal-500">You can request a refund for this order.</p>
+                <p>You can request a refund for this order.</p>
               </div>
             </div>
             <Button 
-              variant="outline" 
-              className="text-gold-600 border-gold-200 hover:bg-gold-50"
-              onClick={handleRefundRequest}
+              onClick={handleShowCancellationInstructions}
+              className="bg-gold-400 hover:bg-gold-500 text-black"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Request Refund
+              Request Cancellation
             </Button>
           </div>
         </div>
@@ -552,9 +560,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
               </Button>
               <Button
                 variant="outline"
+                className="text-red-600 border-red-200 hover:bg-red-50"
                 onClick={handleCancelOrder}
                 isLoading={isCancelling}
-                className="text-red-600 border-red-200 hover:bg-red-50"
               >
                 {order.payment_status === 'completed' ? 'Cancel & Refund' : 'Cancel Order'}
               </Button>
