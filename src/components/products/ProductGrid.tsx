@@ -145,7 +145,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-gold-500">
-                      ${product.price?.toLocaleString() || 'N/A'}
+                      ₹{product.price?.toLocaleString() || 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -197,7 +197,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                   
                   <div className="text-right">
                     <p className="font-medium text-gold-500 text-lg">
-                      ${product.price?.toLocaleString() || 'N/A'}
+                      ₹{product.price?.toLocaleString() || 'N/A'}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       <button
