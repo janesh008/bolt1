@@ -6,7 +6,7 @@ interface VideoChatProps {
   showVideo: boolean;
   videoError: string | null;
   isVideoLoading: boolean;
-  conversationUrl:string | null;
+  conversationUrl: string | null;
   setVideoError: (error: string | null) => void;
   setShowVideo: (show: boolean) => void;
 }

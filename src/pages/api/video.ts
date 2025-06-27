@@ -28,7 +28,9 @@ export async function POST(req: NextRequest) {
     }
     
     // Check for API key
-    if (!process.env.TAVUS_API_KEY) {
+    const tavusApiKey = process.env.TAVUS_API_KEY;
+    if (!tavusApiKey) {
+      console.error('Tavus API key not configured');
       return NextResponse.json(
         { error: 'Tavus API key not configured' },
         { status: 500 }
@@ -42,6 +44,7 @@ export async function POST(req: NextRequest) {
     const personaId = process.env.TAVUS_PERSONA_ID;
     
     if (!personaId && !replicaId) {
+      console.error('Tavus Persona ID not configured');
       return NextResponse.json(
         { error: 'Tavus Persona ID not configured' },
         { status: 500 }
@@ -65,7 +68,7 @@ export async function POST(req: NextRequest) {
       url: 'https://tavusapi.com/v2/conversations',
       body: requestBody,
       headers: {
-        'Authorization': 'Bearer [REDACTED]',
+        'Authorization': `Bearer ${tavusApiKey.substring(0, 5)}...`,
         'Content-Type': 'application/json'
       }
     });
@@ -79,7 +82,7 @@ export async function POST(req: NextRequest) {
         requestBody,
         {
           headers: {
-            'Authorization': `Bearer ${process.env.TAVUS_API_KEY}`,
+            'Authorization': `Bearer ${tavusApiKey}`,
             'Content-Type': 'application/json'
           }
         }

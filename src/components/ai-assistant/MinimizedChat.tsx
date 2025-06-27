@@ -70,18 +70,20 @@ const MinimizedChat: React.FC<MinimizedChatProps> = ({
       
       <div className="bg-black aspect-video">
         {console.log("Minimized iframe with URL:", conversationUrl)}
-        <iframe
-          src={conversationUrl}
-          className="w-full h-full border-0"
-          allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          onError={() => {
-            console.error("Minimized iframe error");
-            setVideoError('Failed to load video chat');
-            setShowVideo(false);
-            setIsMinimized(false);
-          }}
-        />
+        {conversationUrl && (
+          <iframe
+            src={conversationUrl}
+            className="w-full h-full border-0"
+            allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            onError={() => {
+              console.error("Minimized iframe error");
+              setVideoError('Failed to load video chat');
+              setShowVideo(false);
+              setIsMinimized(false);
+            }}
+          />
+        )}
       </div>
       
       <div className="bg-white p-2 flex items-center gap-2">
