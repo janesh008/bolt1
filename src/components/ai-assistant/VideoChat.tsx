@@ -6,7 +6,7 @@ interface VideoChatProps {
   showVideo: boolean;
   videoError: string | null;
   isVideoLoading: boolean;
-  conversationUrl: string | null;
+  conversationUrl: "https://tavus.daily.co/c92d67ed8c787437" | null;
   setVideoError: (error: string | null) => void;
   setShowVideo: (show: boolean) => void;
 }
