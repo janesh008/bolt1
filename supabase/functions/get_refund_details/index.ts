@@ -68,7 +68,7 @@ serve(async (req) => {
         ),
         refund_status_history(
           *,
-          admin_users(name)
+          users(name)
         ),
         refund_notifications(*)
       `)
