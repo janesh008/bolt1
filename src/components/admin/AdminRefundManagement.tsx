@@ -390,11 +390,11 @@ const AdminRefundManagement: React.FC = () => {
                   refunds.map((refund) => (
                     <TableRow key={refund.id}>
                       <TableCell>
-                        <div className="font-medium">{refund.orders?.order_number}</div>
+                        <div className="font-medium">{refund.order_number}</div>
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium">{refund.users?.user_profiles?.full_name || 'Unknown'}</div>
-                        <div className="text-sm text-gray-500">{refund.users?.user_profiles?.email || 'No email'}</div>
+                        <div className="font-medium">{refund.full_name || 'Unknown'}</div>
+                        <div className="text-sm text-gray-500">{refund.email || 'No email'}</div>
                       </TableCell>
                       <TableCell>
                         <div className="font-medium text-green-600">{formatCurrency(refund.amount)}</div>
