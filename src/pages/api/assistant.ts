@@ -17,7 +17,7 @@ const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB'; // D
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, history = [] } = await req.json();
+    const { message, history = [], language = 'en' } = await req.json();
     
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://axels-jewelry.netlify.app/sitemap.xml
