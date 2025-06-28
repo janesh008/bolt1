@@ -2,7 +2,6 @@ import { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/layout/Layout';
-import AIAssistant from './components/ai-assistant/AIAssistant';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import LoadingScreen from './components/ui/LoadingScreen';
 import { AuthProvider } from './context/AuthContext';
@@ -172,7 +171,6 @@ function App() {
                 </Routes>
               </Suspense>
               <Toaster position="top-center" />
-              <AIAssistant />
             </WishlistProvider>
           </CartProvider>
         </AdminAuthProvider>
