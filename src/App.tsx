@@ -9,6 +9,8 @@ import { AdminAuthProvider } from './context/AdminAuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n';
 
 // Lazy-loaded pages
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -61,121 +63,123 @@ function App() {
 
   // Show main app once loading is complete
   return (
-    <Router>
-      <AuthProvider>
-        <AdminAuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <Suspense fallback={<LoadingSpinner />}>
-                <Routes>
-                  {/* Public routes */}
-                  <Route path="/" element={<Layout><HomePage /></Layout>} />
-                  <Route path="/products" element={<Layout><ProductsPage /></Layout>} />
-                  <Route path="/products/:category" element={<Layout><ProductsPage /></Layout>} />
-                  <Route path="/product/:id" element={<Layout><ProductDetailPage /></Layout>} />
-                  <Route path="/cart" element={<Layout><CartPage /></Layout>} />
-                  <Route path="/login" element={<Layout><LoginPage /></Layout>} />
-                  <Route path="/signup" element={<Layout><SignUpPage /></Layout>} />
-                  
-                  {/* Auth callback routes */}
-                  <Route path="/auth/callback" element={<CallbackPage />} />
-                  <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
-                  
-                  {/* Protected routes */}
-                  <Route 
-                    path="/checkout" 
-                    element={
-                      <Layout>
-                        <ProtectedRoute>
-                          <CheckoutPage />
-                        </ProtectedRoute>
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/account" 
-                    element={
-                      <Layout>
-                        <ProtectedRoute>
-                          <AccountPage />
-                        </ProtectedRoute>
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/profile" 
-                    element={
-                      <Layout>
-                        <ProtectedRoute>
-                          <AccountPage />
-                        </ProtectedRoute>
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/wishlist" 
-                    element={
-                      <Layout>
-                        <ProtectedRoute>
-                          <WishlistPage />
-                        </ProtectedRoute>
-                      </Layout>
-                    } 
-                  />
-                  
-                  {/* AI Designer routes */}
-                  <Route 
-                    path="/ai-designer" 
-                    element={
-                      <Layout>
-                        <ProtectedRoute>
-                          <AIDesignerPage />
-                        </ProtectedRoute>
-                      </Layout>
-                    } 
-                  />
-                  <Route 
-                    path="/ai-designer/:sessionId" 
-                    element={
-                      <Layout>
-                        <ProtectedRoute>
-                          <AIDesignerPage />
-                        </ProtectedRoute>
-                      </Layout>
-                    } 
-                  />
+    <I18nextProvider i18n={i18n}>
+      <Router>
+        <AuthProvider>
+          <AdminAuthProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Routes>
+                    {/* Public routes */}
+                    <Route path="/" element={<Layout><HomePage /></Layout>} />
+                    <Route path="/products" element={<Layout><ProductsPage /></Layout>} />
+                    <Route path="/products/:category" element={<Layout><ProductsPage /></Layout>} />
+                    <Route path="/product/:id" element={<Layout><ProductDetailPage /></Layout>} />
+                    <Route path="/cart" element={<Layout><CartPage /></Layout>} />
+                    <Route path="/login" element={<Layout><LoginPage /></Layout>} />
+                    <Route path="/signup" element={<Layout><SignUpPage /></Layout>} />
+                    
+                    {/* Auth callback routes */}
+                    <Route path="/auth/callback" element={<CallbackPage />} />
+                    <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+                    
+                    {/* Protected routes */}
+                    <Route 
+                      path="/checkout" 
+                      element={
+                        <Layout>
+                          <ProtectedRoute>
+                            <CheckoutPage />
+                          </ProtectedRoute>
+                        </Layout>
+                      } 
+                    />
+                    <Route 
+                      path="/account" 
+                      element={
+                        <Layout>
+                          <ProtectedRoute>
+                            <AccountPage />
+                          </ProtectedRoute>
+                        </Layout>
+                      } 
+                    />
+                    <Route 
+                      path="/profile" 
+                      element={
+                        <Layout>
+                          <ProtectedRoute>
+                            <AccountPage />
+                          </ProtectedRoute>
+                        </Layout>
+                      } 
+                    />
+                    <Route 
+                      path="/wishlist" 
+                      element={
+                        <Layout>
+                          <ProtectedRoute>
+                            <WishlistPage />
+                          </ProtectedRoute>
+                        </Layout>
+                      } 
+                    />
+                    
+                    {/* AI Designer routes */}
+                    <Route 
+                      path="/ai-designer" 
+                      element={
+                        <Layout>
+                          <ProtectedRoute>
+                            <AIDesignerPage />
+                          </ProtectedRoute>
+                        </Layout>
+                      } 
+                    />
+                    <Route 
+                      path="/ai-designer/:sessionId" 
+                      element={
+                        <Layout>
+                          <ProtectedRoute>
+                            <AIDesignerPage />
+                          </ProtectedRoute>
+                        </Layout>
+                      } 
+                    />
 
-                  {/* Help Center Routes */}
-                  <Route path="/help" element={<HelpLayout><HelpPage /></HelpLayout>} />
-                  <Route path="/help/contact-us" element={<HelpLayout><ContactUsPage /></HelpLayout>} />
-                  <Route path="/help/faqs" element={<HelpLayout><FAQsPage /></HelpLayout>} />
-                  <Route path="/help/shipping-returns" element={<HelpLayout><ShippingReturnsPage /></HelpLayout>} />
-                  <Route path="/help/jewelry-care" element={<HelpLayout><JewelryCarePage /></HelpLayout>} />
-                  <Route path="/help/size-guide" element={<HelpLayout><SizeGuidePage /></HelpLayout>} />
+                    {/* Help Center Routes */}
+                    <Route path="/help" element={<HelpLayout><HelpPage /></HelpLayout>} />
+                    <Route path="/help/contact-us" element={<HelpLayout><ContactUsPage /></HelpLayout>} />
+                    <Route path="/help/faqs" element={<HelpLayout><FAQsPage /></HelpLayout>} />
+                    <Route path="/help/shipping-returns" element={<HelpLayout><ShippingReturnsPage /></HelpLayout>} />
+                    <Route path="/help/jewelry-care" element={<HelpLayout><JewelryCarePage /></HelpLayout>} />
+                    <Route path="/help/size-guide" element={<HelpLayout><SizeGuidePage /></HelpLayout>} />
 
-                  {/* Admin routes */}
-                  <Route path="/admin/login" element={<AdminLoginPage />} />
-                  <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="users" element={<AdminUsersPage />} />
-                    <Route path="products" element={<AdminProductsPageNew />} />
-                    <Route path="products/new" element={<ProductFormNew mode="create" />} />
-                    <Route path="products/:id/edit" element={<ProductFormNew mode="edit" />} />
-                    <Route path="orders" element={<AdminOrdersPage />} />
-                    <Route path="refunds" element={<AdminRefundsPage />} />
-                    <Route path="settings" element={<div>Settings (Coming Soon)</div>} />
-                  </Route>
+                    {/* Admin routes */}
+                    <Route path="/admin/login" element={<AdminLoginPage />} />
+                    <Route path="/admin" element={<AdminLayout />}>
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="users" element={<AdminUsersPage />} />
+                      <Route path="products" element={<AdminProductsPageNew />} />
+                      <Route path="products/new" element={<ProductFormNew mode="create" />} />
+                      <Route path="products/:id/edit" element={<ProductFormNew mode="edit" />} />
+                      <Route path="orders" element={<AdminOrdersPage />} />
+                      <Route path="refunds" element={<AdminRefundsPage />} />
+                      <Route path="settings" element={<div>Settings (Coming Soon)</div>} />
+                    </Route>
 
-                  {/* 404 */}
-                  <Route path="*" element={<Layout><NotFoundPage /></Layout>} />
-                </Routes>
-              </Suspense>
-              <Toaster position="top-center" />
-            </WishlistProvider>
-          </CartProvider>
-        </AdminAuthProvider>
-      </AuthProvider>
-    </Router>
+                    {/* 404 */}
+                    <Route path="*" element={<Layout><NotFoundPage /></Layout>} />
+                  </Routes>
+                </Suspense>
+                <Toaster position="top-center" />
+              </WishlistProvider>
+            </CartProvider>
+          </AdminAuthProvider>
+        </AuthProvider>
+      </Router>
+    </I18nextProvider>
   );
 }
 

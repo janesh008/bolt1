@@ -1,0 +1,69 @@
+{
+  "assistant": {
+    "title": "Assistant de Bijouterie AXELS",
+    "greeting": "Bonjour ! Je suis votre assistant personnel de bijouterie. Comment puis-je vous aider aujourd'hui ?",
+    "welcomeVideo": "Bienvenue chez AXELS Bijouterie. Je suis là pour vous aider à trouver la pièce parfaite.",
+    "languageSelector": "Choisissez votre langue préférée",
+    "preferences": {
+      "title": "Laissez-moi vous aider à trouver le bijou parfait",
+      "jewelryType": "Quel type de bijou recherchez-vous ?",
+      "metalPreference": "Quel métal préférez-vous ?",
+      "category": "Quelle catégorie vous intéresse ?",
+      "style": "Quel style recherchez-vous ?",
+      "budget": "Quel est votre budget ?",
+      "customDesign": "Avez-vous un design personnalisé en tête ?"
+    },
+    "options": {
+      "metals": {
+        "gold": "Or",
+        "silver": "Argent",
+        "roseGold": "Or Rose",
+        "platinum": "Platine"
+      },
+      "categories": {
+        "ring": "Bague",
+        "earrings": "Boucles d'oreilles",
+        "necklace": "Collier",
+        "bangles": "Bracelets Rigides",
+        "bracelet": "Bracelet"
+      },
+      "styles": {
+        "bridal": "Mariage",
+        "daily": "Quotidien",
+        "casual": "Décontracté",
+        "custom": "Design Personnalisé"
+      }
+    },
+    "actions": {
+      "startChat": "Démarrer le Chat",
+      "endChat": "Terminer le Chat",
+      "minimize": "Réduire",
+      "maximize": "Agrandir",
+      "sendMessage": "Envoyer",
+      "uploadImage": "Télécharger une Image",
+      "callSupport": "Appeler le Support",
+      "viewProducts": "Voir les Produits"
+    },
+    "support": {
+      "phoneNumber": "+91 992590-2377",
+      "callUs": "Appelez notre assistant vocal IA",
+      "hours": "Disponible 24/7"
+    },
+    "errors": {
+      "videoFailed": "Le chat vidéo n'a pas pu être chargé. Continuons avec le chat texte.",
+      "audioFailed": "L'audio n'a pas pu être lu. Veuillez vérifier vos paramètres sonores.",
+      "connectionError": "Erreur de connexion. Veuillez réessayer."
+    }
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite",
+    "retry": "Réessayer",
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "submit": "Soumettre",
+    "continue": "Continuer",
+    "back": "Retour"
+  }
+}

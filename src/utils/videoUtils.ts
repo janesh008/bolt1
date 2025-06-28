@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
  * Handles fetching a conversation URL with retry logic
  * @param userName - The user's name for the conversation
  * @param productName - The product name for the conversation
+ * @param language - The language code for the conversation
  * @param maxRetries - Maximum number of retry attempts (default: 3)
  * @param delayMs - Delay between retries in milliseconds (default: 2000)
  * @returns The conversation URL or null if unavailable after retries
@@ -11,13 +12,14 @@ import { toast } from 'react-hot-toast';
 export const getConversationUrl = async (
   userName: string,
   productName: string,
+  language: string = 'en',
   maxRetries = 3,
   delayMs = 2000
 ): Promise<{ conversationUrl: string | null; conversationId: string | null }> => {
   let attempts = 0;
   let lastError: Error | null = null;
 
-  console.log(`Attempting to get conversation URL for ${userName} about ${productName}`);
+  console.log(`Attempting to get conversation URL for ${userName} about ${productName} in ${language}`);
 
   while (attempts < maxRetries) {
     try {
@@ -31,7 +33,8 @@ export const getConversationUrl = async (
         },
         body: JSON.stringify({ 
           user_name: userName,
-          product_name: productName
+          product_name: productName,
+          language: language
         }),
       });
 

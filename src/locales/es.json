@@ -1,0 +1,69 @@
+{
+  "assistant": {
+    "title": "Asistente de Joyería AXELS",
+    "greeting": "¡Hola! Soy tu asistente personal de joyería. ¿Cómo puedo ayudarte hoy?",
+    "welcomeVideo": "Bienvenido a Joyería AXELS. Estoy aquí para ayudarte a encontrar la pieza perfecta.",
+    "languageSelector": "Elige tu idioma preferido",
+    "preferences": {
+      "title": "Déjame ayudarte a encontrar la joyería perfecta",
+      "jewelryType": "¿Qué tipo de joyería estás buscando?",
+      "metalPreference": "¿Qué metal prefieres?",
+      "category": "¿Qué categoría te interesa?",
+      "style": "¿Qué estilo estás buscando?",
+      "budget": "¿Cuál es tu presupuesto?",
+      "customDesign": "¿Tienes un diseño personalizado en mente?"
+    },
+    "options": {
+      "metals": {
+        "gold": "Oro",
+        "silver": "Plata",
+        "roseGold": "Oro Rosa",
+        "platinum": "Platino"
+      },
+      "categories": {
+        "ring": "Anillo",
+        "earrings": "Pendientes",
+        "necklace": "Collar",
+        "bangles": "Pulseras Rígidas",
+        "bracelet": "Brazalete"
+      },
+      "styles": {
+        "bridal": "Nupcial",
+        "daily": "Uso Diario",
+        "casual": "Casual",
+        "custom": "Diseño Personalizado"
+      }
+    },
+    "actions": {
+      "startChat": "Iniciar Chat",
+      "endChat": "Finalizar Chat",
+      "minimize": "Minimizar",
+      "maximize": "Maximizar",
+      "sendMessage": "Enviar",
+      "uploadImage": "Subir Imagen",
+      "callSupport": "Llamar a Soporte",
+      "viewProducts": "Ver Productos"
+    },
+    "support": {
+      "phoneNumber": "+91 992590-2377",
+      "callUs": "Llama a nuestro asistente de voz AI",
+      "hours": "Disponible 24/7"
+    },
+    "errors": {
+      "videoFailed": "No se pudo cargar el chat de video. Continuemos con el chat de texto.",
+      "audioFailed": "No se pudo reproducir el audio. Por favor, verifica tu configuración de sonido.",
+      "connectionError": "Error de conexión. Por favor, inténtalo de nuevo."
+    }
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "retry": "Reintentar",
+    "close": "Cerrar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "submit": "Enviar",
+    "continue": "Continuar",
+    "back": "Atrás"
+  }
+}

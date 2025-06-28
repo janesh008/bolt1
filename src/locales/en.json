@@ -1,0 +1,69 @@
+{
+  "assistant": {
+    "title": "AXELS Jewelry Assistant",
+    "greeting": "Hello! I'm your personal jewelry assistant. How can I help you today?",
+    "welcomeVideo": "Welcome to AXELS Jewelry. I'm here to help you find the perfect piece.",
+    "languageSelector": "Choose your preferred language",
+    "preferences": {
+      "title": "Let me help you find the perfect jewelry",
+      "jewelryType": "What type of jewelry are you looking for?",
+      "metalPreference": "What metal do you prefer?",
+      "category": "Which category interests you?",
+      "style": "What style are you looking for?",
+      "budget": "What's your budget range?",
+      "customDesign": "Do you have a custom design in mind?"
+    },
+    "options": {
+      "metals": {
+        "gold": "Gold",
+        "silver": "Silver",
+        "roseGold": "Rose Gold",
+        "platinum": "Platinum"
+      },
+      "categories": {
+        "ring": "Ring",
+        "earrings": "Earrings",
+        "necklace": "Necklace",
+        "bangles": "Bangles",
+        "bracelet": "Bracelet"
+      },
+      "styles": {
+        "bridal": "Bridal",
+        "daily": "Daily Wear",
+        "casual": "Casual",
+        "custom": "Custom Design"
+      }
+    },
+    "actions": {
+      "startChat": "Start Chat",
+      "endChat": "End Chat",
+      "minimize": "Minimize",
+      "maximize": "Maximize",
+      "sendMessage": "Send",
+      "uploadImage": "Upload Image",
+      "callSupport": "Call Support",
+      "viewProducts": "View Products"
+    },
+    "support": {
+      "phoneNumber": "+91 992590-2377",
+      "callUs": "Call our AI voice assistant",
+      "hours": "Available 24/7"
+    },
+    "errors": {
+      "videoFailed": "Video chat couldn't be loaded. Let's continue with text chat.",
+      "audioFailed": "Audio couldn't be played. Please check your sound settings.",
+      "connectionError": "Connection error. Please try again."
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "continue": "Continue",
+    "back": "Back"
+  }
+}
