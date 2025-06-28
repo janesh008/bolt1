@@ -14,6 +14,21 @@ export interface CartItem {
   session_id?: string;
 }
 
+interface SupabaseCartItemRow {
+  id: string;
+  product_id: string;
+  quantity: number;
+  products: {
+    id: string;
+    product_name?: string;
+    name?: string;
+    price: number;
+    product_images: {
+      image_url: string;
+    }[];
+  };
+}
+
 interface UseCartReturn {
   items: CartItem[];
   totalItems: number;
@@ -89,7 +104,7 @@ export const useCart = (): UseCartReturn => {
 
       if (error) throw error;
 
-      return (data || []).map((item: any) => ({
+      return (data || []).map((item: SupabaseCartItemRow) => ({
         id: item.id,
         product_id: item.product_id,
         name: item.products?.product_name || item.products?.name || 'Unknown Product',

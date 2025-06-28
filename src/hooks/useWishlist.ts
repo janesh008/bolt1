@@ -12,6 +12,21 @@ export interface WishlistItem {
   created_at: string;
 }
 
+interface SupabaseWishlistRow {
+  id: string;
+  product_id: string;
+  created_at: string;
+  products: {
+    id: string;
+    product_name?: string;
+    name?: string;
+    price: number;
+    product_images: {
+      image_url: string;
+    }[];
+  };
+}
+
 interface UseWishlistReturn {
   items: WishlistItem[];
   isLoading: boolean;
@@ -58,7 +73,7 @@ export const useWishlist = (): UseWishlistReturn => {
 
       if (error) throw error;
 
-      const wishlistItems: WishlistItem[] = (data || []).map((item: any) => ({
+      const wishlistItems: WishlistItem[] = (data || []).map((item: SupabaseWishlistRow) => ({
         id: item.id,
         product_id: item.product_id,
         name: item.products?.product_name || item.products?.name || 'Unknown Product',

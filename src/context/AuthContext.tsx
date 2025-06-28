@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     checkAuth();
     
     // Subscribe to auth changes (only if not in dev mode)
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_, session) => {
       if (isDevMode) return; // Skip auth changes in dev mode
       
       if (session && session.user) {
