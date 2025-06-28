@@ -1,11 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Video, X, Globe } from 'lucide-react';
+import { Video, X, Globe, ChevronDown, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import Button from '../ui/Button';
-import LanguageSelector from './LanguageSelector';
-import { isValidConversationUrl } from '../../utils/videoUtils';
+import { isValidConversationUrl, hideUserVideo, applyLanguageSettings } from '../../utils/videoUtils';
+
+interface Language {
+  code: string;
+  name: string;
+  nativeName: string;
+  flag: string;
+}
+
+const languages: Language[] = [
+  { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
+  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇦🇪' },
+  { code: 'gu', name: 'Gujarati', nativeName: 'ગુજરાતી', flag: '🇮🇳' },
+  { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', flag: '🇮🇳' },
+  { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', flag: '🇮🇳' }
+];
 
 const MultilingualAssistant: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -15,84 +31,113 @@ const MultilingualAssistant: React.FC = () => {
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState<'language' | 'video'>('language');
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const { user } = useAuth();
-  const videoContainerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLIFrameElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Load saved language preference
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('preferred_language');
+    if (savedLanguage) {
+      i18n.changeLanguage(savedLanguage);
+    }
+  }, [i18n]);
+
+  // Handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsLanguageDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Hide user video when iframe loads
+  useEffect(() => {
+    if (videoRef.current && conversationUrl) {
+      const iframe = videoRef.current;
+      
+      // Wait for iframe to load
+      iframe.onload = () => {
+        // Hide user video
+        hideUserVideo(iframe);
+        
+        // Apply language settings
+        applyLanguageSettings(iframe, i18n.language);
+      };
+    }
+  }, [conversationUrl, i18n.language]);
 
   const toggleAssistant = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
-      setCurrentStep('language');
-      setVideoError(null);
+      // If we have a saved language, generate video right away
+      const savedLanguage = localStorage.getItem('preferred_language');
+      if (savedLanguage) {
+        generateWelcomeVideo(savedLanguage);
+      }
     }
   };
 
-  const handleLanguageSelected = (language: string) => {
+  const handleLanguageSelect = (language: string) => {
     i18n.changeLanguage(language);
-    setCurrentStep('video');
-    
-    // Generate welcome video based on language
+    localStorage.setItem('preferred_language', language);
+    setIsLanguageDropdownOpen(false);
     generateWelcomeVideo(language);
   };
   
   const generateWelcomeVideo = async (language: string) => {
     try {
       setIsVideoLoading(true);
-
-      const tavusApiKey = '8be099453eaf4049a4790eaf26fef074'; //import.meta.env.TAVUS_API_KEY;
-      const replicaId = import.meta.env.TAVUS_REPLICA_ID || 'r6ae5b6efc9d';
-      const personaId = import.meta.env.TAVUS_PERSONA_ID;
-
-      const userName =
-        user?.user_metadata?.full_name ||
-        user?.email?.split('@')[0] ||
-        'valued customer';
-
-      const requestBody: Record<string, any> = {
-        replica_id: replicaId,
-        conversation_name: `Jewelry consultation with ${userName}`,
-        conversational_context: `User interested in jewelry. Language: ${language}`,
-        custom_greeting: `Hi ${userName}, welcome to our jewelry store.`,
-      };
-
-      if (personaId) {
-        requestBody.persona_id = personaId;
-      }
-
-      const response = await fetch('https://tavusapi.com/v2/conversations', {
+      setVideoError(null);
+      
+      // Get user's name from metadata or use a default
+      const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'valued customer';
+      
+      // Call API to generate video
+      const response = await fetch('/api/video', {
         method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "x-api-key": "8be099453eaf4049a4790eaf26fef074"
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({ 
+          user_name: userName,
+          product_name: 'jewelry',
+          language: language
+        }),
       });
-
-      const data = await response.json();
-
+      
       if (!response.ok) {
-        throw new Error(data?.error || 'Tavus API returned an error');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate welcome video');
       }
-
-      if (data.conversation_url) {
-        setConversationUrl(data.conversation_url);
-        setConversationId(data.conversation_id);
+      
+      const data = await response.json();
+      
+      if (data.conversationUrl) {
+        setConversationUrl(data.conversationUrl);
+        setConversationId(data.conversationId);
         setShowVideo(true);
       } else {
-        throw new Error('No conversation URL returned from Tavus');
+        throw new Error('No conversation URL returned');
       }
-    } catch (err: any) {
-      console.error('[TAVUS] Error generating video:', err);
-      setVideoError(err?.message || 'Failed to generate Tavus video');
+    } catch (error) {
+      console.error('Error generating welcome video:', error);
+      setVideoError(error instanceof Error ? error.message : 'Failed to generate video');
       setShowVideo(false);
     } finally {
       setIsVideoLoading(false);
     }
   };
 
-  // Function to handle closing the assistant
-  const handleClose = () => {
-    setIsOpen(false);
+  const getCurrentLanguage = () => {
+    return languages.find(lang => lang.code === i18n.language) || languages[0];
   };
 
   return (
@@ -106,105 +151,110 @@ const MultilingualAssistant: React.FC = () => {
         <Video className="h-6 w-6" />
       </button>
       
-      {/* Assistant Modal */}
+      {/* Video Assistant */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            className="fixed bottom-20 right-6 z-50 shadow-xl rounded-lg overflow-hidden"
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden"
-            >
-              {/* Header */}
-              <div className="bg-gold-400 text-white p-4 flex items-center justify-between">
-                <h2 className="text-xl font-serif">{t('assistant.title')}</h2>
-                <div className="flex items-center gap-2">
+            <div className="relative w-80 h-60 bg-black">
+              {/* Video Container */}
+              {isVideoLoading ? (
+                <div className="w-full h-full flex flex-col items-center justify-center">
+                  <div className="w-12 h-12 border-4 border-gold-200 border-t-gold-500 rounded-full animate-spin mb-4"></div>
+                  <p className="text-white text-sm">{t('common.loading')}</p>
+                </div>
+              ) : videoError ? (
+                <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
+                  <Video className="h-12 w-12 text-red-500 opacity-50 mb-4" />
+                  <p className="text-white text-sm mb-2">{t('assistant.errors.videoFailed')}</p>
                   <button 
-                    onClick={handleClose}
-                    className="p-1 hover:bg-gold-500 rounded-full transition-colors"
-                    aria-label="Close assistant"
+                    onClick={() => generateWelcomeVideo(i18n.language)}
+                    className="mt-2 px-3 py-1 bg-gold-400 hover:bg-gold-500 text-white rounded-md text-sm"
                   >
-                    <X className="h-6 w-6" />
+                    {t('common.retry')}
                   </button>
                 </div>
-              </div>
-              
-              {/* Main content area */}
-              <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Language selector */}
-                {currentStep === 'language' && (
-                  <div className="w-full flex items-center justify-center bg-cream-50 p-6">
-                    <LanguageSelector onLanguageSelected={handleLanguageSelected} />
+              ) : conversationUrl && isValidConversationUrl(conversationUrl) ? (
+                <iframe
+                  ref={videoRef}
+                  src={conversationUrl}
+                  className="w-full h-full border-0"
+                  allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  onError={() => {
+                    console.error("iframe error event");
+                    setVideoError(t('assistant.errors.videoFailed'));
+                    setShowVideo(false);
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-center p-4">
+                    <Globe className="h-12 w-12 text-gold-400 mx-auto mb-4" />
+                    <p className="text-white text-sm mb-4">{t('assistant.languageSelector')}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {languages.slice(0, 4).map((lang) => (
+                        <button
+                          key={lang.code}
+                          onClick={() => handleLanguageSelect(lang.code)}
+                          className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white p-2 rounded-md text-sm transition-colors"
+                        >
+                          <span>{lang.flag}</span>
+                          <span>{lang.name}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                )}
-                
-                {/* Video display */}
-                {currentStep === 'video' && (
-                  <div 
-                    ref={videoContainerRef}
-                    className="w-full h-full bg-black flex items-center justify-center"
+                </div>
+              )}
+
+              {/* Close Button */}
+              <button
+                onClick={() => setIsOpen(false)}
+                className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              {/* Language Selector */}
+              {conversationUrl && (
+                <div ref={dropdownRef} className="absolute bottom-2 left-2">
+                  <button
+                    onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+                    className="flex items-center gap-1 bg-black/50 hover:bg-black/70 text-white px-2 py-1 rounded-md text-xs transition-colors"
                   >
-                    {showVideo ? (
-                      videoError ? (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center">
-                          <Video className="h-16 w-16 text-red-500 opacity-50 mb-4" />
-                          <p className="text-white text-sm mb-2">{t('assistant.errors.videoFailed')}</p>
-                          <button 
-                            onClick={() => setCurrentStep('language')}
-                            className="mt-4 px-3 py-1 bg-gold-400 hover:bg-gold-500 text-white rounded-md text-sm"
-                          >
-                            {t('common.retry')}
-                          </button>
-                        </div>
-                      ) : isVideoLoading ? (
-                        <div className="w-full h-full flex flex-col items-center justify-center">
-                          <div className="w-12 h-12 border-4 border-gold-200 border-t-gold-500 rounded-full animate-spin mb-4"></div>
-                          <p className="text-white text-sm">{t('common.loading')}</p>
-                        </div>
-                      ) : conversationUrl && isValidConversationUrl(conversationUrl) ? (
-                        <iframe
-                          src={conversationUrl}
-                          className="w-full h-full border-0"
-                          allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          onError={() => {
-                            console.error("iframe error event");
-                            setVideoError(t('assistant.errors.videoFailed'));
-                            setShowVideo(false);
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center">
-                            <Video className="h-16 w-16 text-gray-700 opacity-30 mx-auto mb-4" />
-                            <p className="text-gray-500">{t('assistant.errors.connectionError')}</p>
+                    <span>{getCurrentLanguage().flag}</span>
+                    <span>{getCurrentLanguage().name}</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                  
+                  {isLanguageDropdownOpen && (
+                    <div className="absolute bottom-full left-0 mb-1 bg-white rounded-md shadow-lg overflow-hidden w-40">
+                      {languages.map((lang) => (
+                        <button
+                          key={lang.code}
+                          onClick={() => handleLanguageSelect(lang.code)}
+                          className="flex items-center justify-between w-full px-3 py-2 text-sm text-left hover:bg-cream-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span>{lang.flag}</span>
+                            <span>{lang.name}</span>
                           </div>
-                        </div>
-                      )
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="text-center">
-                          <Video className="h-16 w-16 text-gray-700 opacity-30 mx-auto mb-4" />
-                          <p className="text-gray-500 text-sm">{t('assistant.errors.videoFailed')}</p>
-                          <button 
-                            onClick={() => setShowVideo(true)}
-                            className="mt-4 px-3 py-1 bg-gold-400 hover:bg-gold-500 text-white rounded-md text-sm"
-                          >
-                            {t('assistant.actions.startChat')}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </motion.div>
+                          {lang.code === i18n.language && (
+                            <Check className="h-3 w-3 text-gold-500" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
