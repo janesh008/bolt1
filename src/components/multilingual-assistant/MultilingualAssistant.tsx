@@ -165,7 +165,7 @@ const MultilingualAssistant: React.FC = () => {
     setShowVideo(true);
 
     console.log('[TAVUS] ✅ Conversation ready:', conversation_url);
-  } catch (error) {
+    } catch (error) {
      console.error('[TAVUS] Exception:', error);
      console.error('Error generating welcome video:', error);
       setVideoError(error instanceof Error ? error.message : 'Failed to generate video');
