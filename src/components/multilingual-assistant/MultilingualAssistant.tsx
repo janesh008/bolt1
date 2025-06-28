@@ -108,72 +108,62 @@ const MultilingualAssistant: React.FC = () => {
     // Generate welcome video based on language
     generateWelcomeVideo(language);
   };
-  
+
   const generateWelcomeVideo = async (language: string) => {
-    try {
-    console.log("[🎬 TAVUS] Starting video generation...");
+  try {
+    console.log('[TAVUS] 🎬 Starting welcome video generation...');
+    setIsVideoLoading(true);
 
-    const tavusApiKey = process.env.NEXT_PUBLIC_TAVUS_API_KEY;
-    const replicaId = process.env.NEXT_PUBLIC_TAVUS_REPLICA_ID || 'r6ae5b6efc9d';
-    const personaId = process.env.NEXT_PUBLIC_TAVUS_PERSONA_ID;
+    const userName =
+      user?.user_metadata?.full_name ||
+      user?.email?.split('@')[0] ||
+      'valued customer';
 
-    if (!tavusApiKey) {
-      console.error('[TAVUS] Missing API key');
-      return;
-    }
+    console.log('[TAVUS] 👤 User name:', userName);
+    console.log('[TAVUS] 🌐 Language selected:', language);
 
-    const requestBody: Record<string, any> = {
-      replica_id: replicaId,
-      conversation_name: `Jewelry consultation with ${userName}`,
-      conversational_context: `The user is interested in ${input}. Their name is ${userName}. Language: ${language}`,
-      custom_greeting: `Hello ${userName}, I'm excited to help you find the perfect ${input} today!`,
-    };
-
-    if (personaId) {
-      requestBody.persona_id = personaId;
-    }
-
-    console.log("[TAVUS] Sending request:", requestBody);
-
-    const res = await fetch('https://tavusapi.com/v2/conversations', {
+    const response = await fetch('/api/video', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tavusApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({
+        user_name: userName,
+        product_name: 'jewelry',
+        language: language,
+      }),
     });
 
-    const data = await res.json();
+    console.log('[TAVUS] 📤 API request sent to /api/video');
 
-    console.log("[TAVUS] Raw response:", data);
+    const data = await response.json();
 
-    if (!res.ok) {
-      console.error('[TAVUS] API returned error:', data);
-      return;
+    console.log('[TAVUS] 📥 API response received:', data);
+
+    if (!response.ok) {
+      console.error('[TAVUS] ❌ API returned failure:', data);
+      throw new Error(data?.error || 'Failed to generate welcome video');
     }
 
-    const { conversation_url, conversation_id, status } = data;
+    if (data.conversationUrl) {
+      console.log('[TAVUS] ✅ Video ready. Showing video:', data.conversationUrl);
 
-    if (!conversation_url) {
-      console.error('[TAVUS] No conversation_url returned');
-      return;
+      setConversationUrl(data.conversationUrl);
+      setConversationId(data.conversationId);
+      setShowVideo(true);
+    } else {
+      console.error('[TAVUS] ❗ No conversation URL returned from API');
+      throw new Error('No conversation URL returned');
     }
-
-    setConversationUrl(conversation_url);
-    setConversationId(conversation_id);
-    setShowVideo(true);
-
-    console.log('[TAVUS] ✅ Conversation ready:', conversation_url);
-    } catch (error) {
-     console.error('[TAVUS] Exception:', error);
-     console.error('Error generating welcome video:', error);
-      setVideoError(error instanceof Error ? error.message : 'Failed to generate video');
-      setShowVideo(false);
-    } finally {
-      setIsVideoLoading(false);
-    }
-  };
+  } catch (error: any) {
+    console.error('[TAVUS] 🚨 Error generating welcome video:', error);
+    setVideoError(error instanceof Error ? error.message : 'Failed to generate video');
+    setShowVideo(false);
+  } finally {
+    console.log('[TAVUS] 🔁 Video loading complete.');
+    setIsVideoLoading(false);
+  }
+};
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
