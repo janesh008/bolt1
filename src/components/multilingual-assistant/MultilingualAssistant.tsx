@@ -12,6 +12,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import MinimizedChat from './MinimizedChat';
 import PreferencesForm from './PreferencesForm';
+import { isValidConversationUrl } from '../../utils/videoUtils';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -43,9 +44,7 @@ const MultilingualAssistant: React.FC = () => {
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
-  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
-  const [showPreferencesForm, setShowPreferencesForm] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'language' | 'preferences' | 'chat'>('language');
+  const [currentStep, setCurrentStep] = useState<'language' | 'chat'>('language');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { user } = useAuth();
@@ -85,7 +84,6 @@ const MultilingualAssistant: React.FC = () => {
     setIsOpen(!isOpen);
     setIsMinimized(false);
     if (!isOpen) {
-      setShowLanguageSelector(true);
       setCurrentStep('language');
     }
   };
@@ -96,9 +94,7 @@ const MultilingualAssistant: React.FC = () => {
 
   const handleLanguageSelected = (language: string) => {
     i18n.changeLanguage(language);
-    setShowLanguageSelector(false);
-    setShowPreferencesForm(true);
-    setCurrentStep('preferences');
+    setCurrentStep('chat');
     
     // Add language-specific greeting
     setMessages([
@@ -153,31 +149,6 @@ const MultilingualAssistant: React.FC = () => {
     } finally {
       setIsVideoLoading(false);
     }
-  };
-
-  const handlePreferencesSubmit = async (preferences: any) => {
-    setShowPreferencesForm(false);
-    setCurrentStep('chat');
-    
-    // Add user preferences message
-    const preferencesMessage = `
-      ${t('assistant.preferences.jewelryType')}: ${preferences.jewelryType}
-      ${t('assistant.preferences.metalPreference')}: ${preferences.metalPreference}
-      ${t('assistant.preferences.category')}: ${preferences.category}
-      ${t('assistant.preferences.style')}: ${preferences.style}
-      ${t('assistant.preferences.budget')}: ${preferences.budget}
-    `;
-    
-    const userMessage: Message = {
-      role: 'user',
-      content: preferencesMessage,
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    
-    // Generate AI response based on preferences
-    await generateAIResponse(preferencesMessage);
   };
 
   const handleSendMessage = async () => {
@@ -328,13 +299,6 @@ const MultilingualAssistant: React.FC = () => {
                 {currentStep === 'language' && (
                   <div className="w-full flex items-center justify-center bg-cream-50 p-6">
                     <LanguageSelector onLanguageSelected={handleLanguageSelected} />
-                  </div>
-                )}
-                
-                {/* Preferences form */}
-                {currentStep === 'preferences' && (
-                  <div className="w-full flex items-center justify-center bg-cream-50 p-6">
-                    <PreferencesForm onSubmit={handlePreferencesSubmit} />
                   </div>
                 )}
                 

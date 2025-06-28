@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Maximize2, X, Mic, MicOff, Send } from 'lucide-react';
 import Button from '../ui/Button';
 import { useTranslation } from 'react-i18next';
+import { isValidConversationUrl } from '../../utils/videoUtils';
 
 interface MinimizedChatProps {
   conversationUrl: string | null;
@@ -41,18 +42,6 @@ const MinimizedChat: React.FC<MinimizedChatProps> = ({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
-    }
-  };
-
-  const isValidConversationUrl = (url: string | null): boolean => {
-    if (!url) return false;
-    
-    try {
-      const urlObj = new URL(url);
-      // Check if it's a valid Tavus URL
-      return urlObj.hostname.includes('tavus.daily.co') || urlObj.hostname.includes('daily.co');
-    } catch (error) {
-      return false;
     }
   };
 
@@ -118,7 +107,7 @@ const MinimizedChat: React.FC<MinimizedChatProps> = ({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyPress}
-          placeholder={t('assistant.placeholders.message', 'Ask something...')}
+          placeholder="Ask something..."
           className="flex-1 text-sm px-2 py-1 border border-cream-200 rounded focus:outline-none focus:ring-1 focus:ring-gold-400"
           disabled={isLoading}
         />

@@ -63,7 +63,7 @@ const MessageList: React.FC<MessageListProps> = ({
                 <Volume2 className="h-4 w-4 mr-1" />
                 {isPlaying && audioRef.current?.src === message.audioUrl 
                   ? t('common.loading')
-                  : t('assistant.actions.playAudio', 'Play audio response')}
+                  : 'Play audio response'}
               </button>
             )}
             

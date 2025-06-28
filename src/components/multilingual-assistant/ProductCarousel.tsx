@@ -86,14 +86,14 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ products }) => {
           <button
             onClick={prevSlide}
             className="absolute left-0 top-1/2 -translate-y-1/2 p-1 bg-white rounded-full shadow-md text-charcoal-600 hover:text-gold-500 transition-colors"
-            aria-label={t('assistant.actions.previousProduct', 'Previous product')}
+            aria-label="Previous product"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button
             onClick={nextSlide}
             className="absolute right-0 top-1/2 -translate-y-1/2 p-1 bg-white rounded-full shadow-md text-charcoal-600 hover:text-gold-500 transition-colors"
-            aria-label={t('assistant.actions.nextProduct', 'Next product')}
+            aria-label="Next product"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -106,7 +106,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ products }) => {
                 className={`w-2 h-2 rounded-full transition-colors ${
                   index === currentIndex ? 'bg-gold-500' : 'bg-cream-200'
                 }`}
-                aria-label={t('assistant.actions.goToProduct', { index: index + 1 }, `Go to product ${index + 1}`)}
+                aria-label={`Go to product ${index + 1}`}
               />
             ))}
           </div>

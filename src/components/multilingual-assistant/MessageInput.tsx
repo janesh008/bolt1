@@ -54,7 +54,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder={t('assistant.placeholders.message', 'Ask about jewelry, styles, or recommendations...')}
+            placeholder="Ask about jewelry, styles, or recommendations..."
             className="w-full px-4 py-3 pr-12 border border-cream-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-400 resize-none"
             rows={1}
             disabled={isLoading}

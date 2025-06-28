@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { Video } from 'lucide-react';
 import Button from '../ui/Button';
 import { useTranslation } from 'react-i18next';
+import { isValidConversationUrl } from '../../utils/videoUtils';
 
 interface VideoChatProps {
   showVideo: boolean;
@@ -36,18 +37,6 @@ const VideoChat: React.FC<VideoChatProps> = ({
       }
     }
   }, [conversationUrl, setVideoError, t]);
-
-  const isValidConversationUrl = (url: string | null): boolean => {
-    if (!url) return false;
-    
-    try {
-      const urlObj = new URL(url);
-      // Check if it's a valid Tavus URL
-      return urlObj.hostname.includes('tavus.daily.co') || urlObj.hostname.includes('daily.co');
-    } catch (error) {
-      return false;
-    }
-  };
 
   return (
     <>
