@@ -33,7 +33,7 @@ const MultilingualAssistant: React.FC = () => {
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
-  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
   const { user } = useAuth();
@@ -46,7 +46,7 @@ const MultilingualAssistant: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
           assistantRef.current && assistantRef.current.contains(event.target as Node)) {
-        setShowLanguageDropdown(false);
+        setIsDropdownOpen(false);
       }
     };
 
@@ -59,7 +59,7 @@ const MultilingualAssistant: React.FC = () => {
   const toggleAssistant = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
-      setShowLanguageDropdown(false);
+      setIsDropdownOpen(false);
       setVideoError(null);
       setSelectedLanguage(null);
       setConversationUrl(null);
@@ -67,8 +67,8 @@ const MultilingualAssistant: React.FC = () => {
     }
   };
 
-  const toggleLanguageDropdown = () => {
-    setShowLanguageDropdown(!showLanguageDropdown);
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
   const toggleMinimize = () => {
@@ -78,7 +78,7 @@ const MultilingualAssistant: React.FC = () => {
   const handleLanguageSelected = (language: Language) => {
     setSelectedLanguage(language);
     i18n.changeLanguage(language.code);
-    setShowLanguageDropdown(false);
+    setIsDropdownOpen(false);
     
     // Generate welcome video based on language
     generateWelcomeVideo(language.code);
@@ -224,20 +224,42 @@ const MultilingualAssistant: React.FC = () => {
                         </p>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-2 overflow-y-auto max-h-[200px]">
-                        {languages.map((language) => (
-                          <button
-                            key={language.code}
-                            onClick={() => handleLanguageSelected(language)}
-                            className="flex items-center p-2 border border-cream-200 rounded hover:bg-gold-50 hover:border-gold-300 transition-colors"
-                          >
-                            <span className="text-xl mr-2">{language.flag}</span>
-                            <div className="text-left">
-                              <div className="text-xs font-medium">{language.name}</div>
-                              <div className="text-xs text-charcoal-500">{language.nativeName}</div>
-                            </div>
-                          </button>
-                        ))}
+                      {/* Language Dropdown */}
+                      <div className="relative mt-4" ref={dropdownRef}>
+                        <button
+                          onClick={toggleDropdown}
+                          className="w-full flex items-center justify-between p-3 border border-cream-200 rounded-md bg-white hover:border-gold-300 transition-colors"
+                        >
+                          <span className="text-charcoal-700">
+                            {selectedLanguage ? (
+                              <span className="flex items-center">
+                                <span className="mr-2 text-xl">{selectedLanguage.flag}</span>
+                                {selectedLanguage.name}
+                              </span>
+                            ) : (
+                              'Choose your language'
+                            )}
+                          </span>
+                          <ChevronDown className={`h-4 w-4 text-charcoal-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        {isDropdownOpen && (
+                          <div className="absolute z-10 mt-1 w-full bg-white border border-cream-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                            {languages.map((language) => (
+                              <button
+                                key={language.code}
+                                onClick={() => handleLanguageSelected(language)}
+                                className="w-full flex items-center p-3 hover:bg-cream-50 transition-colors text-left"
+                              >
+                                <span className="text-xl mr-3">{language.flag}</span>
+                                <div>
+                                  <div className="font-medium text-charcoal-800">{language.name}</div>
+                                  <div className="text-xs text-charcoal-500">{language.nativeName}</div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
