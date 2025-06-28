@@ -260,10 +260,19 @@ const MultilingualAssistant: React.FC = () => {
                           </div>
                         ) : conversationUrl && isValidConversationUrl(conversationUrl) ? (
                           <iframe
-                            src={conversationUrl}
+                            src={`${conversationUrl}?startVideoOff=true&startAudioOff=false`}
                             className="w-full h-full border-0"
-                            allow="camera; microphone; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            width="300"
+                            height="300"
+                            allow="microphone; autoplay; clipboard-write; encrypted-media; picture-in-picture"
                             allowFullScreen
+                            style={{
+                                position: 'fixed',
+                                 bottom: '20px',
+                                 right: '20px',
+                                 borderRadius: '16px',
+                                 overflow: 'hidden',
+                               }}
                             onError={() => {
                               console.error("iframe error event");
                               setVideoError(t('assistant.errors.videoFailed'));
