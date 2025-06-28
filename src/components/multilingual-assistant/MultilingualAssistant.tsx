@@ -109,7 +109,7 @@ const MultilingualAssistant: React.FC = () => {
       method: 'POST',
       headers: {
        "Content-Type": "application/json",
-       "x-api-key": tavusApiKey
+       "x-api-key": ${tavusApiKey}
       },
       body: JSON.stringify(requestBody),
     });
