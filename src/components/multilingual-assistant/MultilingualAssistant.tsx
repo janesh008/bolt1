@@ -113,7 +113,7 @@ const MultilingualAssistant: React.FC = () => {
   try {
     setIsVideoLoading(true);
 
-    const tavusApiKey = process.env.NEXT_PUBLIC_TAVUS_API_KEY;
+    const tavusApiKey = import.meta.env.TAVUS_API_KEY;
     const replicaId = process.env.NEXT_PUBLIC_TAVUS_REPLICA_ID || 'r6ae5b6efc9d';
     const personaId = process.env.NEXT_PUBLIC_TAVUS_PERSONA_ID;
 
