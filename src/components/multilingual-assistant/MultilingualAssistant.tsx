@@ -136,8 +136,8 @@ const MultilingualAssistant: React.FC = () => {
     const response = await fetch('https://tavusapi.com/v2/conversations', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${tavusApiKey}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
+        "x-api-key": "8be099453eaf4049a4790eaf26fef074"
       },
       body: JSON.stringify(requestBody),
     });
