@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Video, X, Globe, ChevronDown, ChevronUp, Minimize2, Maximize2 } from 'lucide-react';
+import { Video, X, Globe, Minimize2, Maximize2, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { isValidConversationUrl } from '../../utils/videoUtils';
@@ -39,11 +39,13 @@ const MultilingualAssistant: React.FC = () => {
   const { user } = useAuth();
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const assistantRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+          assistantRef.current && assistantRef.current.contains(event.target as Node)) {
         setShowLanguageDropdown(false);
       }
     };
@@ -61,6 +63,7 @@ const MultilingualAssistant: React.FC = () => {
       setVideoError(null);
       setSelectedLanguage(null);
       setConversationUrl(null);
+      setIsMinimized(false);
     }
   };
 
@@ -81,60 +84,60 @@ const MultilingualAssistant: React.FC = () => {
     generateWelcomeVideo(language.code);
   };
   
-   const generateWelcomeVideo = async (language: string) => {
-  try {
-    setIsVideoLoading(true);
+  const generateWelcomeVideo = async (language: string) => {
+    try {
+      setIsVideoLoading(true);
 
-    const tavusApiKey = import.meta.env.TAVUS_API_KEY;
-    const replicaId = import.meta.env.TAVUS_REPLICA_ID || 'r6ae5b6efc9d';
-    const personaId = import.meta.env.TAVUS_PERSONA_ID;
+      const tavusApiKey = '8be099453eaf4049a4790eaf26fef074'; // import.meta.env.TAVUS_API_KEY
+      const replicaId = import.meta.env.TAVUS_REPLICA_ID || 'r6ae5b6efc9d';
+      const personaId = import.meta.env.TAVUS_PERSONA_ID;
 
-    const userName =
-      user?.user_metadata?.full_name ||
-      user?.email?.split('@')[0] ||
-      'valued customer';
+      const userName =
+        user?.user_metadata?.full_name ||
+        user?.email?.split('@')[0] ||
+        'valued customer';
 
-    const requestBody: Record<string, any> = {
-      replica_id: replicaId,
-      conversation_name: `Jewelry consultation with ${userName}`,
-      conversational_context: `User interested in jewelry. Language: ${language}`,
-      custom_greeting: `Hi ${userName}, welcome to our jewelry store.`,
-    };
+      const requestBody: Record<string, any> = {
+        replica_id: replicaId,
+        conversation_name: `Jewelry consultation with ${userName}`,
+        conversational_context: `User interested in jewelry. Language: ${language}`,
+        custom_greeting: `Hi ${userName}, welcome to our jewelry store. I'm here to help you find the perfect piece.`,
+      };
 
-    if (personaId) {
-      requestBody.persona_id = personaId;
+      if (personaId) {
+        requestBody.persona_id = personaId;
+      }
+
+      const response = await fetch('https://tavusapi.com/v2/conversations', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": tavusApiKey
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Tavus API returned an error');
+      }
+
+      if (data.conversation_url) {
+        setConversationUrl(data.conversation_url);
+        setConversationId(data.conversation_id);
+        setShowVideo(true);
+      } else {
+        throw new Error('No conversation URL returned from Tavus');
+      }
+    } catch (err: any) {
+      console.error('[TAVUS] Error generating video:', err);
+      setVideoError(err?.message || 'Failed to generate Tavus video');
+      setShowVideo(false);
+    } finally {
+      setIsVideoLoading(false);
     }
-
-    const response = await fetch('https://tavusapi.com/v2/conversations', {
-      method: 'POST',
-      headers: {
-       "Content-Type": "application/json",
-       "x-api-key": '8be099453eaf4049a4790eaf26fef074'
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data?.error || 'Tavus API returned an error');
-    }
-
-    if (data.conversation_url) {
-      setConversationUrl(data.conversation_url);
-      setConversationId(data.conversation_id);
-      setShowVideo(true);
-    } else {
-      throw new Error('No conversation URL returned from Tavus');
-    }
-  } catch (err: any) {
-    console.error('[TAVUS] Error generating video:', err);
-    setVideoError(err?.message || 'Failed to generate Tavus video');
-    setShowVideo(false);
-  } finally {
-    setIsVideoLoading(false);
-  }
-};
+  };
 
   // Function to handle closing the assistant
   const handleClose = () => {
@@ -160,6 +163,7 @@ const MultilingualAssistant: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed bottom-20 right-6 z-50"
+            ref={assistantRef}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -172,7 +176,7 @@ const MultilingualAssistant: React.FC = () => {
               }}
             >
               {/* Header */}
-              <div className="bg-gold-400 text-white p-2 flex items-center justify-between">
+              <div className="bg-gold-400 text-white p-3 flex items-center justify-between">
                 <h2 className="text-sm font-medium flex items-center">
                   {selectedLanguage ? (
                     <>
@@ -206,7 +210,7 @@ const MultilingualAssistant: React.FC = () => {
               
               {/* Content area - only show if not minimized */}
               {!isMinimized && (
-                <div className="relative h-[calc(300px-32px)]">
+                <div className="relative h-[calc(300px-50px)]">
                   {/* Language selector */}
                   {!selectedLanguage && (
                     <div className="w-full h-full bg-cream-50 p-4">
@@ -215,6 +219,9 @@ const MultilingualAssistant: React.FC = () => {
                         <h3 className="text-sm font-medium text-charcoal-800">
                           {t('assistant.languageSelector')}
                         </h3>
+                        <p className="text-xs text-charcoal-500 mt-1">
+                          Select your preferred language to continue
+                        </p>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2 overflow-y-auto max-h-[200px]">
@@ -237,7 +244,10 @@ const MultilingualAssistant: React.FC = () => {
                   
                   {/* Video display */}
                   {selectedLanguage && (
-                    <div className="w-full h-full bg-black">
+                    <div 
+                      ref={videoContainerRef}
+                      className="w-full h-full bg-black"
+                    >
                       {showVideo ? (
                         videoError ? (
                           <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
