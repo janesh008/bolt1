@@ -111,56 +111,55 @@ const MultilingualAssistant: React.FC = () => {
 
   const generateWelcomeVideo = async (language: string) => {
   try {
-    console.log('[TAVUS] 🎬 Starting welcome video generation...');
     setIsVideoLoading(true);
+
+    const tavusApiKey = process.env.NEXT_PUBLIC_TAVUS_API_KEY;
+    const replicaId = process.env.NEXT_PUBLIC_TAVUS_REPLICA_ID || 'r6ae5b6efc9d';
+    const personaId = process.env.NEXT_PUBLIC_TAVUS_PERSONA_ID;
 
     const userName =
       user?.user_metadata?.full_name ||
       user?.email?.split('@')[0] ||
       'valued customer';
 
-    console.log('[TAVUS] 👤 User name:', userName);
-    console.log('[TAVUS] 🌐 Language selected:', language);
+    const requestBody: Record<string, any> = {
+      replica_id: replicaId,
+      conversation_name: `Jewelry consultation with ${userName}`,
+      conversational_context: `User interested in jewelry. Language: ${language}`,
+      custom_greeting: `Hi ${userName}, welcome to our jewelry store.`,
+    };
 
-    const response = await fetch('/api/video', {
+    if (personaId) {
+      requestBody.persona_id = personaId;
+    }
+
+    const response = await fetch('https://tavusapi.com/v2/conversations', {
       method: 'POST',
       headers: {
+        Authorization: `Bearer ${tavusApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        user_name: userName,
-        product_name: 'jewelry',
-        language: language,
-      }),
+      body: JSON.stringify(requestBody),
     });
-
-    console.log('[TAVUS] 📤 API request sent to /api/video');
 
     const data = await response.json();
 
-    console.log('[TAVUS] 📥 API response received:', data);
-
     if (!response.ok) {
-      console.error('[TAVUS] ❌ API returned failure:', data);
-      throw new Error(data?.error || 'Failed to generate welcome video');
+      throw new Error(data?.error || 'Tavus API returned an error');
     }
 
-    if (data.conversationUrl) {
-      console.log('[TAVUS] ✅ Video ready. Showing video:', data.conversationUrl);
-
-      setConversationUrl(data.conversationUrl);
-      setConversationId(data.conversationId);
+    if (data.conversation_url) {
+      setConversationUrl(data.conversation_url);
+      setConversationId(data.conversation_id);
       setShowVideo(true);
     } else {
-      console.error('[TAVUS] ❗ No conversation URL returned from API');
-      throw new Error('No conversation URL returned');
+      throw new Error('No conversation URL returned from Tavus');
     }
-  } catch (error: any) {
-    console.error('[TAVUS] 🚨 Error generating welcome video:', error);
-    setVideoError(error instanceof Error ? error.message : 'Failed to generate video');
+  } catch (err: any) {
+    console.error('[TAVUS] Error generating video:', err);
+    setVideoError(err?.message || 'Failed to generate Tavus video');
     setShowVideo(false);
   } finally {
-    console.log('[TAVUS] 🔁 Video loading complete.');
     setIsVideoLoading(false);
   }
 };
