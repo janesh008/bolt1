@@ -4,16 +4,16 @@ import { ElevenLabs } from 'elevenlabs-node';
 
 // Initialize OpenAI
 const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_KEY || process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENROUTER_KEY ? 'https://openrouter.ai/api/v1' : undefined,
+  apiKey: import.meta.env.OPENROUTER_KEY || import.meta.env.OPENAI_API_KEY,
+  baseURL: import.meta.env.OPENROUTER_KEY ? 'https://openrouter.ai/api/v1' : undefined,
 });
 
 // Initialize ElevenLabs
 const elevenlabs = new ElevenLabs({
-  apiKey: process.env.ELEVENLABS_API_KEY || '',
+  apiKey: import.meta.env.ELEVENLABS_API_KEY || '',
 });
 
-const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB'; // Default to "Rachel"
+const VOICE_ID = import.meta.env.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB'; // Default to "Rachel"
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     
     // Get response from OpenAI
     const completion = await openai.chat.completions.create({
-      model: process.env.OPENROUTER_KEY ? 'openai/gpt-4o-mini-high' : 'gpt-4o',
+      model: import.meta.env.OPENROUTER_KEY ? 'openai/gpt-4o-mini-high' : 'gpt-4o',
       messages: messages as any,
       temperature: 0.7,
       max_tokens: 500,
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Assistant API error:', error);
     return NextResponse.json(
-      { error: 'Failed to process request' },
+      { error: 'Failed to import.meta request' },
       { status: 500 }
     );
   }
