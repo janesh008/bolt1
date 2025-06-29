@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, Video, AlertCircle, Check } from 'lucide-react';
+import { X, Video, AlertCircle, Check } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { uploadProductVideo } from '../../../lib/supabase-storage';
 import { Badge } from '../../ui/badge';
