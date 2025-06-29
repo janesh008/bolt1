@@ -102,6 +102,9 @@ const Header = () => {
               <User className="h-5 w-5" />
             </Link>
           )}
+
+          <Link to="https://bolt.new/">
+          Bolt.new Hackthon 2025</Link>
         </div>
       </div>
       
