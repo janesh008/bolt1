@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import SupportAssistant from '../components/multilingual-assistant/SupportAssistant';
 import Button from '../components/ui/Button';
 import { Tabs, TabsContent } from '../components/ui/tabs';
 import toast from 'react-hot-toast';
@@ -246,6 +247,16 @@ const AccountPage = () => {
   
   return (
     <div className="container mx-auto px-4 py-8 pt-24">
+      <div className="bg-gold-50 p-4 rounded-lg mb-6 border border-gold-200 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-medium text-charcoal-800">Need help with your account?</h2>
+          <p className="text-charcoal-600">Our AI assistant is available 24/7 to help with your questions.</p>
+        </div>
+        <Button onClick={() => document.querySelector('.fixed.bottom-6.right-6.z-50')?.dispatchEvent(new MouseEvent('click'))}>
+          Talk to Support
+        </Button>
+      </div>
+      
       <div className="max-w-6xl mx-auto">
         <h1 className="font-serif text-3xl md:text-4xl text-charcoal-800 mb-8">My Account</h1>
         

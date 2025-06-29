@@ -9,6 +9,7 @@ import { AdminAuthProvider } from './context/AdminAuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import SupportAssistant from './components/multilingual-assistant/SupportAssistant';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 
@@ -174,6 +175,7 @@ function App() {
                   </Routes>
                 </Suspense>
                 <Toaster position="top-center" />
+                <SupportAssistant />
               </WishlistProvider>
             </CartProvider>
           </AdminAuthProvider>

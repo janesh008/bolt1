@@ -13,11 +13,11 @@ interface TavusErrorResponse {
   status?: number;
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   console.info('[TAVUS] Received API request');
 
   try {
-    const body = await req.json();
+    const body = await request.json();
     const { user_name, product_name } = body;
 
     console.info('[TAVUS] Request body:', body);
@@ -50,6 +50,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Construct system prompt based on session details
+    let systemPrompt = `You are an expert jewelry designer specializing in ${product_name} design.`;
+    
+    // Construct request body
     const requestBody: Record<string, any> = {
       replica_id: replicaId,
       conversation_name: `Jewelry Consultation with ${user_name}`,
@@ -61,63 +65,34 @@ export async function POST(req: NextRequest) {
       requestBody.persona_id = personaId;
     }
 
-    console.info('[TAVUS] Making API call to Tavus...', {
-      endpoint: 'https://tavusapi.com/v2/conversations',
+    const completion = await axios.post(
+      'https://tavusapi.com/v2/conversations',
       requestBody,
-      headersPreview: {
-        Authorization: `Bearer ${tavusApiKey?.substring(0, 5)}...`,
-        'Content-Type': 'application/json'
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": tavusApiKey
+        },
       }
-    });
+    );
 
-    let conversationData: TavusConversationResponse;
-
-    try {
-      const response = await axios.post(
-        'https://tavusapi.com/v2/conversations',
-        requestBody,
-        {
-          headers: {
-            Authorization: `Bearer ${tavusApiKey}`,
-            'Content-Type': 'application/json'
-          },
-          timeout: 10000
-        }
-      );
-
-      console.info('[TAVUS] Raw Tavus response:', response.data);
-
-      conversationData = response.data;
-
-      if (!conversationData?.conversation_url) {
-        throw new Error('Tavus API response missing conversation_url');
-      }
-    } catch (apiError: any) {
-      console.error('[TAVUS] Tavus API error:', apiError.response?.data || apiError.message);
-      throw new Error(apiError.response?.data?.message || apiError.message || 'Tavus API call failed');
+    if (!completion.data) {
+      throw new Error('No data returned from Tavus API');
     }
 
-    console.info('[TAVUS] Successfully created conversation:', {
-      id: conversationData.conversation_id,
-      url: conversationData.conversation_url
-    });
+    const conversationData = completion.data;
 
-    return NextResponse.json({
+    if (!conversationData.conversation_url) {
+      throw new Error('No conversation URL returned from Tavus');
+    }
+
+    return NextResponse.json({ 
       conversationUrl: conversationData.conversation_url,
       conversationId: conversationData.conversation_id,
       status: conversationData.status
     });
-  } catch (error: any) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('[TAVUS] General error:', message);
-
-    return NextResponse.json(
-      {
-        error: 'Failed to create video conversation',
-        details: message,
-        fallbackToText: true
-      },
-      { status: 500 }
-    );
+  } catch (err: any) {
+    console.error('[TAVUS] Error generating video:', err);
+    return NextResponse.json({ error: err?.message || 'Failed to generate Tavus video' }, { status: 500 });
   }
 }
