@@ -37,7 +37,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ onLanguageSelected 
           <Globe className="h-8 w-8 text-gold-500" />
         </div>
         <h3 className="text-xl font-medium text-charcoal-800 mb-2">
-          {t('assistant.languageSelector')}
+          {t('assistant.languageSelector', 'Choose your preferred language')}
         </h3>
         <p className="text-charcoal-500">
           Please select your preferred language to continue

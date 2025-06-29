@@ -36,13 +36,12 @@ export async function POST(req: NextRequest) {
     
     Keep responses concise, friendly, and helpful. If you recommend products, explain why they would be a good fit.
     
+    IMPORTANT: Respond in the same language as the user's message. The current language is: ${language}.
+    
     If the user is asking about a specific product or category, indicate this in your response by including a "category" field.
     If the user mentions a budget, include a "budget" field with the amount.
     If the user mentions a style preference, include a "style" field.
-    If the user mentions a material preference, include a "material" field.
-    
-    For example, if a user asks about gold rings under $1000, your response should include:
-    category: "ring", budget: 1000, material: "gold"`;
+    If the user mentions a material preference, include a "material" field.`;
     
     // Format conversation history for the API
     const formattedHistory = history.map((msg: any) => ({
@@ -120,7 +119,7 @@ export async function POST(req: NextRequest) {
       const audioResponse = await elevenlabs.textToSpeech({
         voice_id: VOICE_ID,
         text: reply,
-        model_id: 'eleven_monolingual_v1',
+        model_id: 'eleven_multilingual_v1',
         voice_settings: {
           stability: 0.5,
           similarity_boost: 0.75,

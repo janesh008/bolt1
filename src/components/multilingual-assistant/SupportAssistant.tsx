@@ -17,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import LanguageSelector from './LanguageSelector';
 import Button from '../ui/Button';
+import { createRoot } from 'react-dom/client';
 
 // Speech recognition setup with type safety
 declare global {
@@ -34,6 +35,12 @@ interface Message {
   timestamp: Date;
 }
 
+// Create a global event for opening the support assistant
+export const openSupportAssistant = () => {
+  const event = new CustomEvent('openSupportAssistant');
+  document.dispatchEvent(event);
+};
+
 const SupportAssistant: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
@@ -46,6 +53,20 @@ const SupportAssistant: React.FC = () => {
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  
+  // Listen for the custom event to open the assistant
+  useEffect(() => {
+    const handleOpenAssistant = () => {
+      setIsOpen(true);
+      setIsMinimized(false);
+    };
+    
+    document.addEventListener('openSupportAssistant', handleOpenAssistant);
+    
+    return () => {
+      document.removeEventListener('openSupportAssistant', handleOpenAssistant);
+    };
+  }, []);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
