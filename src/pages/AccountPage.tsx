@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import SupportAssistant from '../components/multilingual-assistant/SupportAssistant';
-import { openSupportAssistant } from '../components/multilingual-assistant/SupportAssistant';
 import Button from '../components/ui/Button';
 import { Tabs, TabsContent } from '../components/ui/tabs';
 import toast from 'react-hot-toast';
@@ -253,7 +252,7 @@ const AccountPage = () => {
           <h2 className="text-lg font-medium text-charcoal-800">Need help with your account?</h2>
           <p className="text-charcoal-600">Our AI assistant is available 24/7 to help with your questions.</p>
         </div>
-        <Button onClick={() => openSupportAssistant()}>
+        <Button onClick={() => document.querySelector('.fixed.bottom-6.right-6.z-50')?.dispatchEvent(new MouseEvent('click'))}>
           Talk to Support
         </Button>
       </div>

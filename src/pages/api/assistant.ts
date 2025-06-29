@@ -4,16 +4,16 @@ import { ElevenLabs } from 'elevenlabs-node';
 
 // Initialize OpenAI
 const openai = new OpenAI({
-  apiKey: import.meta.env.OPENROUTER_KEY || import.meta.env.OPENAI_API_KEY,
-  baseURL: import.meta.env.OPENROUTER_KEY ? 'https://openrouter.ai/api/v1' : undefined,
+  apiKey: process.env.OPENROUTER_KEY || process.env.OPENAI_API_KEY,
+  baseURL: process.env.OPENROUTER_KEY ? 'https://openrouter.ai/api/v1' : undefined,
 });
 
 // Initialize ElevenLabs
 const elevenlabs = new ElevenLabs({
-  apiKey: import.meta.env.ELEVENLABS_API_KEY || '',
+  apiKey: process.env.ELEVENLABS_API_KEY || '',
 });
 
-const VOICE_ID = import.meta.env.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB'; // Default to "Rachel"
+const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB'; // Default to "Rachel"
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,12 +36,13 @@ export async function POST(req: NextRequest) {
     
     Keep responses concise, friendly, and helpful. If you recommend products, explain why they would be a good fit.
     
-    IMPORTANT: Respond in the same language as the user's message. The current language is: ${language}.
-    
     If the user is asking about a specific product or category, indicate this in your response by including a "category" field.
     If the user mentions a budget, include a "budget" field with the amount.
     If the user mentions a style preference, include a "style" field.
-    If the user mentions a material preference, include a "material" field.`;
+    If the user mentions a material preference, include a "material" field.
+    
+    For example, if a user asks about gold rings under $1000, your response should include:
+    category: "ring", budget: 1000, material: "gold"`;
     
     // Format conversation history for the API
     const formattedHistory = history.map((msg: any) => ({
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
     
     // Get response from OpenAI
     const completion = await openai.chat.completions.create({
-      model: import.meta.env.OPENROUTER_KEY ? 'openai/gpt-4o-mini-high' : 'gpt-4o',
+      model: process.env.OPENROUTER_KEY ? 'openai/gpt-4o-mini-high' : 'gpt-4o',
       messages: messages as any,
       temperature: 0.7,
       max_tokens: 500,
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
       const audioResponse = await elevenlabs.textToSpeech({
         voice_id: VOICE_ID,
         text: reply,
-        model_id: 'eleven_multilingual_v1',
+        model_id: 'eleven_monolingual_v1',
         voice_settings: {
           stability: 0.5,
           similarity_boost: 0.75,
@@ -145,7 +146,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Assistant API error:', error);
     return NextResponse.json(
-      { error: 'Failed to import.meta request' },
+      { error: 'Failed to process request' },
       { status: 500 }
     );
   }
