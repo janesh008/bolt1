@@ -116,7 +116,6 @@ CREATE TRIGGER on_auth_user_created
 -- Fix any potential issues with the orders table RLS
 -- The orders table has conflicting policies that might cause issues
 DROP POLICY IF EXISTS "Users can create their own orders" ON orders;
-DROP POLICY IF EXISTS "Users can view their own orders" ON orders;
 
 CREATE POLICY "Users can create orders" ON orders
   FOR INSERT WITH CHECK (user_id = auth.uid());
