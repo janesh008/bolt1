@@ -93,7 +93,7 @@ const MultilingualAssistant: React.FC = () => {
       const personaId = import.meta.env.TAVUS_PERSONA_ID;
 
       const userName =
-        user?.user_metadata?.full_name ||
+        user?.full_name ||
         user?.email?.split('@')[0] ||
         'valued customer';
 
