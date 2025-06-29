@@ -153,7 +153,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const handleMockAuth = async (email: string, devCred: any) => {
+  const _handleMockAuth = async (email: string, devCred: any) => {
     try {
       // Get existing admin user or create mock user
       let { data: adminUser, error: adminError } = await supabase
