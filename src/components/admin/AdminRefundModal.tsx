@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   DollarSign,
   User,
-  Calendar,
   CreditCard
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
