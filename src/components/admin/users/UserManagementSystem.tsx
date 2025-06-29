@@ -268,7 +268,7 @@ const UserManagementSystem: React.FC = () => {
       const { error } = await supabase
         .from('roles')
         .update({
-         permissions: Array.isArray(selectedPermissions) ? selectedPermissions : []
+          permissions: selectedPermissions
         })
         .eq('id', selectedRole.id);
       
@@ -302,7 +302,7 @@ const UserManagementSystem: React.FC = () => {
   
   const handleRolePermissionsClick = (role: Role) => {
     setSelectedRole(role);
-   setSelectedPermissions(Array.isArray(role.permissions) ? role.permissions : []);
+    setSelectedPermissions(role.permissions || []);
     setShowRolePermissionsModal(true);
   };
   
@@ -580,15 +580,15 @@ const UserManagementSystem: React.FC = () => {
                   </div>
                   
                   <div className="flex flex-wrap gap-2">
-                    {Array.isArray(role.permissions) ? role.permissions.map((permissionId) => {
+                    {role.permissions?.map((permissionId) => {
                       const permission = permissions.find(p => p.id === permissionId);
                       return permission ? (
                         <Badge key={permission.id} variant="outline" className="text-xs">
                           {permission.module}.{permission.action}
                         </Badge>
                       ) : null;
-                    }) : null}
-                    {(!role.permissions || !Array.isArray(role.permissions) || role.permissions.length === 0) && (
+                    })}
+                    {(!role.permissions || role.permissions.length === 0) && (
                       <span className="text-sm text-gray-500">No permissions assigned</span>
                     )}
                   </div>
@@ -862,12 +862,12 @@ const UserManagementSystem: React.FC = () => {
                       <div key={permission.id} className="flex items-center space-x-2">
                         <Checkbox
                           id={permission.id}
-                         checked={Array.isArray(selectedPermissions) && selectedPermissions.includes(permission.id)}
+                          checked={selectedPermissions.includes(permission.id)}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                             setSelectedPermissions(Array.isArray(selectedPermissions) ? [...selectedPermissions, permission.id] : [permission.id]);
+                              setSelectedPermissions([...selectedPermissions, permission.id]);
                             } else {
-                             setSelectedPermissions(Array.isArray(selectedPermissions) ? selectedPermissions.filter(id => id !== permission.id) : []);
+                              setSelectedPermissions(selectedPermissions.filter(id => id !== permission.id));
                             }
                           }}
                         />
