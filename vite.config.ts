@@ -13,5 +13,8 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  server: {
+    port: 5173,
+  },
   // Remove proxy configuration since we're running everything on one port
 });

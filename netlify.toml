@@ -5,7 +5,7 @@
 
 [dev]
   command = "npm run dev"
-  port = 3000
+  port = 5173
 
 [[redirects]]
   from = "/*"
