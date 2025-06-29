@@ -302,7 +302,7 @@ const UserManagementSystem: React.FC = () => {
   
   const handleRolePermissionsClick = (role: Role) => {
     setSelectedRole(role);
-    setSelectedPermissions(role.permissions || []);
+    setSelectedPermissions(Array.isArray(role.permissions) ? role.permissions : []);
     setShowRolePermissionsModal(true);
   };
   
@@ -580,7 +580,7 @@ const UserManagementSystem: React.FC = () => {
                   </div>
                   
                   <div className="flex flex-wrap gap-2">
-                    {role.permissions?.map((permissionId) => {
+                    {(role.permissions || []).map((permissionId) => {
                       const permission = permissions.find(p => p.id === permissionId);
                       return permission ? (
                         <Badge key={permission.id} variant="outline" className="text-xs">
@@ -588,7 +588,7 @@ const UserManagementSystem: React.FC = () => {
                         </Badge>
                       ) : null;
                     })}
-                    {(!role.permissions || role.permissions.length === 0) && (
+                    {(!role.permissions || (Array.isArray(role.permissions) && role.permissions.length === 0)) && (
                       <span className="text-sm text-gray-500">No permissions assigned</span>
                     )}
                   </div>
