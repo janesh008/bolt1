@@ -7,12 +7,6 @@ interface TavusConversationResponse {
   status: string;
 }
 
-interface TavusErrorResponse {
-  error: string;
-  message?: string;
-  status?: number;
-}
-
 export async function POST(req: NextRequest) {
   console.info('[TAVUS] Received API request');
 
