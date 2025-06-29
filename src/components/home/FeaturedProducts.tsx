@@ -28,7 +28,6 @@ const FeaturedProducts = () => {
       } catch (error) {
         console.error('Error fetching featured products:', error);
         // Fallback to mock data if Supabase isn't connected yet
-        setProducts(mockProducts);
       } finally {
         setIsLoading(false);
       }
