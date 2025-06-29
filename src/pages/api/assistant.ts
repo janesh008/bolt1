@@ -1,25 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { ElevenLabs } from 'elevenlabs-node';
-import { createClient } from '@supabase/supabase-js';
 
 // Initialize OpenAI
 const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.VITE_OPENROUTER_KEY,
-  baseURL: import.meta.env.VITE_OPENROUTER_KEY ? 'https://openrouter.ai/api/v1' : undefined,
+  apiKey: import.meta.env.OPENROUTER_KEY || import.meta.env.OPENAI_API_KEY,
+  baseURL: import.meta.env.OPENROUTER_KEY ? 'https://openrouter.ai/api/v1' : undefined,
 });
 
 // Initialize ElevenLabs
 const elevenlabs = new ElevenLabs({
-  apiKey: import.meta.env.VITE_ELEVENLABS_API_KEY || '',
+  apiKey: import.meta.env.ELEVENLABS_API_KEY || '',
 });
 
-const VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB'; // Default to "Rachel"
-
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const VOICE_ID = import.meta.env.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB'; // Default to "Rachel"
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,7 +36,12 @@ export async function POST(req: NextRequest) {
     
     Keep responses concise, friendly, and helpful. If you recommend products, explain why they would be a good fit.
     
-    IMPORTANT: Respond in the same language as the user's message. The current language is: ${language}.`;
+    IMPORTANT: Respond in the same language as the user's message. The current language is: ${language}.
+    
+    If the user is asking about a specific product or category, indicate this in your response by including a "category" field.
+    If the user mentions a budget, include a "budget" field with the amount.
+    If the user mentions a style preference, include a "style" field.
+    If the user mentions a material preference, include a "material" field.`;
     
     // Format conversation history for the API
     const formattedHistory = history.map((msg: any) => ({
@@ -59,13 +58,60 @@ export async function POST(req: NextRequest) {
     
     // Get response from OpenAI
     const completion = await openai.chat.completions.create({
-      model: import.meta.env.VITE_OPENROUTER_KEY ? 'openai/gpt-4o-mini' : 'gpt-4o',
+      model: import.meta.env.OPENROUTER_KEY ? 'openai/gpt-4o-mini-high' : 'gpt-4o',
       messages: messages as any,
       temperature: 0.7,
       max_tokens: 500,
     });
     
     const reply = completion.choices[0].message.content || 'I apologize, but I couldn\'t generate a response.';
+    
+    // Parse the response for product recommendation parameters
+    let category = null;
+    let budget = null;
+    let style = null;
+    let material = null;
+    let generateVideo = false;
+    
+    // Check for category mentions
+    if (reply.toLowerCase().includes('ring') || message.toLowerCase().includes('ring')) {
+      category = 'ring';
+    } else if (reply.toLowerCase().includes('necklace') || message.toLowerCase().includes('necklace')) {
+      category = 'necklace';
+    } else if (reply.toLowerCase().includes('bracelet') || message.toLowerCase().includes('bracelet')) {
+      category = 'bracelet';
+    } else if (reply.toLowerCase().includes('earring') || message.toLowerCase().includes('earring')) {
+      category = 'earring';
+    }
+    
+    // Check for budget mentions
+    const budgetMatch = reply.match(/\$(\d+,?\d*)/);
+    if (budgetMatch) {
+      budget = parseInt(budgetMatch[1].replace(',', ''));
+    }
+    
+    // Check for style mentions
+    if (reply.toLowerCase().includes('modern')) {
+      style = 'modern';
+    } else if (reply.toLowerCase().includes('classic')) {
+      style = 'classic';
+    } else if (reply.toLowerCase().includes('vintage')) {
+      style = 'vintage';
+    }
+    
+    // Check for material mentions
+    if (reply.toLowerCase().includes('gold')) {
+      material = 'gold';
+    } else if (reply.toLowerCase().includes('silver')) {
+      material = 'silver';
+    } else if (reply.toLowerCase().includes('platinum')) {
+      material = 'platinum';
+    }
+    
+    // Determine if we should generate a video (for high-value recommendations)
+    if (budget && budget > 1000 && category) {
+      generateVideo = true;
+    }
     
     // Generate audio response using ElevenLabs
     let audioBase64 = '';
@@ -86,80 +132,21 @@ export async function POST(req: NextRequest) {
       console.error('Error generating audio:', error);
     }
     
-    // Get user ID from auth header if available
-    const authHeader = req.headers.get('Authorization');
-    let userId = null;
-    
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-      
-      if (!userError && user) {
-        userId = user.id;
-      }
-    }
-    
-    // Log to database if user is authenticated
-    if (userId) {
-      try {
-        await supabase.from('support_chat_logs').insert({
-          user_id: userId,
-          language,
-          message,
-          reply,
-        });
-        
-        // Check if message needs escalation
-        if (needsEscalation(reply)) {
-          // Get recent messages for context
-          const recentMessages = history.slice(-3).map((msg: any) => ({
-            role: msg.role,
-            content: msg.content,
-          }));
-          
-          // Create support alert
-          await supabase.from('support_alerts').insert({
-            user_id: userId,
-            message,
-            recent_context: recentMessages,
-            flagged: true,
-          });
-        }
-      } catch (dbError) {
-        console.error('Error saving to database:', dbError);
-      }
-    }
-    
     return NextResponse.json({
       reply,
-      audioBase64
+      audioBase64,
+      category,
+      budget,
+      style,
+      material,
+      generateVideo
     });
     
   } catch (error) {
     console.error('Assistant API error:', error);
     return NextResponse.json(
-      { error: 'Failed to process request' },
+      { error: 'Failed to import.meta request' },
       { status: 500 }
     );
   }
-}
-
-// Helper function to check if a message needs escalation
-function needsEscalation(message: string): boolean {
-  const escalationPhrases = [
-    "I'm not sure",
-    "I don't know",
-    "I am unsure",
-    "cannot help",
-    "unable to assist",
-    "cannot provide",
-    "don't have enough information",
-    "need more details",
-    "beyond my capabilities",
-    "I apologize"
-  ];
-  
-  return escalationPhrases.some(phrase => 
-    message.toLowerCase().includes(phrase.toLowerCase())
-  );
 }
