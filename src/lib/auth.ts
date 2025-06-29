@@ -58,15 +58,6 @@ export const getCurrentAdminUser = async (): Promise<AdminUser | null> => {
 
 export const signInAdmin = async (email: string, password: string) => {
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      throw error;
-    }
-
     // Verify user has admin privileges
     const adminUser = await getCurrentAdminUser();
     
