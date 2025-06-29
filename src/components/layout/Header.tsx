@@ -109,8 +109,7 @@ const Header = () => {
   target="_blank" 
   rel="noopener noreferrer"
 >
-  Bolt.new Hackathon 2025
-</Link>
+  Powered By Bolt.new </Link>
         </div>
       </div>
       
