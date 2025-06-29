@@ -7,7 +7,7 @@ interface LoadingScreenProps {
 }
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [_isLoading, setIsLoading] = useState(true);
   const [loadingPhase, setLoadingPhase] = useState<'license' | '3d-models' | 'complete'>('license');
   const [progress, setProgress] = useState(0);
   const [apiResponse, setApiResponse] = useState<any>(null);
