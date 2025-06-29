@@ -105,7 +105,7 @@ const Header = () => {
 
           <Link 
   to="https://bolt.new/" 
-  className="text-gold-400 hover:underline"
+  className="text-gold-400"
   target="_blank" 
   rel="noopener noreferrer"
 >
