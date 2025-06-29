@@ -171,31 +171,22 @@ serve(async (req) => {
     // Save chat message to database if user is authenticated
     if (userId) {
       try {
-        await supabase.from('support_chat_logs').insert({
+        await supabase.from('ai_chat_history').insert({
           user_id: userId,
-          language,
-          message,
-          reply,
+          role: 'user',
+          content: message,
+          created_at: new Date().toISOString()
         });
         
-        // Check if message needs escalation
-        if (needsEscalation(reply)) {
-          // Get recent messages for context
-          const recentMessages = history.slice(-3).map((msg: any) => ({
-            role: msg.role,
-            content: msg.content,
-          }));
-          
-          // Create support alert
-          await supabase.from('support_alerts').insert({
-            user_id: userId,
-            message,
-            recent_context: recentMessages,
-            flagged: true,
-          });
-        }
+        await supabase.from('ai_chat_history').insert({
+          user_id: userId,
+          role: 'assistant',
+          content: reply,
+          audio_url: audioBase64 ? 'audio_generated' : null,
+          created_at: new Date().toISOString()
+        });
       } catch (dbError) {
-        console.error('Error saving to database:', dbError);
+        console.error('Error saving chat history:', dbError);
       }
     }
     
@@ -254,23 +245,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Helper function to check if a message needs escalation
-function needsEscalation(message: string): boolean {
-  const escalationPhrases = [
-    "I'm not sure",
-    "I don't know",
-    "I am unsure",
-    "cannot help",
-    "unable to assist",
-    "cannot provide",
-    "don't have enough information",
-    "need more details",
-    "beyond my capabilities",
-    "I apologize"
-  ];
-  
-  return escalationPhrases.some(phrase => 
-    message.toLowerCase().includes(phrase.toLowerCase())
-  );
-}
