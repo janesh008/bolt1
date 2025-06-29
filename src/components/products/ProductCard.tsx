@@ -7,7 +7,6 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { Badge } from '../ui/badge';
 import Button from '../ui/Button';
-import toast from 'react-hot-toast';
 
 interface Product {
   id: string;
