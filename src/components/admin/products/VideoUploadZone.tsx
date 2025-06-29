@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, Video, AlertCircle, Check } from 'lucide-react';
 import { cn } from '../../../lib/utils';
-import { uploadProductVideo, deleteProductVideo } from '../../../lib/supabase-storage';
+import { uploadProductVideo } from '../../../lib/supabase-storage';
 import { Badge } from '../../ui/badge';
 import toast from 'react-hot-toast';
 
