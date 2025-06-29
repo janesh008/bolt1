@@ -15,8 +15,7 @@ interface ProductToolbarProps {
 
 const ProductToolbar: React.FC<ProductToolbarProps> = ({
   viewMode,
-  setViewMode,s
-  setSearchTerm,
+  setViewMode,
   sortBy,
   setSortBy,
   showFilters,
