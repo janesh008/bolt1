@@ -24,13 +24,6 @@ interface AdminAuthContextType {
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
-// Development credentials mapping
-const DEV_CREDENTIALS = {
-  'admin@axels.com': { password: 'admin123', role: 'SuperAdmin', name: 'Super Admin' },
-  'manager@axels.com': { password: 'manager123', role: 'Admin', name: 'Admin Manager' },
-  'mod@axels.com': { password: 'mod123', role: 'Moderator', name: 'Moderator User' }
-};
-
 export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
