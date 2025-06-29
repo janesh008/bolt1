@@ -10,6 +10,7 @@ import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import SupportAssistant from './components/multilingual-assistant/SupportAssistant';
+import VoiceAssistantPage from './pages/VoiceAssistantPage';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 
@@ -156,6 +157,9 @@ function App() {
                     <Route path="/help/shipping-returns" element={<HelpLayout><ShippingReturnsPage /></HelpLayout>} />
                     <Route path="/help/jewelry-care" element={<HelpLayout><JewelryCarePage /></HelpLayout>} />
                     <Route path="/help/size-guide" element={<HelpLayout><SizeGuidePage /></HelpLayout>} />
+                    
+                    {/* Voice Assistant */}
+                    <Route path="/voice-assistant" element={<VoiceAssistantPage />} />
 
                     {/* Admin routes */}
                     <Route path="/admin/login" element={<AdminLoginPage />} />
