@@ -12,7 +12,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { pathname } = useLocation();
-  const { user, isDevMode } = useAuth();
+  const { user } = useAuth();
   const { totalItems } = useCart();
   const { items: wishlistItems } = useWishlist();
   
