@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Gem, Sparkles, Diamond, DollarSign } from 'lucide-react';
 import Button from '../ui/Button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 
 interface PreferencesFormProps {
