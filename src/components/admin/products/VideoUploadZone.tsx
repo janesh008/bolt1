@@ -4,7 +4,6 @@ import { Upload, X, Video, AlertCircle, Check } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { uploadProductVideo, deleteProductVideo } from '../../../lib/supabase-storage';
 import { Badge } from '../../ui/badge';
-import Button from '../../ui/Button';
 import toast from 'react-hot-toast';
 
 export interface ProductVideo {
