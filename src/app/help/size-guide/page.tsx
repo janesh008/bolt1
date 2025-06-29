@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Image from 'next/image';
-import { Ruler, Download, Printer, Phone, Info, AlertCircle } from 'lucide-react';
+import { Ruler, Download, Printer, Info, AlertCircle } from 'lucide-react';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import PageHeader from '@/components/help/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
