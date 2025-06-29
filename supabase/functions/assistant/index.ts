@@ -49,7 +49,6 @@ serve(async (req) => {
     // Get user from auth header
     const authHeader = req.headers.get("Authorization");
     let userId = null;
-    let userEmail = null;
     
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
@@ -57,7 +56,6 @@ serve(async (req) => {
       
       if (!userError && user) {
         userId = user.id;
-        userEmail = user.email;
       }
     }
     
@@ -173,35 +171,20 @@ serve(async (req) => {
     // Save chat message to database if user is authenticated
     if (userId) {
       try {
-        await supabase.from('support_chat_logs').insert({
+        await supabase.from('ai_chat_history').insert({
           user_id: userId,
-          user_email: userEmail,
-          language,
-          message,
-          reply,
-          audio_url: audioBase64 ? 'audio_generated' : null,
+          role: 'user',
+          content: message,
           created_at: new Date().toISOString()
         });
         
-        // Check if message needs escalation
-        const needsEscalation = reply.includes("I'm not sure") || 
-                               reply.includes("I don't know") || 
-                               reply.includes("I cannot help") ||
-                               reply.includes("I apologize");
-        
-        if (needsEscalation) {
-          // Create support alert
-          await supabase.from('support_alerts').insert({
-            user_id: userId,
-            user_email: userEmail,
-            message,
-            recent_context: JSON.stringify(history.slice(-3)),
-            is_urgent: budget ? budget > 5000 : false,
-            created_at: new Date().toISOString()
-          });
-          
-          // TODO: Send email alert using Resend API
-        }
+        await supabase.from('ai_chat_history').insert({
+          user_id: userId,
+          role: 'assistant',
+          content: reply,
+          audio_url: audioBase64 ? 'audio_generated' : null,
+          created_at: new Date().toISOString()
+        });
       } catch (dbError) {
         console.error('Error saving chat history:', dbError);
       }

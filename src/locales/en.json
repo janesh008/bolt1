@@ -42,10 +42,7 @@
       "sendMessage": "Send",
       "uploadImage": "Upload Image",
       "callSupport": "Call Support",
-      "viewProducts": "View Products",
-      "toggleMic": "Toggle microphone",
-      "addToCart": "Add to Cart",
-      "continue": "Continue"
+      "viewProducts": "View Products"
     },
     "support": {
       "phoneNumber": "+91 992590-2377",
@@ -55,15 +52,7 @@
     "errors": {
       "videoFailed": "Video chat couldn't be loaded. Let's continue with text chat.",
       "audioFailed": "Audio couldn't be played. Please check your sound settings.",
-      "connectionError": "Connection error. Please try again.",
-      "micNotSupported": "Your browser doesn't support speech recognition"
-    },
-    "listening": "Listening...",
-    "placeholders": {
-      "selectType": "Select type",
-      "selectMetal": "Select metal",
-      "selectStyle": "Select style",
-      "selectBudget": "Select budget range"
+      "connectionError": "Connection error. Please try again."
     }
   },
   "common": {

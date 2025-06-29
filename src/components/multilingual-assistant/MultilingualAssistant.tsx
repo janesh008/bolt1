@@ -4,14 +4,6 @@ import { Video, X, Globe, Minimize2, Maximize2, MessageSquare, ChevronDown, Chev
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { isValidConversationUrl } from '../../utils/videoUtils';
-import LanguageSelector from './LanguageSelector';
-import PreferencesForm from './PreferencesForm';
-import MessageList from './MessageList';
-import MessageInput from './MessageInput';
-import VideoChat from './VideoChat';
-import MinimizedChat from './MinimizedChat';
-import 'regenerator-runtime/runtime';
-import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 interface Language {
   code: string;
@@ -20,22 +12,18 @@ interface Language {
   flag: string;
 }
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  audioUrl?: string;
-  videoUrl?: string;
-  products?: Product[];
-  timestamp: Date;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  description?: string;
-}
+const languages: Language[] = [
+  { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'gu', name: 'Gujarati', nativeName: 'ગુજરાતી', flag: '🇮🇳' },
+  { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', flag: '🇮🇳' },
+  { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', flag: '🇮🇳' },
+  { code: 'mr', name: 'Marathi', nativeName: 'मराठी', flag: '🇮🇳' },
+  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇮🇳' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
+  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇦🇪' }
+];
 
 const MultilingualAssistant: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -48,25 +36,10 @@ const MultilingualAssistant: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [showPreferences, setShowPreferences] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  
   const { user } = useAuth();
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const assistantRef = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  
-  const {
-    transcript,
-    listening,
-    resetTranscript,
-    browserSupportsSpeechRecognition
-  } = useSpeechRecognition();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -83,25 +56,6 @@ const MultilingualAssistant: React.FC = () => {
     };
   }, []);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // Set language based on user selection
-  useEffect(() => {
-    if (selectedLanguage) {
-      i18n.changeLanguage(selectedLanguage.code);
-    }
-  }, [selectedLanguage, i18n]);
-
-  // Listen for transcript changes
-  useEffect(() => {
-    if (transcript && !isLoading) {
-      setInput(transcript);
-    }
-  }, [transcript, isLoading]);
-
   const toggleAssistant = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
@@ -110,8 +64,6 @@ const MultilingualAssistant: React.FC = () => {
       setSelectedLanguage(null);
       setConversationUrl(null);
       setIsMinimized(false);
-      setMessages([]);
-      resetTranscript();
     }
   };
 
@@ -123,196 +75,84 @@ const MultilingualAssistant: React.FC = () => {
     setIsMinimized(!isMinimized);
   };
 
-  const toggleMic = () => {
-    if (listening) {
-      SpeechRecognition.stopListening();
-    } else {
-      resetTranscript();
-      SpeechRecognition.startListening({ continuous: true, language: selectedLanguage?.code || 'en-US' });
-    }
-  };
-
-  const handleLanguageSelected = (language: string) => {
-    const lang = languages.find(l => l.code === language) || null;
-    setSelectedLanguage(lang);
-    i18n.changeLanguage(language);
-    setShowPreferences(true);
-  };
-  
-  const handlePreferencesSubmit = async (preferences: any) => {
-    setShowPreferences(false);
-    
-    // Add initial greeting message
-    const initialMessage: Message = {
-      role: 'assistant',
-      content: t('assistant.greeting'),
-      timestamp: new Date()
-    };
-    
-    setMessages([initialMessage]);
+  const handleLanguageSelected = (language: Language) => {
+    setSelectedLanguage(language);
+    i18n.changeLanguage(language.code);
+    setIsDropdownOpen(false);
     
     // Generate welcome video based on language
-    generateWelcomeVideo(selectedLanguage?.code || 'en');
+    generateWelcomeVideo(language.code);
   };
   
   const generateWelcomeVideo = async (language: string) => {
     try {
       setIsVideoLoading(true);
 
-      const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'valued customer';
-      
-      const response = await fetch('/api/video', {
+      const tavusApiKey = '8be099453eaf4049a4790eaf26fef074'; // import.meta.env.TAVUS_API_KEY
+      const replicaId = import.meta.env.TAVUS_REPLICA_ID || 'r6ae5b6efc9d';
+      const personaId = import.meta.env.TAVUS_PERSONA_ID;
+
+      const userName =
+        user?.user_metadata?.full_name ||
+        user?.email?.split('@')[0] ||
+        'valued customer';
+
+      const requestBody: Record<string, any> = {
+        replica_id: replicaId,
+        conversation_name: `Jewelry consultation with ${userName}`,
+        conversational_context: `User interested in jewelry. Language: ${language}`,
+        custom_greeting: `Hi ${userName}, welcome to our jewelry store. I'm here to help you find the perfect piece.`,
+      };
+
+      if (personaId) {
+        requestBody.persona_id = personaId;
+      }
+
+      const response = await fetch('https://tavusapi.com/v2/conversations', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
+          "x-api-key": tavusApiKey
         },
-        body: JSON.stringify({
-          user_name: userName,
-          product_name: 'jewelry',
-          language: language
-        })
+        body: JSON.stringify(requestBody),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate video');
-      }
 
       const data = await response.json();
 
-      if (data.conversationUrl) {
-        setConversationUrl(data.conversationUrl);
-        setConversationId(data.conversationId);
+      if (!response.ok) {
+        throw new Error(data?.error || 'Tavus API returned an error');
+      }
+
+      if (data.conversation_url) {
+        setConversationUrl(data.conversation_url);
+        setConversationId(data.conversation_id);
         setShowVideo(true);
       } else {
-        throw new Error('No conversation URL returned');
+        throw new Error('No conversation URL returned from Tavus');
       }
     } catch (err: any) {
-      console.error('Error generating video:', err);
-      setVideoError(err?.message || 'Failed to generate video');
+      console.error('[TAVUS] Error generating video:', err);
+      setVideoError(err?.message || 'Failed to generate Tavus video');
       setShowVideo(false);
     } finally {
       setIsVideoLoading(false);
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!input.trim()) return;
-    
-    const userMessage: Message = {
-      role: 'user',
-      content: input,
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    resetTranscript();
-    setIsLoading(true);
-    
-    try {
-      // Call the assistant API
-      const response = await fetch('/api/assistant', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: input,
-          history: messages.map(msg => ({
-            role: msg.role,
-            content: msg.content
-          })),
-          language: selectedLanguage?.code || 'en'
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to get response from assistant');
-      }
-      
-      const data = await response.json();
-      
-      // Create products array if recommendations are available
-      let products: Product[] | undefined;
-      if (data.products && data.products.length > 0) {
-        products = data.products;
-      }
-      
-      // Create assistant message
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: data.reply,
-        audioUrl: data.audioBase64 ? `data:audio/mp3;base64,${data.audioBase64}` : undefined,
-        products,
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
-      
-      // Play audio if available
-      if (data.audioBase64) {
-        playAudio(`data:audio/mp3;base64,${data.audioBase64}`);
-      }
-      
-    } catch (error) {
-      console.error('Error sending message:', error);
-      
-      // Add error message
-      const errorMessage: Message = {
-        role: 'assistant',
-        content: t('assistant.errors.connectionError'),
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
+  // Function to handle closing the assistant
+  const handleClose = () => {
+    setIsOpen(false);
   };
-
-  const playAudio = (audioUrl: string) => {
-    if (audioRef.current) {
-      audioRef.current.src = audioUrl;
-      audioRef.current.onplay = () => setIsPlaying(true);
-      audioRef.current.onended = () => setIsPlaying(false);
-      audioRef.current.onerror = () => {
-        setIsPlaying(false);
-        console.error('Error playing audio');
-      };
-      audioRef.current.play().catch(err => {
-        console.error('Error playing audio:', err);
-        setIsPlaying(false);
-      });
-    }
-  };
-
-  // Languages array
-  const languages: Language[] = [
-    { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
-    { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
-    { code: 'gu', name: 'Gujarati', nativeName: 'ગુજરાતી', flag: '🇮🇳' },
-    { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', flag: '🇮🇳' },
-    { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', flag: '🇮🇳' },
-    { code: 'mr', name: 'Marathi', nativeName: 'मराठी', flag: '🇮🇳' },
-    { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', flag: '🇮🇳' },
-    { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
-    { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
-    { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇦🇪' }
-  ];
 
   return (
     <>
-      {/* Audio element for playing responses */}
-      <audio ref={audioRef} className="hidden" />
-      
       {/* Floating button */}
       <button
         onClick={toggleAssistant}
         className="fixed bottom-6 right-6 z-50 p-4 bg-gold-400 hover:bg-gold-500 text-white rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
         aria-label="Open AI Assistant"
       >
-        <MessageSquare className="h-6 w-6" />
+        <Video className="h-6 w-6" />
       </button>
       
       {/* Assistant Modal */}
@@ -325,124 +165,173 @@ const MultilingualAssistant: React.FC = () => {
             className="fixed bottom-20 right-6 z-50"
             ref={assistantRef}
           >
-            {isMinimized ? (
-              <MinimizedChat
-                conversationUrl={conversationUrl}
-                toggleMinimize={toggleMinimize}
-                toggleAssistant={toggleAssistant}
-                input={input}
-                setInput={setInput}
-                handleSendMessage={handleSendMessage}
-                isLoading={isLoading}
-                listening={listening}
-                toggleMic={toggleMic}
-                browserSupportsSpeechRecognition={browserSupportsSpeechRecognition}
-                setVideoError={setVideoError}
-                setShowVideo={setShowVideo}
-                setIsMinimized={setIsMinimized}
-              />
-            ) : (
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-lg shadow-2xl overflow-hidden"
-                style={{ width: '350px', height: '500px' }}
-              >
-                {/* Header */}
-                <div className="bg-gold-400 text-white p-3 flex items-center justify-between">
-                  <h2 className="text-sm font-medium flex items-center">
-                    {selectedLanguage ? (
-                      <>
-                        <span className="mr-2">{selectedLanguage.flag}</span>
-                        {selectedLanguage.name}
-                      </>
-                    ) : (
-                      <>
-                        <Globe className="h-4 w-4 mr-1" />
-                        {t('assistant.title')}
-                      </>
-                    )}
-                  </h2>
-                  <div className="flex items-center gap-1">
-                    <button 
-                      onClick={toggleMinimize}
-                      className="p-1 hover:bg-gold-500 rounded-full transition-colors"
-                      aria-label="Minimize"
-                    >
-                      <Minimize2 className="h-3 w-3" />
-                    </button>
-                    <button 
-                      onClick={toggleAssistant}
-                      className="p-1 hover:bg-gold-500 rounded-full transition-colors"
-                      aria-label="Close assistant"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Content area */}
-                <div className="flex flex-col h-[calc(500px-48px)]">
-                  {/* Language selector */}
-                  {!selectedLanguage && !showPreferences && (
-                    <div className="flex-1 overflow-y-auto p-4 bg-cream-50">
-                      <LanguageSelector onLanguageSelected={handleLanguageSelected} />
-                    </div>
-                  )}
-                  
-                  {/* Preferences form */}
-                  {selectedLanguage && showPreferences && (
-                    <div className="flex-1 overflow-y-auto p-4 bg-cream-50">
-                      <PreferencesForm onSubmit={handlePreferencesSubmit} />
-                    </div>
-                  )}
-                  
-                  {/* Chat interface */}
-                  {selectedLanguage && !showPreferences && (
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-lg shadow-2xl overflow-hidden"
+              style={{ 
+                width: '300px', 
+                height: isMinimized ? '50px' : '300px'
+              }}
+            >
+              {/* Header */}
+              <div className="bg-gold-400 text-white p-3 flex items-center justify-between">
+                <h2 className="text-sm font-medium flex items-center">
+                  {selectedLanguage ? (
                     <>
-                      {/* Video chat or message list */}
-                      {showVideo ? (
-                        <div className="h-1/2 bg-black">
-                          <VideoChat
-                            showVideo={showVideo}
-                            videoError={videoError}
-                            isVideoLoading={isVideoLoading}
-                            conversationUrl={conversationUrl}
-                            setVideoError={setVideoError}
-                            setShowVideo={setShowVideo}
-                          />
-                        </div>
-                      ) : null}
-                      
-                      {/* Message list */}
-                      <div className={`flex-1 ${showVideo ? 'h-1/2' : 'h-full'}`}>
-                        <MessageList
-                          messages={messages}
-                          isLoading={isLoading}
-                          playAudio={playAudio}
-                          isPlaying={isPlaying}
-                          audioRef={audioRef}
-                          messagesEndRef={messagesEndRef}
-                        />
-                      </div>
-                      
-                      {/* Message input */}
-                      <MessageInput
-                        input={input}
-                        setInput={setInput}
-                        handleSendMessage={handleSendMessage}
-                        isLoading={isLoading}
-                        listening={listening}
-                        toggleMic={toggleMic}
-                        transcript={transcript}
-                        browserSupportsSpeechRecognition={browserSupportsSpeechRecognition}
-                      />
+                      <span className="mr-2">{selectedLanguage.flag}</span>
+                      {selectedLanguage.name}
+                    </>
+                  ) : (
+                    <>
+                      <Globe className="h-4 w-4 mr-1" />
+                      {t('assistant.title')}
                     </>
                   )}
+                </h2>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={toggleMinimize}
+                    className="p-1 hover:bg-gold-500 rounded-full transition-colors"
+                    aria-label={isMinimized ? "Maximize" : "Minimize"}
+                  >
+                    {isMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
+                  </button>
+                  <button 
+                    onClick={handleClose}
+                    className="p-1 hover:bg-gold-500 rounded-full transition-colors"
+                    aria-label="Close assistant"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 </div>
-              </motion.div>
-            )}
+              </div>
+              
+              {/* Content area - only show if not minimized */}
+              {!isMinimized && (
+                <div className="relative h-[calc(300px-50px)]">
+                  {/* Language selector */}
+                  {!selectedLanguage && (
+                    <div className="w-full h-full bg-cream-50 p-4">
+                      <div className="text-center mb-4">
+                        <Globe className="h-8 w-8 text-gold-500 mx-auto mb-2" />
+                        <h3 className="text-sm font-medium text-charcoal-800">
+                          {t('assistant.languageSelector')}
+                        </h3>
+                        <p className="text-xs text-charcoal-500 mt-1">
+                          Select your preferred language to continue
+                        </p>
+                      </div>
+                      
+                      {/* Language Dropdown */}
+                      <div className="relative mt-4" ref={dropdownRef}>
+                        <button
+                          onClick={toggleDropdown}
+                          className="w-full flex items-center justify-between p-3 border border-cream-200 rounded-md bg-white hover:border-gold-300 transition-colors"
+                        >
+                          <span className="text-charcoal-700">
+                            {selectedLanguage ? (
+                              <span className="flex items-center">
+                                <span className="mr-2 text-xl">{selectedLanguage.flag}</span>
+                                {selectedLanguage.name}
+                              </span>
+                            ) : (
+                              'Choose your language'
+                            )}
+                          </span>
+                          <ChevronDown className={`h-4 w-4 text-charcoal-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        {isDropdownOpen && (
+                          <div className="absolute z-10 mt-1 w-full bg-white border border-cream-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                            {languages.map((language) => (
+                              <button
+                                key={language.code}
+                                onClick={() => handleLanguageSelected(language)}
+                                className="w-full flex items-center p-3 hover:bg-cream-50 transition-colors text-left"
+                              >
+                                <span className="text-xl mr-3">{language.flag}</span>
+                                <div>
+                                  <div className="font-medium text-charcoal-800">{language.name}</div>
+                                  <div className="text-xs text-charcoal-500">{language.nativeName}</div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Video display */}
+                  {selectedLanguage && (
+                    <div 
+                      ref={videoContainerRef}
+                      className="w-full h-full bg-black"
+                    >
+                      {showVideo ? (
+                        videoError ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
+                            <Video className="h-10 w-10 text-red-500 opacity-50 mb-2" />
+                            <p className="text-white text-xs mb-2">{t('assistant.errors.videoFailed')}</p>
+                            <button 
+                              onClick={() => {
+                                setVideoError(null);
+                                generateWelcomeVideo(selectedLanguage.code);
+                              }}
+                              className="mt-2 px-3 py-1 bg-gold-400 hover:bg-gold-500 text-white rounded-md text-xs"
+                            >
+                              {t('common.retry')}
+                            </button>
+                          </div>
+                        ) : isVideoLoading ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center">
+                            <div className="w-10 h-10 border-4 border-gold-200 border-t-gold-500 rounded-full animate-spin mb-2"></div>
+                            <p className="text-white text-xs">{t('common.loading')}</p>
+                          </div>
+                        ) : conversationUrl && isValidConversationUrl(conversationUrl) ? (
+                          <iframe
+                            src={`${conversationUrl}?startVideoOff=true&startAudioOff=false`}
+                            className="w-full h-full border-0"
+                            allow="microphone; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+                            allowFullScreen
+                            onError={() => {
+                              console.error("iframe error event");
+                              setVideoError(t('assistant.errors.videoFailed'));
+                              setShowVideo(false);
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <div className="text-center">
+                              <Video className="h-10 w-10 text-gray-700 opacity-30 mx-auto mb-2" />
+                              <p className="text-gray-500 text-xs">{t('assistant.errors.connectionError')}</p>
+                            </div>
+                          </div>
+                        )
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="text-center">
+                            <Video className="h-10 w-10 text-gray-700 opacity-30 mx-auto mb-2" />
+                            <p className="text-gray-500 text-xs">{t('assistant.errors.videoFailed')}</p>
+                            <button 
+                              onClick={() => {
+                                setShowVideo(true);
+                                generateWelcomeVideo(selectedLanguage.code);
+                              }}
+                              className="mt-2 px-3 py-1 bg-gold-400 hover:bg-gold-500 text-white rounded-md text-xs"
+                            >
+                              {t('assistant.actions.startChat')}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
