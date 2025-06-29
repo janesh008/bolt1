@@ -103,8 +103,14 @@ const Header = () => {
             </Link>
           )}
 
-          <Link to="https://bolt.new/">
-          Bolt.new Hackthon 2025</Link>
+          <Link 
+  to="https://bolt.new/" 
+  className="text-gold-400 hover:underline"
+  target="_blank" 
+  rel="noopener noreferrer"
+>
+  Bolt.new Hackathon 2025
+</Link>
         </div>
       </div>
       
