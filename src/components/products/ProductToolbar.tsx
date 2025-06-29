@@ -1,5 +1,4 @@
 import { Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
-import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import Button from '../ui/Button';
 
