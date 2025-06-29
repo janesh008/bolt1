@@ -2,9 +2,8 @@ import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, Image as ImageIcon, AlertCircle, Check } from 'lucide-react';
 import { cn } from '../../../lib/utils';
-import { uploadProductImage, deleteProductImage } from '../../../lib/supabase-storage';
+import { uploadProductImage } from '../../../lib/supabase-storage';
 import { Badge } from '../../ui/badge';
-import Button from '../../ui/Button';
 import toast from 'react-hot-toast';
 
 export interface ProductImage {
