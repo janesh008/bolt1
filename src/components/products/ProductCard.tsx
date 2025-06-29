@@ -43,7 +43,6 @@ const ProductCard = ({ product, viewMode = 'grid', showQuickActions = true }: Pr
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [_isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const getProductName = () => {
     return product.product_name || product.name || 'Unknown Product';
