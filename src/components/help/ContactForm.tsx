@@ -27,7 +27,7 @@ const ContactForm = () => {
     resolver: zodResolver(contactFormSchema),
   });
   
-  const onSubmit = async (data: ContactFormValues) => {
+  const onSubmit = async () => {
     setIsSubmitting(true);
     
     try {
