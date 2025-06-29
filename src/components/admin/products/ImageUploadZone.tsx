@@ -181,15 +181,6 @@ const ImageUploadZone: React.FC<ImageUploadZoneProps> = ({
     }
   };
 
-  const handleReorderImages = (fromIndex: number, toIndex: number) => {
-    if (disabled) return;
-    
-    const updatedImages = [...images];
-    const [movedImage] = updatedImages.splice(fromIndex, 1);
-    updatedImages.splice(toIndex, 0, movedImage);
-    onImagesChange(updatedImages);
-  };
-
   const activeImages = images.filter(img => !img.markedForDeletion);
   const canAddMore = activeImages.length < maxImages;
 
