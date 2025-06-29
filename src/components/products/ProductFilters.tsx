@@ -1,4 +1,4 @@
-import { Filter, X } from 'lucide-react';
+
 import { Checkbox } from '../ui/checkbox';
 import { Slider } from '../ui/slider';
 import Button from '../ui/Button';
