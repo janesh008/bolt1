@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       );
     }
     
-    const { session_id, message_id, notes } = result.data;
+    const { session_id, message_id } = result.data;
     
     // Verify session belongs to user
     const { data: session, error: sessionError } = await supabase
