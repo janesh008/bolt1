@@ -2,7 +2,6 @@ import { ReactNode } from 'react';
 import Header from './Header';
 import Footer from './Footer';
 import MultilingualAssistant from '../multilingual-assistant/MultilingualAssistant';
-import MultilingualAssistant from '../multilingual-assistant/MultilingualAssistant';
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,7 +15,6 @@ const Layout = ({ children }: LayoutProps) => {
         {children}
       </main>
       <Footer />
-      <MultilingualAssistant />
       <MultilingualAssistant />
     </div>
   );
