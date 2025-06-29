@@ -1,5 +1,3 @@
-import { toast } from 'react-hot-toast';
-
 /**
  * Validates if a conversation URL is valid
  * @param url - The URL to validate
