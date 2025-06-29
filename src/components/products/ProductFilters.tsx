@@ -45,8 +45,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
   diamondWeightRange,
   setDiamondWeightRange,
   clearFilters,
-  showFilters,
-  setShowFilters
+  showFilters
 }) => {
   return (
     <aside className={`lg:w-80 ${showFilters ? 'block' : 'hidden lg:block'}`}>
