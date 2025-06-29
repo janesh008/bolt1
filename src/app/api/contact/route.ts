@@ -30,19 +30,7 @@ export async function POST(request: Request) {
     }
     
     const { name, email, phone, subject, message } = result.data;
-    
-    // Store in Supabase
-    const { data, error } = await supabase
-      .from('contact_queries')
-      .insert([
-        {
-          name,
-          email,
-          phone: phone || null,
-          subject,
-          message,
-        },
-      ]);
+
     
     if (error) {
       console.error('Supabase error:', error);
