@@ -85,7 +85,6 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
     handleSubmit,
     control,
     watch,
-    setValue,
     reset,
     formState: { errors, isDirty }
   } = useForm<ProductFormData>({
