@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { Heart, Droplet, Sun, Sparkles, AlertTriangle, Info } from 'lucide-react';
+import { Heart, Droplet, Sparkles, AlertTriangle, Info } from 'lucide-react';
 import Breadcrumbs from '@/components/ui/Breadcrumbs';
 import PageHeader from '@/components/help/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
