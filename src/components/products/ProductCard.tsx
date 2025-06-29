@@ -39,7 +39,6 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, viewMode = 'grid', showQuickActions = true }: ProductCardProps) => {
-  const { user } = useAuth();
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [isHovered, setIsHovered] = useState(false);
