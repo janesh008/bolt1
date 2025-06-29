@@ -68,7 +68,7 @@ serve(async (req) => {
     if (!personaId && !replicaId) {
       console.error('Tavus Persona ID not configured');
       return new Response(
-        JSON.stringify({ error: 'Tavus Persona ID not configured' }),
+        JSON.stringify({ error: 'Tavus persona or replica ID not configured' }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

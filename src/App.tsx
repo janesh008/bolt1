@@ -8,9 +8,9 @@ import { AuthProvider } from './context/AuthContext';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
-import ProtectedRoute from './components/auth/ProtectedRoute';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Lazy-loaded pages
 const HomePage = lazy(() => import('./pages/HomePage'));

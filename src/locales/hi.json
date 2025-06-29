@@ -42,7 +42,10 @@
       "sendMessage": "भेजें",
       "uploadImage": "छवि अपलोड करें",
       "callSupport": "सपोर्ट को कॉल करें",
-      "viewProducts": "उत्पाद देखें"
+      "viewProducts": "उत्पाद देखें",
+      "toggleMic": "माइक्रोफोन टॉगल करें",
+      "addToCart": "कार्ट में जोड़ें",
+      "continue": "जारी रखें"
     },
     "support": {
       "phoneNumber": "+91 992590-2377",
@@ -52,7 +55,15 @@
     "errors": {
       "videoFailed": "वीडियो चैट लोड नहीं हो सका। चलिए टेक्स्ट चैट से जारी रखते हैं।",
       "audioFailed": "ऑडियो नहीं चला सका। कृपया अपनी साउंड सेटिंग्स जांचें।",
-      "connectionError": "कनेक्शन त्रुटि। कृपया पुनः प्रयास करें।"
+      "connectionError": "कनेक्शन त्रुटि। कृपया पुनः प्रयास करें।",
+      "micNotSupported": "आपका ब्राउज़र स्पीच रिकग्निशन का समर्थन नहीं करता है"
+    },
+    "listening": "सुन रहा है...",
+    "placeholders": {
+      "selectType": "प्रकार चुनें",
+      "selectMetal": "धातु चुनें",
+      "selectStyle": "शैली चुनें",
+      "selectBudget": "बजट सीमा चुनें"
     }
   },
   "common": {
