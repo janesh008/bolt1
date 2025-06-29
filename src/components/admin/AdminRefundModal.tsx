@@ -113,8 +113,6 @@ const AdminRefundModal: React.FC<AdminRefundModalProps> = ({
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to process refund');
       }
-
-      const data = await response.json();
       
       toast.success(`Refund status updated to ${newStatus}`);
       onRefundProcessed();
