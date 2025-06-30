@@ -110,12 +110,6 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
         const fileName = `${uuidv4()}.${fileExt}`;
         const filePath = `design-references/${user.id}/${fileName}`;
         
-        const { error: uploadError, data } = await supabase.storage
-          .from('design-references')
-          .upload(filePath, imageFile);
-        
-        if (uploadError) throw uploadError;
-        
         // Get public URL
         const { data: { publicUrl } } = supabase.storage
           .from('design-references')
