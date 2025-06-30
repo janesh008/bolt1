@@ -56,7 +56,7 @@ export const getCurrentAdminUser = async (): Promise<AdminUser | null> => {
   }
 };
 
-export const signInAdmin = async (email: string, password: string) => {
+export const signInAdmin = async () => {
   try {
     // Verify user has admin privileges
     const adminUser = await getCurrentAdminUser();
