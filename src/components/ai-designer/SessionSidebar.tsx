@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Gem, Sparkles, Diamond } from 'lucide-react';
 import { AIDesignSession } from '../../types/ai-designer';
 import { Badge } from '../ui/badge';
