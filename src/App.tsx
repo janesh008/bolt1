@@ -164,7 +164,7 @@ function App() {
                       <Route path="products/:id/edit" element={<ProductFormNew mode="edit" />} />
                       <Route path="orders" element={<AdminOrdersPage />} />
                       <Route path="refunds" element={<AdminRefundsPage />} />
-                      <Route path="settings" element={<div>Settings (Coming Soon)</div>} />
+                      
                     </Route>
 
                     {/* 404 */}
