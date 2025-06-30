@@ -1,6 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, X, Globe, MessageSquare, Loader2 } from 'lucide-react';
+import { 
+  Mic, 
+  MicOff, 
+  X, 
+  Globe, 
+  MessageSquare, 
+  Loader2 
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSupportSession } from './useSupportSession';
 import { cn } from '../../lib/utils';
@@ -139,7 +146,7 @@ const SupportAgent: React.FC<SupportAgentProps> = ({ className }) => {
                               : "hover:bg-cream-100 border border-transparent"
                           )}
                         >
-                          <span className="text-xl mr-2">{lang.flag}</span>
+                          <span className="mr-2 text-xl">{lang.flag}</span>
                           <span>{lang.name}</span>
                         </button>
                       ))}
@@ -151,7 +158,7 @@ const SupportAgent: React.FC<SupportAgentProps> = ({ className }) => {
             
             {/* Messages Area */}
             <div className="h-80 overflow-y-auto p-4 bg-cream-50">
-              {state.messages.length === 0 ? (
+              {state.messages && state.messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-4">
                   <div className="w-16 h-16 bg-gold-100 rounded-full flex items-center justify-center mb-4">
                     <MessageSquare className="h-8 w-8 text-gold-400" />
@@ -165,7 +172,7 @@ const SupportAgent: React.FC<SupportAgentProps> = ({ className }) => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {state.messages.map((msg, index) => (
+                  {state.messages && Array.isArray(state.messages) && state.messages.map((msg, index) => (
                     <div
                       key={index}
                       className={cn(
