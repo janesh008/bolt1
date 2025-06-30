@@ -123,14 +123,7 @@ const UserManagementSystem: React.FC = () => {
       
       if (error) throw error;
       
-      // Ensure permissions is always an array
-      const rolesWithArrayPermissions = (data || []).map(role => ({
-        ...role,
-        permissions: Array.isArray(role.permissions) ? role.permissions : 
-                    (role.permissions ? [role.permissions] : [])
-      }));
-      
-      setRoles(rolesWithArrayPermissions);
+      setRoles(data || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
       toast.error('Failed to fetch roles');
@@ -309,7 +302,7 @@ const UserManagementSystem: React.FC = () => {
   
   const handleRolePermissionsClick = (role: Role) => {
     setSelectedRole(role);
-    setSelectedPermissions(role.permissions || []);
+    setSelectedPermissions(Array.isArray(role.permissions) ? role.permissions : []);
     setShowRolePermissionsModal(true);
   };
   
@@ -587,15 +580,16 @@ const UserManagementSystem: React.FC = () => {
                   </div>
                   
                   <div className="flex flex-wrap gap-2">
-                    {(role.permissions || []).map((permissionId) => {
-                      const permission = permissions.find(p => p.id === permissionId);
-                      return permission ? (
-                        <Badge key={permission.id} variant="outline" className="text-xs">
-                          {permission.module}.{permission.action}
-                        </Badge>
-                      ) : null;
-                    })}
-                    {(!role.permissions || role.permissions.length === 0) && (
+                    {Array.isArray(role.permissions) && role.permissions.length > 0 ? (
+                      role.permissions.map((permissionId) => {
+                        const permission = permissions.find(p => p.id === permissionId);
+                        return permission ? (
+                          <Badge key={permission.id} variant="outline" className="text-xs">
+                            {permission.module}.{permission.action}
+                          </Badge>
+                        ) : null;
+                      })
+                    ) : (
                       <span className="text-sm text-gray-500">No permissions assigned</span>
                     )}
                   </div>
