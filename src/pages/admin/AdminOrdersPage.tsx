@@ -25,7 +25,6 @@ import {
 import { exportOrdersToExcel } from '../../utils/excelExport';
 
 const AdminOrdersPage = () => {
-  const { user } = useAuth();
   const { hasRole } = useAdminAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
