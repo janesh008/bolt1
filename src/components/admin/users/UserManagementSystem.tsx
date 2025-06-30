@@ -123,7 +123,13 @@ const UserManagementSystem: React.FC = () => {
       
       if (error) throw error;
       
-      setRoles(data || []);
+      // Ensure permissions is always an array
+      const rolesWithArrayPermissions = (data || []).map(role => ({
+        ...role,
+        permissions: Array.isArray(role.permissions) ? role.permissions : []
+      }));
+      
+      setRoles(rolesWithArrayPermissions);
     } catch (error) {
       console.error('Error fetching roles:', error);
       toast.error('Failed to fetch roles');
@@ -302,7 +308,7 @@ const UserManagementSystem: React.FC = () => {
   
   const handleRolePermissionsClick = (role: Role) => {
     setSelectedRole(role);
-    setSelectedPermissions(role.permissions || []);
+    setSelectedPermissions(Array.isArray(role.permissions) ? role.permissions : []);
     setShowRolePermissionsModal(true);
   };
   
@@ -580,7 +586,7 @@ const UserManagementSystem: React.FC = () => {
                   </div>
                   
                   <div className="flex flex-wrap gap-2">
-                    {role.permissions?.map((permissionId) => {
+                    {(role.permissions || []).map((permissionId) => {
                       const permission = permissions.find(p => p.id === permissionId);
                       return permission ? (
                         <Badge key={permission.id} variant="outline" className="text-xs">
