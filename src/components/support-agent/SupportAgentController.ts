@@ -8,12 +8,11 @@ export interface Message {
   audioUrl?: string;
 }
 
-export interface SupportAgentState {
-  isListening: boolean;
-  messages: Message[];
-  language: string;
-  isLoading: boolean;
-  error: string | null;
+export interface SupportAgentCallbacks {
+  addMessage: (message: Message) => void;
+  setIsLoadingState: (isLoading: boolean) => void;
+  setErrorState: (error: string | null) => void;
+  setListeningState: (isListening: boolean) => void;
 }
 
 export class SupportAgentController {
@@ -22,7 +21,7 @@ export class SupportAgentController {
   private audioElement: HTMLAudioElement | null = null;
   private userId: string | null = null;
 
-  constructor(private setState: (state: Partial<SupportAgentState>) => void) {
+  constructor(private callbacks: SupportAgentCallbacks) {
     // Initialize Web Speech API if available
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -33,7 +32,7 @@ export class SupportAgentController {
       this.recognition.onresult = this.handleSpeechResult.bind(this);
       this.recognition.onerror = this.handleSpeechError.bind(this);
       this.recognition.onend = () => {
-        this.setState({ isListening: false });
+        this.callbacks.setListeningState(false);
       };
     }
     
@@ -52,20 +51,21 @@ export class SupportAgentController {
 
   public startRecording(language: string): void {
     if (!this.recognition) {
-      this.setState({ error: 'Speech recognition not supported in this browser' });
+      this.callbacks.setErrorState('Speech recognition not supported in this browser');
       return;
     }
     
     this.recognition.lang = language;
     this.recognition.start();
-    this.setState({ isListening: true, error: null });
+    this.callbacks.setListeningState(true);
+    this.callbacks.setErrorState(null);
   }
 
   public stopRecording(): void {
     if (this.recognition) {
       this.recognition.stop();
     }
-    this.setState({ isListening: false });
+    this.callbacks.setListeningState(false);
   }
 
   private handleSpeechResult(event: SpeechRecognitionEvent): void {
@@ -75,25 +75,22 @@ export class SupportAgentController {
 
   private handleSpeechError(event: SpeechRecognitionErrorEvent): void {
     console.error('Speech recognition error:', event.error);
-    this.setState({ 
-      error: `Speech recognition error: ${event.error}`, 
-      isListening: false 
-    });
+    this.callbacks.setErrorState(`Speech recognition error: ${event.error}`);
+    this.callbacks.setListeningState(false);
   }
 
   public async sendMessage(message: string): Promise<void> {
     if (!message.trim() || !this.userId) return;
     
-    // Add user message to state
-    this.setState({ 
-      messages: prev => [...(prev || []), { 
-        role: 'user', 
-        content: message, 
-        timestamp: new Date() 
-      }],
-      isLoading: true,
-      error: null
+    // Add user message
+    this.callbacks.addMessage({ 
+      role: 'user', 
+      content: message, 
+      timestamp: new Date() 
     });
+    
+    this.callbacks.setIsLoadingState(true);
+    this.callbacks.setErrorState(null);
 
     try {
       // Get current session
@@ -123,16 +120,15 @@ export class SupportAgentController {
 
       const data = await response.json();
       
-      // Add assistant message to state
-      this.setState({ 
-        messages: prev => [...(prev || []), { 
-          role: 'assistant', 
-          content: data.text, 
-          timestamp: new Date(),
-          audioUrl: data.audioUrl
-        }],
-        isLoading: false
+      // Add assistant message
+      this.callbacks.addMessage({ 
+        role: 'assistant', 
+        content: data.text, 
+        timestamp: new Date(),
+        audioUrl: data.audioUrl
       });
+
+      this.callbacks.setIsLoadingState(false);
 
       // Play audio response if available
       if (data.audioUrl) {
@@ -140,10 +136,8 @@ export class SupportAgentController {
       }
     } catch (error) {
       console.error('Error sending message to support agent:', error);
-      this.setState({ 
-        error: error instanceof Error ? error.message : 'An unknown error occurred',
-        isLoading: false
-      });
+      this.callbacks.setErrorState(error instanceof Error ? error.message : 'An unknown error occurred');
+      this.callbacks.setIsLoadingState(false);
     }
   }
 
@@ -152,7 +146,7 @@ export class SupportAgentController {
       this.audioElement.src = audioUrl;
       this.audioElement.play().catch(error => {
         console.error('Error playing audio:', error);
-        this.setState({ error: 'Failed to play audio response' });
+        this.callbacks.setErrorState('Failed to play audio response');
       });
     }
   }

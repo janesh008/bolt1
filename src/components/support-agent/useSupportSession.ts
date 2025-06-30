@@ -26,11 +26,34 @@ export function useSupportSession() {
   
   const controllerRef = useRef<SupportAgentController | null>(null);
   
+  // Callback functions for the controller to update state
+  const addMessage = (message: Message) => {
+    setState(prev => ({
+      ...prev,
+      messages: [...prev.messages, message]
+    }));
+  };
+  
+  const setIsLoadingState = (isLoading: boolean) => {
+    setState(prev => ({ ...prev, isLoading }));
+  };
+  
+  const setErrorState = (error: string | null) => {
+    setState(prev => ({ ...prev, error }));
+  };
+  
+  const setListeningState = (isListening: boolean) => {
+    setState(prev => ({ ...prev, isListening }));
+  };
+  
   // Initialize controller
   useEffect(() => {
     if (user) {
-      const controller = new SupportAgentController((newState) => {
-        setState(prevState => ({ ...prevState, ...newState }));
+      const controller = new SupportAgentController({
+        addMessage,
+        setIsLoadingState,
+        setErrorState,
+        setListeningState
       });
       
       controller.init(user.id).catch(console.error);

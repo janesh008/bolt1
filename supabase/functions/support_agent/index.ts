@@ -65,16 +65,16 @@ serve(async (req) => {
       );
     }
     
-    // Get user profile
+    // Get user profile - use maybeSingle() to avoid errors if no profile exists
     const { data: userProfile, error: profileError } = await supabase
       .from('user_profiles')
       .select('full_name')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
     
     const userName = userProfile?.full_name || user.user_metadata?.full_name || 'Customer';
     
-    // Get user's latest order
+    // Get user's latest order - use maybeSingle() to avoid errors if no orders exist
     const { data: latestOrder, error: orderError } = await supabase
       .from('orders')
       .select(`
@@ -91,7 +91,7 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
     
     // Prepare the system prompt
     const systemPrompt = `You are a helpful customer support agent for AXELS, a luxury jewelry brand. 
@@ -135,33 +135,42 @@ serve(async (req) => {
     // Generate audio response using ElevenLabs
     let audioUrl = '';
     try {
-      const audioResponse = await elevenlabs.textToSpeech({
-        voice_id: VOICE_ID,
-        text: reply,
-        model_id: 'eleven_multilingual_v1',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
-        },
-      });
-      
-      // Convert audio buffer to base64
-      const audioBase64 = Buffer.from(audioResponse).toString('base64');
-      
-      // Create a data URL for the audio
-      audioUrl = `data:audio/mpeg;base64,${audioBase64}`;
+      if (Deno.env.get("ELEVENLABS_API_KEY")) {
+        const audioResponse = await elevenlabs.textToSpeech({
+          voice_id: VOICE_ID,
+          text: reply,
+          model_id: 'eleven_multilingual_v1',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+          },
+        });
+        
+        // Convert audio buffer to base64 using Deno-compatible method
+        const audioArray = new Uint8Array(audioResponse);
+        const audioBase64 = btoa(String.fromCharCode(...audioArray));
+        
+        // Create a data URL for the audio
+        audioUrl = `data:audio/mpeg;base64,${audioBase64}`;
+      }
     } catch (error) {
       console.error('Error generating audio:', error);
+      // Continue without audio if there's an error
     }
     
-    // Log the interaction
-    await supabase.from('support_logs').insert({
-      user_id: user.id,
-      message,
-      response: reply,
-      language,
-      created_at: new Date().toISOString()
-    });
+    // Log the interaction - use insert with error handling
+    try {
+      await supabase.from('support_logs').insert({
+        user_id: user.id,
+        message,
+        response: reply,
+        language,
+        created_at: new Date().toISOString()
+      });
+    } catch (logError) {
+      console.error('Error logging support interaction:', logError);
+      // Continue without logging if there's an error
+    }
     
     return new Response(
       JSON.stringify({
