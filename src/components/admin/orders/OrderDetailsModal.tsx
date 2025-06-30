@@ -16,7 +16,6 @@ import {
   Download
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../ui/dialog';
-import { Badge } from '../../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import Button from '../../ui/Button';
 import OrderStatusUpdater from './OrderStatusUpdater';
