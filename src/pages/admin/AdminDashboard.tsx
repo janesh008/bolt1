@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Card } from '../../components/ui/card';
-import { Users, Package, ShoppingCart, DollarSign, TrendingUp, Eye } from 'lucide-react';
+import { Users, Package, ShoppingCart, DollarSign, TrendingUp } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import QuickIJewelTool from '../../components/admin/QuickIJewelTool';
 
