@@ -7,7 +7,8 @@ import {
   Eye, 
   Search,
   Download,
-  AlertTriangle
+  AlertTriangle,
+  Filter
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -21,6 +22,8 @@ import toast from 'react-hot-toast';
 import AdminRefundModal from './AdminRefundModal';
 import ExportModal from './ExportModal';
 import { exportRefundsToExcel } from '../../utils/excelExport';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useDebounce } from '../../hooks/useDebounce';
 
 interface Refund {
   id: string;
@@ -56,8 +59,27 @@ const AdminRefundManagement: React.FC = () => {
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [showExportModal, setShowExportModal] = useState(false);
+  
+  const location = useLocation();
+  const navigate = useNavigate();
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   useEffect(() => {
+    // Parse URL parameters on component mount
+    const params = new URLSearchParams(location.search);
+    
+    if (params.has('search')) {
+      setSearchTerm(params.get('search') || '');
+    }
+    
+    if (params.has('status')) {
+      setStatusFilter(params.get('status') || 'all');
+    }
+    
+    if (params.has('date')) {
+      setDateFilter(params.get('date') || 'all');
+    }
+    
     fetchRefunds();
     
     // Set up real-time subscription for new refund requests
@@ -106,7 +128,20 @@ const AdminRefundManagement: React.FC = () => {
     return () => {
       supabase.removeChannel(refundsSubscription);
     };
-  }, []);
+  }, [debouncedSearchTerm, statusFilter, dateFilter, location.search]);
+
+  // Update URL when filters change
+  const updateUrlParams = (key: string, value: string) => {
+    const params = new URLSearchParams(location.search);
+    
+    if (value && value !== 'all') {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    
+    navigate({ search: params.toString() });
+  };
 
   const fetchRefunds = async () => {
     try {
@@ -115,6 +150,11 @@ const AdminRefundManagement: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
+      // Apply search filter
+      if (debouncedSearchTerm) {
+        query = query.or(`order_number.ilike.%${debouncedSearchTerm}%,full_name.ilike.%${debouncedSearchTerm}%,email.ilike.%${debouncedSearchTerm}%`);
+      }
+      
       // Apply status filter
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
@@ -147,20 +187,6 @@ const AdminRefundManagement: React.FC = () => {
       if (error) throw error;
       
       let filteredData = data || [];
-      
-      // Apply search filter on the client side since we can't do complex joins with search
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        filteredData = filteredData.filter(refund => {
-          const orderNumber = refund.orders?.order_number?.toLowerCase() || '';
-          const fullName = refund.users?.user_profiles?.full_name?.toLowerCase() || '';
-          const email = refund.users?.user_profiles?.email?.toLowerCase() || '';
-          
-          return orderNumber.includes(searchLower) || 
-                 fullName.includes(searchLower) || 
-                 email.includes(searchLower);
-        });
-      }
       
       setRefunds(filteredData);
       
@@ -264,6 +290,29 @@ const AdminRefundManagement: React.FC = () => {
       setIsLoading(false);
     }
   };
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    updateUrlParams('search', value);
+  };
+  
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    updateUrlParams('status', value);
+  };
+  
+  const handleDateChange = (value: string) => {
+    setDateFilter(value);
+    updateUrlParams('date', value);
+  };
+  
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setDateFilter('all');
+    navigate({ search: '' });
+  };
 
   return (
     <div className="space-y-6">
@@ -346,17 +395,17 @@ const AdminRefundManagement: React.FC = () => {
       <Card>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
+            <div className="relative md:col-span-2">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder="Search refunds..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
                 className="pl-10"
               />
             </div>
             
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={handleStatusChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -369,7 +418,7 @@ const AdminRefundManagement: React.FC = () => {
               </SelectContent>
             </Select>
 
-            <Select value={dateFilter} onValueChange={setDateFilter}>
+            <Select value={dateFilter} onValueChange={handleDateChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Date Range" />
               </SelectTrigger>
@@ -380,6 +429,15 @@ const AdminRefundManagement: React.FC = () => {
                 <SelectItem value="month">This Month</SelectItem>
               </SelectContent>
             </Select>
+            
+            {(searchTerm || statusFilter !== 'all' || dateFilter !== 'all') && (
+              <div className="md:col-span-4 flex justify-end">
+                <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                  <Filter className="h-4 w-4 mr-2" />
+                  Clear Filters
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

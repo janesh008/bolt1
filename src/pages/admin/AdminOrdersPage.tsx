@@ -6,6 +6,7 @@ import { useAdminAuth } from '../../context/AdminAuthContext';
 import { supabase } from '../../lib/supabase';
 import { useDebounce } from '../../hooks/useDebounce';
 import toast from 'react-hot-toast';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 // Import components
 import OrderFilters from '../../components/admin/orders/OrderFilters';
@@ -36,13 +37,39 @@ const AdminOrdersPage = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-
-  const ordersPerPage = 10;
+  
+  const location = useLocation();
+  const navigate = useNavigate();
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
+  const ordersPerPage = 10;
+
   useEffect(() => {
+    // Parse URL parameters on component mount
+    const params = new URLSearchParams(location.search);
+    
+    if (params.has('search')) {
+      setSearchTerm(params.get('search') || '');
+    }
+    
+    if (params.has('status')) {
+      setStatusFilter(params.get('status') || 'all');
+    }
+    
+    if (params.has('paymentStatus')) {
+      setPaymentStatusFilter(params.get('paymentStatus') || 'all');
+    }
+    
+    if (params.has('date')) {
+      setDateFilter(params.get('date') || 'all');
+    }
+    
+    if (params.has('page')) {
+      setCurrentPage(parseInt(params.get('page') || '1'));
+    }
+    
     fetchOrders();
-  }, [currentPage, debouncedSearchTerm, statusFilter, paymentStatusFilter, dateFilter]);
+  }, [currentPage, debouncedSearchTerm, statusFilter, paymentStatusFilter, dateFilter, location.search]);
 
   const fetchOrders = async () => {
     try {
@@ -223,6 +250,15 @@ const AdminOrdersPage = () => {
       setIsLoading(false);
     }
   };
+  
+  // Update URL when page changes
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    
+    const params = new URLSearchParams(location.search);
+    params.set('page', page.toString());
+    navigate({ search: params.toString() });
+  };
 
   return (
     <div className="space-y-6">
@@ -283,7 +319,7 @@ const AdminOrdersPage = () => {
             <OrderPagination
               currentPage={currentPage}
               totalPages={totalPages}
-              setCurrentPage={setCurrentPage}
+              setCurrentPage={handlePageChange}
               ordersPerPage={ordersPerPage}
               totalOrders={orders.length}
             />

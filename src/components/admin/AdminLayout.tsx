@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
+import { Outlet, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
   Package, 
   ShoppingCart, 
-  Settings, 
   Menu, 
   X, 
   LogOut,
@@ -29,19 +28,39 @@ const navigation = [
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const { user, isLoading, signOut, hasRole } = useAdminAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
   if (!user || !hasRole('Moderator')) {
-    return <Navigate to="/admin/login\" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchTerm.trim()) {
+      // Determine which section to search based on current path
+      if (location.pathname.includes('/admin/products')) {
+        navigate(`/admin/products?search=${encodeURIComponent(searchTerm)}`);
+      } else if (location.pathname.includes('/admin/users')) {
+        navigate(`/admin/users?search=${encodeURIComponent(searchTerm)}`);
+      } else if (location.pathname.includes('/admin/orders')) {
+        navigate(`/admin/orders?search=${encodeURIComponent(searchTerm)}`);
+      } else if (location.pathname.includes('/admin/refunds')) {
+        navigate(`/admin/refunds?search=${encodeURIComponent(searchTerm)}`);
+      } else {
+        // Default to products search if on dashboard or other pages
+        navigate(`/admin/products?search=${encodeURIComponent(searchTerm)}`);
+      }
+    }
   };
 
   return (
@@ -157,6 +176,9 @@ const AdminLayout = () => {
                 <input
                   type="text"
                   placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={handleSearch}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>

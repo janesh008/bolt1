@@ -25,6 +25,8 @@ import { supabase } from '../../../lib/supabase';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
 import toast from 'react-hot-toast';
 import { exportUsersToExcel } from '../../../utils/excelExport';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useDebounce } from '../../../hooks/useDebounce';
 
 interface Permission {
   id: string;
@@ -88,20 +90,69 @@ const UserManagementSystem: React.FC = () => {
   
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   
+  const location = useLocation();
+  const navigate = useNavigate();
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  
   useEffect(() => {
+    // Parse URL parameters on component mount
+    const params = new URLSearchParams(location.search);
+    
+    if (params.has('search')) {
+      setSearchTerm(params.get('search') || '');
+    }
+    
+    if (params.has('status')) {
+      setStatusFilter(params.get('status') || 'all');
+    }
+    
+    if (params.has('role')) {
+      setRoleFilter(params.get('role') || 'all');
+    }
+    
     fetchUsers();
     fetchRoles();
     fetchPermissions();
-  }, []);
+  }, [debouncedSearchTerm, statusFilter, roleFilter, location.search]);
+  
+  // Update URL when filters change
+  const updateUrlParams = (key: string, value: string) => {
+    const params = new URLSearchParams(location.search);
+    
+    if (value && value !== 'all') {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    
+    navigate({ search: params.toString() });
+  };
   
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('users')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      // Apply search filter
+      if (debouncedSearchTerm) {
+        query = query.or(`full_name.ilike.%${debouncedSearchTerm}%,email.ilike.%${debouncedSearchTerm}%,phone.ilike.%${debouncedSearchTerm}%`);
+      }
+      
+      // Apply status filter
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+      
+      // Apply role filter
+      if (roleFilter !== 'all') {
+        query = query.eq('role', roleFilter);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       
@@ -313,8 +364,8 @@ const UserManagementSystem: React.FC = () => {
       // Apply filters
       let filteredUsers = [...users];
       
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
+      if (debouncedSearchTerm) {
+        const searchLower = debouncedSearchTerm.toLowerCase();
         filteredUsers = filteredUsers.filter(user => 
           user.full_name.toLowerCase().includes(searchLower) ||
           user.email.toLowerCase().includes(searchLower)
@@ -374,11 +425,34 @@ const UserManagementSystem: React.FC = () => {
     });
   };
   
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    updateUrlParams('search', value);
+  };
+  
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    updateUrlParams('status', value);
+  };
+  
+  const handleRoleChange = (value: string) => {
+    setRoleFilter(value);
+    updateUrlParams('role', value);
+  };
+  
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setRoleFilter('all');
+    navigate({ search: '' });
+  };
+  
   // Filter users based on search term and filters
   const filteredUsers = users.filter(user => {
-    const matchesSearch = !searchTerm || 
-      user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = !debouncedSearchTerm || 
+      user.full_name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
@@ -420,17 +494,17 @@ const UserManagementSystem: React.FC = () => {
       {/* Filters */}
       <Card>
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative md:col-span-2">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder="Search users..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
                 className="pl-10"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={handleStatusChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -441,7 +515,7 @@ const UserManagementSystem: React.FC = () => {
                 <SelectItem value="pending">Pending</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <Select value={roleFilter} onValueChange={handleRoleChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Role" />
               </SelectTrigger>
@@ -453,6 +527,15 @@ const UserManagementSystem: React.FC = () => {
                 <SelectItem value="User">User</SelectItem>
               </SelectContent>
             </Select>
+            
+            {(searchTerm || statusFilter !== 'all' || roleFilter !== 'all') && (
+              <div className="md:col-span-4 flex justify-end">
+                <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                  <Filter className="h-4 w-4 mr-2" />
+                  Clear Filters
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
