@@ -48,7 +48,7 @@ const SizeGuidePage = lazy(() => import('./app/help/size-guide/page'));
 
 function App() {
   const [showLoadingScreen, setShowLoadingScreen] = useState(true);
-  const [isAppReady, setIsAppReady] = useState(false);
+  const [_isAppReady, setIsAppReady] = useState(false);
 
   // Handle loading screen completion
   const handleLoadingComplete = () => {
