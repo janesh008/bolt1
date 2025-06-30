@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Package, Heart, CreditCard, Settings, LogOut, RefreshCw } from 'lucide-react';
+import { User, Package, Heart, CreditCard, Settings, LogOut, RefreshCw, Headphones } from 'lucide-react';
 
 interface AccountSidebarProps {
   activeTab: string;
@@ -105,6 +105,18 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({
       >
         <Settings className="h-5 w-5" />
         <span>Settings</span>
+      </button>
+      
+      <button
+        onClick={() => onTabChange('support')}
+        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+          activeTab === 'support'
+            ? 'bg-gold-400 text-white'
+            : 'hover:bg-cream-100 text-charcoal-600'
+        }`}
+      >
+        <Headphones className="h-5 w-5" />
+        <span>Support</span>
       </button>
       
       <button

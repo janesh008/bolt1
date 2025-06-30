@@ -15,6 +15,8 @@ import WishlistTab from '../components/account/WishlistTab';
 import AddressesTab from '../components/account/AddressesTab';
 import SettingsTab from '../components/account/SettingsTab';
 import RefundsTab from '../components/account/RefundsTab';
+import SupportTab from '../components/account/SupportTab';
+import SupportAgent from '../components/support-agent/SupportAgent';
 
 interface Address {
   id: string;
@@ -301,10 +303,17 @@ const AccountPage = () => {
               <TabsContent value="settings">
                 <SettingsTab onSignOut={handleSignOut} />
               </TabsContent>
+              
+              <TabsContent value="support">
+                <SupportTab />
+              </TabsContent>
             </Tabs>
           </div>
         </div>
       </div>
+      
+      {/* Support Agent */}
+      <SupportAgent />
     </div>
   );
 };
