@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid'; 
 import { 
   AIDesignerStore, 
   AIDesignSession, 
-  AIMessage, 
+  AIMessage,
   DesignFormValues 
 } from '../types/ai-designer';
 import toast from 'react-hot-toast';
@@ -199,7 +199,7 @@ const useAIDesignerStore = create<AIDesignerStore>((set, get) => ({
       
       // Get AI response
       const response = await fetch('/api/ai/send-message', {
-        method: 'POST',
+        method: 'POST', 
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,

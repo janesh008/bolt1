@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { format } from 'date-fns';
+import { format } from 'date-fns'; 
 
 // Define types for export options
 export interface ExportOptions {
@@ -66,7 +66,7 @@ export const exportOrdersToExcel = async (orders: any[], options?: ExportOptions
 
     // Format customer info
     const customerName = order.users?.full_name || 'Unknown';
-    const customerEmail = order.users?.email || 'No email';
+    const customerEmail = order.users?.email || 'No email'; 
 
     worksheet.addRow({
       orderNumber: order.order_number,
@@ -148,8 +148,8 @@ export const exportRefundsToExcel = async (refunds: any[], options?: ExportOptio
       refundId: refund.id.slice(0, 8),
       orderNumber: refund.order_number || refund.orders?.order_number || 'Unknown',
       dateRequested: format(new Date(refund.created_at), 'yyyy-MM-dd HH:mm:ss'),
-      customerName: refund.full_name || 'Unknown',
-      customerEmail: refund.email || 'No email',
+      customerName: refund.full_name || 'Unknown', 
+      customerEmail: refund.email || 'No email', 
       amount: refund.amount,
       status: refund.status,
       paymentMethod: refund.payment_method,
