@@ -54,7 +54,7 @@ const AIDesignerPage = () => {
     setView('form');
   };
   
-  const handleSelectSession = (session: AIDesignSession) => {
+  const handleSelectSession = () => {
     setCurrentSession(session);
     navigate(`/ai-designer/${session.id}`);
     setView('chat');
