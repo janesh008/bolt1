@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gem, Sparkles, Diamond, Image as ImageIcon } from 'lucide-react';
+import { Gem, Sparkles, Diamond } from 'lucide-react';
 import { AIDesignSession } from '../../types/ai-designer';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
