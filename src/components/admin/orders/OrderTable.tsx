@@ -1,7 +1,6 @@
 import React from 'react';
 import { Package, Eye } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
-import { Badge } from '../../ui/badge';
 import Button from '../../ui/Button';
 import OrderStatusUpdater from './OrderStatusUpdater';
 import { formatCurrency } from '../../../lib/utils';
