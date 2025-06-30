@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Gem, ArrowLeft } from 'lucide-react'; 
 import { DesignFormValues } from '../types/ai-designer';
