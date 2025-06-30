@@ -25,7 +25,7 @@ const SignUpPage = lazy(() => import('./pages/SignUpPage'));
 const CallbackPage = lazy(() => import('./pages/auth/CallbackPage'));
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
-const AIDesignerPage = lazy(() => import('./pages/WishlistPage'));
+const AIDesignerPage = lazy(() => import('./pages/AIDesignerPage'));
 
 // Admin pages
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
@@ -131,9 +131,7 @@ function App() {
                       path="/ai-designer" 
                       element={
                         <Layout>
-                          <ProtectedRoute>
-                            <AIDesignerPage />
-                          </ProtectedRoute>
+                          <AIDesignerPage />
                         </Layout>
                       } 
                     />
