@@ -11,7 +11,8 @@ import {
   Bell,
   Search,
   User,
-  RefreshCw
+  RefreshCw,
+  BarChart
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { cn } from '../../lib/utils';
@@ -20,6 +21,7 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'Analytics', href: '/admin/analytics', icon: BarChart },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
@@ -56,6 +58,8 @@ const AdminLayout = () => {
         navigate(`/admin/orders?search=${encodeURIComponent(searchTerm)}`);
       } else if (location.pathname.includes('/admin/refunds')) {
         navigate(`/admin/refunds?search=${encodeURIComponent(searchTerm)}`);
+      } else if (location.pathname.includes('/admin/analytics')) {
+        navigate(`/admin/analytics?search=${encodeURIComponent(searchTerm)}`);
       } else {
         // Default to products search if on dashboard or other pages
         navigate(`/admin/products?search=${encodeURIComponent(searchTerm)}`);
