@@ -14,7 +14,6 @@ import { AIDesignSession, AIMessage } from '../../types/ai-designer';
 import { Input } from '../ui/input';
 import Button from '../ui/Button';
 import { Badge } from '../ui/badge';
-import { Separator } from '../ui/separator';
 import { formatDistanceToNow } from 'date-fns';
 import useAIDesignerStore from '../../store/useAIDesignerStore';
 import toast from 'react-hot-toast';
