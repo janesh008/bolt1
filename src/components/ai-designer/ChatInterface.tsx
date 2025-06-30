@@ -1,5 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Heart, Send, RefreshCw, Download, ShoppingBag, Clock, Star, Sparkles, X, Image as ImageIcon } from 'lucide-react';
+import { 
+  Heart, 
+  Send, 
+  RefreshCw, 
+  Download, 
+  ShoppingBag, 
+  Clock, 
+  Star, 
+  X, 
+  Image as ImageIcon 
+} from 'lucide-react';
 import { AIDesignSession, AIMessage } from '../../types/ai-designer';
 import { Input } from '../ui/input';
 import Button from '../ui/Button';
@@ -19,7 +29,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ session, messages, onBack
   const [newMessage, setNewMessage] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null); 
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { sendMessage, toggleFavorite, deleteSession, isLoading } = useAIDesignerStore();

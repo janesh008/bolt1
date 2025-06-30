@@ -1,7 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, ShoppingBag, ZoomIn, Share2, Star, ChevronLeft, ChevronRight, Shield, Truck, RotateCcw, Award, Info, Cuboid as Cube, Video as VideoIcon } from 'lucide-react';
+import { 
+  Heart, 
+  ShoppingBag, 
+  ZoomIn, 
+  Share2, 
+  Star, 
+  ChevronLeft, 
+  ChevronRight, 
+  Shield, 
+  Truck, 
+  RotateCcw, 
+  Award, 
+  Info, 
+  Cuboid as Cube, 
+  Video as VideoIcon 
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -59,10 +74,10 @@ const ProductDetailPage = () => {
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [selectedMediaType, setSelectedMediaType] = useState<'image' | 'video'>('image');
   const [isLoading, setIsLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(1); 
   const [selectedTab, setSelectedTab] = useState('description');
   const [show3DViewer, setShow3DViewer] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [_isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Combined media array for slider
   const [combinedMedia, setCombinedMedia] = useState<Array<{type: 'image' | 'video', url: string, id: string}>>([]);

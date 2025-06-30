@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Save, X, Eye, ArrowLeft, AlertTriangle, ExternalLink, Video } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom'; 
+import { 
+  Save, 
+  X, 
+  Eye, 
+  ArrowLeft, 
+  AlertTriangle, 
+  ExternalLink, 
+  Video 
+} from 'lucide-react';
 import { z } from 'zod';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
@@ -80,14 +88,14 @@ const ProductFormNew: React.FC<ProductFormNewProps> = ({ mode }) => {
   const [showIJewelPreview, setShowIJewelPreview] = useState(false);
   const [tempProductId, setTempProductId] = useState<string | null>(null);
 
-  const {
+  const { 
     register,
     handleSubmit,
     control,
     watch,
     reset,
     formState: { errors, isDirty }
-  } = useForm<ProductFormData>({
+  } = useForm<ProductFormData>({ 
     resolver: zodResolver(productSchema),
     defaultValues: {
       product_id: '',

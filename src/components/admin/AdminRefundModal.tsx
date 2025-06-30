@@ -12,7 +12,13 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Badge } from '../ui/badge';
 import { Textarea } from '../ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '../ui/select';
 import Button from '../ui/Button';
 import { formatCurrency } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
@@ -25,7 +31,7 @@ interface Refund {
   amount: number;
   payment_method: string;
   payment_id: string | null;
-  reason: string | null;
+  reason: string | null; 
   status: 'pending' | 'processing' | 'completed' | 'rejected';
   admin_notes: string | null;
   processed_by: string | null;
@@ -35,12 +41,11 @@ interface Refund {
   orders?: {
     order_number: string;
   };
-  users?: {
-    full_name: string;
-    email: string;
-  };
-}
-
+  full_name?: string;
+  email?: string;
+  order_number?: string;
+  processed_by_name?: string;
+  processed_by_role?: string;
 interface AdminRefundModalProps {
   isOpen: boolean;
   onClose: () => void;

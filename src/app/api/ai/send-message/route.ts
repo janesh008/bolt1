@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid'; 
 import OpenAI from 'openai';
 
 // Initialize Supabase client
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
       // Call OpenAI API
       const completion = await openai.chat.completions.create({
         model: "gpt-4-turbo",
-        messages,
+        messages: messages as any,
         max_tokens: 1000,
       });
       

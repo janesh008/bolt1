@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'; 
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
@@ -19,7 +19,10 @@ interface WishlistTabProps {
   onRemoveItem: (productId: string) => Promise<void>;
 }
 
-const WishlistTab: React.FC<WishlistTabProps> = ({ items, onRemoveItem }) => {
+const WishlistTab: React.FC<WishlistTabProps> = ({ 
+  items, 
+  onRemoveItem 
+}) => {
   const { addToCart } = useCart();
   
   const handleAddToCart = (item: WishlistItem) => {

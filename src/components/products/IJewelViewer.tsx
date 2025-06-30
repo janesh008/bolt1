@@ -1,5 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Maximize2, Minimize2, RotateCcw, AlertCircle, Loader2 } from 'lucide-react';
+import { 
+  Maximize2, 
+  Minimize2, 
+  RotateCcw, 
+  AlertCircle, 
+  Loader2 
+} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import Button from '../ui/Button';
 import { cn } from '../../lib/utils';
@@ -22,7 +28,7 @@ const IJewelViewer: React.FC<IJewelViewerProps> = ({
   lazy = true
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); 
   const [hasError, setHasError] = useState(false);
   const [isVisible, setIsVisible] = useState(!lazy);
   const iframeRef = useRef<HTMLIFrameElement>(null);

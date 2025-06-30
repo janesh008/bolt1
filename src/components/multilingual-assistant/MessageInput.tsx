@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'; 
 import { Mic, MicOff, Send } from 'lucide-react';
 import Button from '../ui/Button';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +9,7 @@ interface MessageInputProps {
   handleSendMessage: () => void;
   isLoading: boolean;
   listening: boolean;
-  toggleMic: () => void;
+  toggleMic: () => void; 
   transcript: string;
   browserSupportsSpeechRecognition: boolean;
 }

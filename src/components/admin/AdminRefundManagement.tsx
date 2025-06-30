@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   RefreshCw, 
   CheckCircle, 
-  XCircle, 
+  XCircle,
   Clock, 
   Eye, 
   Search,
@@ -31,20 +31,19 @@ interface Refund {
   payment_id: string | null;
   reason: string | null;
   status: 'pending' | 'processing' | 'completed' | 'rejected';
-  admin_notes: string | null;
-  processed_by: string | null;
+  admin_notes: string | null; 
+  processed_by: string | null; 
   created_at: string;
   updated_at: string;
   completed_at: string | null;
-  orders: {
+  orders?: {
     order_number: string;
   };
-  users?: {
-    user_profiles: {
-      full_name: string;
-      email: string;
-    };
-  };
+  full_name?: string;
+  email?: string;
+  order_number?: string;
+  processed_by_name?: string;
+  processed_by_role?: string;
 }
 
 const AdminRefundManagement: React.FC = () => {

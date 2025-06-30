@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Video, X, Globe, Minimize2, Maximize2, ChevronDown } from 'lucide-react';
+import { 
+  Video, 
+  X, 
+  Globe, 
+  Minimize2, 
+  Maximize2, 
+  ChevronDown 
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { isValidConversationUrl } from '../../utils/videoUtils';
@@ -31,7 +38,7 @@ const MultilingualAssistant: React.FC = () => {
   const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [_conversationId, setConversationId] = useState<string | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);

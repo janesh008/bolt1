@@ -1,6 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { X, Video, AlertCircle, Check } from 'lucide-react';
+import { 
+  X, 
+  Video, 
+  AlertCircle, 
+  Check 
+} from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { uploadProductVideo } from '../../../lib/supabase-storage';
 import { Badge } from '../../ui/badge';
@@ -32,7 +37,7 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
   maxVideos = 3,
   disabled = false,
 }) => {
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDragging, setIsDragging] = useState(false); 
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (disabled) return;
@@ -46,7 +51,7 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
     const filesToProcess = acceptedFiles.slice(0, remainingSlots);
 
     if (filesToProcess.length < acceptedFiles.length) {
-      toast.error(`Only ${remainingSlots} more videos can be added`);
+      toast.error(`Only ${remainingSlots} more videos can be added`); 
     }
 
     // Create temporary video objects with unique IDs
@@ -72,7 +77,7 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
       try {
         // Update progress to show upload starting
         const currentVideos = [...updatedVideos];
-        const videoIndex = currentVideos.findIndex(vid => vid.id === tempVideo.id);
+        const videoIndex = currentVideos.findIndex(vid => vid.id === tempVideo.id); 
         
         if (videoIndex !== -1) {
           currentVideos[videoIndex] = {
@@ -85,7 +90,7 @@ const VideoUploadZone: React.FC<VideoUploadZoneProps> = ({
         const result = await uploadProductVideo(file, productId, (progress) => {
           // Update progress during upload
           const progressVideos = [...currentVideos];
-          const progressIndex = progressVideos.findIndex(vid => vid.id === tempVideo.id);
+          const progressIndex = progressVideos.findIndex(vid => vid.id === tempVideo.id); 
           if (progressIndex !== -1) {
             progressVideos[progressIndex] = {
               ...progressVideos[progressIndex],

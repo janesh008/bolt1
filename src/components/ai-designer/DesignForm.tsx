@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useDropzone } from 'react-dropzone';
-import { 
-  Diamond, 
-  Gem, 
-  Sparkles, 
-  Upload, 
-  X, 
+import {
+  Diamond,
+  Gem,
+  Sparkles,
+  Upload,
+  X,
   Image as ImageIcon,
-  Loader2
+  Loader2 
 } from 'lucide-react';
 import { designFormSchema, DesignFormValues } from '../../types/ai-designer';
 import { Input } from '../ui/input';
@@ -26,7 +26,11 @@ interface DesignFormProps {
   isAuthenticated: boolean;
 }
 
-const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading, isAuthenticated }) => {
+const DesignForm: React.FC<DesignFormProps> = ({ 
+  onSubmit, 
+  isLoading, 
+  isAuthenticated 
+}) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   
@@ -34,7 +38,7 @@ const DesignForm: React.FC<DesignFormProps> = ({ onSubmit, isLoading, isAuthenti
     register, 
     handleSubmit, 
     control,
-    watch,
+    watch, 
     formState: { errors } 
   } = useForm<DesignFormValues>({
     resolver: zodResolver(designFormSchema),

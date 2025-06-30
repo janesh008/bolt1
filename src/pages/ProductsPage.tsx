@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../context/CartContext'; 
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useDebounce } from '../hooks/useDebounce';
@@ -57,7 +57,7 @@ const ProductsPage = () => {
   const { category } = useParams<{ category?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart } = useCart(); 
   
   // State
   const [products, setProducts] = useState<Product[]>([]);
@@ -79,7 +79,7 @@ const ProductsPage = () => {
   const [selectedMetalColors, setSelectedMetalColors] = useState<string[]>(
     searchParams.get('metalColors')?.split(',').filter(Boolean) || []
   );
-  const [priceRange, setPriceRange] = useState<[number, number]>([
+  const [priceRange, setPriceRange] = useState<[number, number]>([ 
     parseInt(searchParams.get('minPrice') || '0'),
     parseInt(searchParams.get('maxPrice') || '10000')
   ]);

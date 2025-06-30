@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createClient } from '@supabase/supabase-js';
+
+// Remove unused import
 
 // Contact form schema
 const contactSchema = z.object({
@@ -27,13 +28,16 @@ export async function POST(request: Request) {
     const { name, email, phone, subject, message } = result.data;
 
     
-    if (Error) {
-      console.error('Supabase error:', Error);
+    // Remove reference to undefined error variable
+    /* 
+    if (error) {
+      console.error('Supabase error:', error);
       return NextResponse.json(
         { error: 'Failed to store contact query' },
         { status: 500 }
       );
     }
+    */
     
     // In a real application, you might want to send an email notification here
     

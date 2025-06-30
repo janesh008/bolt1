@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
-import { Star, Clock, Search, Plus, Gem, Filter } from 'lucide-react';
+import { 
+  Star, 
+  Clock, 
+  Search, 
+  Plus, 
+  Gem 
+} from 'lucide-react';
 import { AIDesignSession } from '../../types/ai-designer';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';

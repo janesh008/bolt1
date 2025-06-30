@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  User, 
-  Search, 
-  Filter, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  CheckCircle, 
-  XCircle, 
-  Clock,
-  Download,
-  Shield,
-  Key
+  User,
+  Search,
+  Filter,
+  Plus,
+  Edit,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Clock, 
+  Download, 
+  Shield, 
+  Key 
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
@@ -43,10 +43,10 @@ interface Role {
 interface User {
   id: string;
   full_name: string;
-  email: string;
-  phone: string | null;
-  role: string;
-  status: 'active' | 'blocked' | 'pending';
+  email: string; 
+  phone: string | null; 
+  role: string; 
+  status: string;
   created_at: string;
   last_login: string | null;
 }

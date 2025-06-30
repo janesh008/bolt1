@@ -1,5 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
+import { 
+  Play, 
+  Pause, 
+  Volume2, 
+  VolumeX, 
+  Maximize, 
+  Minimize 
+} from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface ProductVideoPlayerProps {
@@ -24,7 +31,7 @@ const ProductVideoPlayer: React.FC<ProductVideoPlayerProps> = ({
   height = '400px',
 }) => {
   const [isPlaying, setIsPlaying] = useState(autoPlay);
-  const [isMuted, setIsMuted] = useState(muted);
+  const [isMuted, setIsMuted] = useState(muted); 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);

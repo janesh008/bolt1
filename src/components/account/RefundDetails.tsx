@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Clock, CheckCircle, XCircle, AlertTriangle, RefreshCw } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  Clock, 
+  CheckCircle, 
+  XCircle, 
+  AlertTriangle, 
+  RefreshCw 
+} from 'lucide-react';
 import Button from '../ui/Button';
 import { Badge } from '../ui/badge';
 import { formatCurrency } from '../../lib/utils';
@@ -23,7 +30,7 @@ interface RefundStatusHistory {
   };
 }
 
-interface RefundNotification {
+interface RefundNotification { 
   id: string;
   refund_id: string;
   user_id: string;
@@ -50,14 +57,12 @@ interface Refund {
   completed_at: string | null;
   orders: {
     order_number: string;
-    payment_status: string;
+    payment_status?: string;
   };
   refund_status_history: RefundStatusHistory[];
   refund_notifications: RefundNotification[];
-  processed_by_admin?: {
-    name: string;
-    role: string;
-  };
+  processed_by_name?: string;
+  processed_by_role?: string;
 }
 
 const RefundDetails: React.FC<RefundDetailsProps> = ({ refundId, onBack }) => {

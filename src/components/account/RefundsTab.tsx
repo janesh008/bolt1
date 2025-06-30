@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'; 
 import { Clock, CheckCircle, XCircle, RefreshCw, Eye, DollarSign } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import Button from '../ui/Button';
@@ -19,7 +19,7 @@ const RefundsTab: React.FC<RefundsTabProps> = ({ userId, highlightedRefundId }) 
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRefundId, setSelectedRefundId] = useState<string | null>(highlightedRefundId || null);
   
-  useEffect(() => {
+  useEffect(() => { 
     if (userId) {
       fetchRefunds();
     }

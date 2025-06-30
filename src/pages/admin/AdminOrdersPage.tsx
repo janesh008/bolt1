@@ -1,8 +1,7 @@
-
+import React, { useState, useEffect } from 'react';
 import { RefreshCw, Download } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import Button from '../../components/ui/Button';
-import { useAuth } from '../../context/AuthContext';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { supabase } from '../../lib/supabase';
 import { useDebounce } from '../../hooks/useDebounce';

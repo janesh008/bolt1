@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Gem, ArrowLeft } from 'lucide-react';
+import { Gem, ArrowLeft } from 'lucide-react'; 
 import { DesignFormValues } from '../types/ai-designer';
 import DesignForm from '../components/ai-designer/DesignForm';
 import SessionList from '../components/ai-designer/SessionList';
@@ -15,7 +15,7 @@ const AIDesignerPage = () => {
   const { sessionId } = useParams<{ sessionId?: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+   
   const [view, setView] = useState<'list' | 'form' | 'chat'>('list');
   
   const { 
@@ -32,14 +32,14 @@ const AIDesignerPage = () => {
   // Load sessions on mount
   useEffect(() => {
     if (user) {
-      fetchSessions();
+      fetchSessions(); 
     }
   }, [user, fetchSessions]);
   
   // Load specific session if ID is provided
   useEffect(() => {
     if (sessionId) {
-      fetchSession(sessionId);
+      fetchSession(sessionId); 
       setView('chat');
     }
   }, [sessionId, fetchSession]);

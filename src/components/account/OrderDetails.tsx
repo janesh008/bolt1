@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Package, 
-  Truck,
-  X,
-  CheckCircle, 
-  Clock, 
-  AlertCircle, 
-  Calendar, 
-  MapPin, 
-  CreditCard, 
-  AlertTriangle,
-  ChevronLeft,
-  ShoppingBag,
-  RefreshCw
+  Truck, 
+  X, 
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Calendar,
+  MapPin,
+  CreditCard,
+  AlertTriangle, 
+  ChevronLeft, 
+  ShoppingBag, 
+  RefreshCw 
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Badge } from '../ui/badge';
@@ -34,7 +34,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, onBack }) => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
-  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false); 
   const [refundHistory, setRefundHistory] = useState<any[]>([]);
   const [isLoadingRefunds, setIsLoadingRefunds] = useState(false);
   const [showCancellationInstructions, setShowCancellationInstructions] = useState(false);

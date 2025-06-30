@@ -1,6 +1,12 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, Image as ImageIcon, AlertCircle, Check } from 'lucide-react';
+import { 
+  Upload, 
+  X, 
+  Image as ImageIcon, 
+  AlertCircle, 
+  Check 
+} from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { uploadProductImage } from '../../../lib/supabase-storage';
 import { Badge } from '../../ui/badge';
@@ -32,7 +38,7 @@ const ImageUploadZone: React.FC<ImageUploadZoneProps> = ({
   maxImages = 10,
   disabled = false,
 }) => {
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDragging, setIsDragging] = useState(false); 
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (disabled) return;
@@ -46,7 +52,7 @@ const ImageUploadZone: React.FC<ImageUploadZoneProps> = ({
     const filesToProcess = acceptedFiles.slice(0, remainingSlots);
 
     if (filesToProcess.length < acceptedFiles.length) {
-      toast.error(`Only ${remainingSlots} more images can be added`);
+      toast.error(`Only ${remainingSlots} more images can be added`); 
     }
 
     // Create temporary image objects with unique IDs
@@ -72,7 +78,7 @@ const ImageUploadZone: React.FC<ImageUploadZoneProps> = ({
       try {
         // Update progress to show upload starting
         const currentImages = [...updatedImages];
-        const imageIndex = currentImages.findIndex(img => img.id === tempImage.id);
+        const imageIndex = currentImages.findIndex(img => img.id === tempImage.id); 
         
         if (imageIndex !== -1) {
           currentImages[imageIndex] = {
@@ -85,7 +91,7 @@ const ImageUploadZone: React.FC<ImageUploadZoneProps> = ({
         const result = await uploadProductImage(file, productId, (progress) => {
           // Update progress during upload
           const progressImages = [...currentImages];
-          const progressIndex = progressImages.findIndex(img => img.id === tempImage.id);
+          const progressIndex = progressImages.findIndex(img => img.id === tempImage.id); 
           if (progressIndex !== -1) {
             progressImages[progressIndex] = {
               ...progressImages[progressIndex],

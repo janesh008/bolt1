@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; 
 import { useTranslation } from 'react-i18next';
 import { Gem, Sparkles, Diamond, DollarSign } from 'lucide-react';
 import Button from '../ui/Button';
@@ -9,7 +9,9 @@ interface PreferencesFormProps {
   onSubmit: (preferences: any) => void;
 }
 
-const PreferencesForm: React.FC<PreferencesFormProps> = ({ onSubmit }) => {
+const PreferencesForm: React.FC<PreferencesFormProps> = ({ 
+  onSubmit 
+}) => {
   const { t } = useTranslation();
   const [preferences, setPreferences] = useState({
     jewelryType: '',

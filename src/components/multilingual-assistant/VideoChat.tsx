@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Video } from 'lucide-react';
+import Button from '../ui/Button';
 import { useTranslation } from 'react-i18next';
 import { isValidConversationUrl } from '../../utils/videoUtils';
 

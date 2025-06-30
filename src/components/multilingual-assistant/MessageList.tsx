@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'; 
 import { Volume2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ProductCarousel from './ProductCarousel';
@@ -25,7 +25,7 @@ interface MessageListProps {
   isLoading: boolean;
   playAudio: (audioUrl: string) => void;
   isPlaying: boolean;
-  audioRef: React.RefObject<HTMLAudioElement>;
+  audioRef: React.RefObject<HTMLAudioElement>; 
   messagesEndRef: React.RefObject<HTMLDivElement>;
 }
 

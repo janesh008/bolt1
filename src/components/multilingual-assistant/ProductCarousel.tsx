@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; 
 import { ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatCurrency } from '../../lib/utils';
@@ -17,7 +17,9 @@ interface ProductCarouselProps {
   products: Product[];
 }
 
-const ProductCarousel: React.FC<ProductCarouselProps> = ({ products }) => {
+const ProductCarousel: React.FC<ProductCarouselProps> = ({ 
+  products 
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { addToCart } = useCart();
   const { t } = useTranslation();
