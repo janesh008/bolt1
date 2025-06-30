@@ -6,7 +6,6 @@ import {
   Clock,
   AlertCircle,
   MapPin,
-  CreditCard,
   AlertTriangle, 
   ChevronLeft, 
   ShoppingBag, 
