@@ -25,7 +25,6 @@ const navigation = [
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Refunds', href: '/admin/refunds', icon: RefreshCw },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 const AdminLayout = () => {
