@@ -25,7 +25,7 @@ const AdminDashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showIJewelTool] = useState(false);
+  const [showIJewelTool, _setShowIJewelTool] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
