@@ -46,6 +46,8 @@ interface Refund {
   order_number?: string;
   processed_by_name?: string;
   processed_by_role?: string;
+}
+
 interface AdminRefundModalProps {
   isOpen: boolean;
   onClose: () => void;
