@@ -182,17 +182,9 @@ const AIDesignerPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     document.title = 'AI Jewelry Designer | AXELS';
-    
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
   }, []);
 
   // Generate random positions for particles
@@ -236,47 +228,41 @@ const AIDesignerPage = () => {
           
           {/* 3D Model Container */}
           <div className="w-full max-w-2xl h-[400px] md:h-[500px] mb-12 relative">
-            {!isLoaded ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 border-4 border-gold-200 border-t-gold-500 rounded-full animate-spin"></div>
-              </div>
-            ) : (
-              <motion.div
-                className="w-full h-full rounded-2xl overflow-hidden bg-gradient-to-b from-purple-900/30 to-black/50 backdrop-blur-sm border border-purple-500/20"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-              >
-                <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
-                  <ambientLight intensity={0.5} />
-                  <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
-                  <pointLight position={[-10, -10, -10]} intensity={0.5} />
-                  
-                  <PresentationControls
-                    global
-                    rotation={[0, 0, 0]}
-                    polar={[-Math.PI / 4, Math.PI / 4]}
-                    azimuth={[-Math.PI / 4, Math.PI / 4]}
-                    config={{ mass: 2, tension: 400 }}
-                    snap={{ mass: 4, tension: 400 }}
-                  >
-                    <Float rotationIntensity={0.4} floatIntensity={0.4}>
-                      <DiamondRing />
-                    </Float>
-                  </PresentationControls>
-                  
-                  <ContactShadows 
-                    position={[0, -1.5, 0]} 
-                    opacity={0.4} 
-                    scale={5} 
-                    blur={2.4} 
-                  />
-                  
-                  <Environment preset="city" />
-                  <Stars radius={100} depth={50} count={1000} factor={4} saturation={0} fade speed={1} />
-                </Canvas>
-              </motion.div>
-            )}
+            <motion.div
+              className="w-full h-full rounded-2xl overflow-hidden bg-gradient-to-b from-purple-900/30 to-black/50 backdrop-blur-sm border border-purple-500/20"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+            >
+              <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+                <ambientLight intensity={0.5} />
+                <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
+                <pointLight position={[-10, -10, -10]} intensity={0.5} />
+                
+                <PresentationControls
+                  global
+                  rotation={[0, 0, 0]}
+                  polar={[-Math.PI / 4, Math.PI / 4]}
+                  azimuth={[-Math.PI / 4, Math.PI / 4]}
+                  config={{ mass: 2, tension: 400 }}
+                  snap={{ mass: 4, tension: 400 }}
+                >
+                  <Float rotationIntensity={0.4} floatIntensity={0.4}>
+                    <DiamondRing />
+                  </Float>
+                </PresentationControls>
+                
+                <ContactShadows 
+                  position={[0, -1.5, 0]} 
+                  opacity={0.4} 
+                  scale={5} 
+                  blur={2.4} 
+                />
+                
+                <Environment preset="city" />
+                <Stars radius={100} depth={50} count={1000} factor={4} saturation={0} fade speed={1} />
+              </Canvas>
+            </motion.div>
           </div>
           
           {/* Coming Soon Text */}
