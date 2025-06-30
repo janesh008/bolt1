@@ -16,5 +16,8 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  server: {
+    port: 5173,
+  },
   // Remove proxy configuration since we're running everything on one port
 });
