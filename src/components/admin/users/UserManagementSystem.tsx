@@ -302,7 +302,9 @@ const UserManagementSystem: React.FC = () => {
   
   const handleRolePermissionsClick = (role: Role) => {
     setSelectedRole(role);
-    setSelectedPermissions(Array.isArray(role.permissions) ? role.permissions : []);
+    // Ensure permissions is treated as an array
+    const rolePermissions = Array.isArray(role.permissions) ? role.permissions : [];
+    setSelectedPermissions(rolePermissions);
     setShowRolePermissionsModal(true);
   };
   
