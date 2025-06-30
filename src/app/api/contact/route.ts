@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const { name, email, phone, subject, message } = result.data;
 
     
-    if (error) {
+    if (Error) {
       console.error('Supabase error:', Error);
       return NextResponse.json(
         { error: 'Failed to store contact query' },
