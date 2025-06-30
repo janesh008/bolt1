@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Package, 
-  Truck, 
-  X, 
+  Truck,
   CheckCircle,
   Clock,
   AlertCircle,
