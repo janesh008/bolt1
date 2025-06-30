@@ -15,7 +15,6 @@ interface DashboardStats {
 }
 
 const AdminDashboard: React.FC = () => {
-  const { user } = useAdminAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalProducts: 0,
