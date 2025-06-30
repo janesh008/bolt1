@@ -126,7 +126,8 @@ const UserManagementSystem: React.FC = () => {
       // Ensure permissions is always an array
       const rolesWithArrayPermissions = (data || []).map(role => ({
         ...role,
-        permissions: Array.isArray(role.permissions) ? role.permissions : []
+        permissions: Array.isArray(role.permissions) ? role.permissions : 
+                    (role.permissions ? [role.permissions] : [])
       }));
       
       setRoles(rolesWithArrayPermissions);
@@ -308,7 +309,7 @@ const UserManagementSystem: React.FC = () => {
   
   const handleRolePermissionsClick = (role: Role) => {
     setSelectedRole(role);
-    setSelectedPermissions(Array.isArray(role.permissions) ? role.permissions : []);
+    setSelectedPermissions(role.permissions || []);
     setShowRolePermissionsModal(true);
   };
   
