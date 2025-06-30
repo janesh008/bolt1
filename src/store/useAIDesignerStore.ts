@@ -3,8 +3,6 @@ import { supabase } from '../lib/supabase';
 import { v4 as uuidv4 } from 'uuid'; 
 import { 
   AIDesignerStore, 
-  AIDesignSession, 
-  AIMessage,
   DesignFormValues 
 } from '../types/ai-designer';
 import toast from 'react-hot-toast';
