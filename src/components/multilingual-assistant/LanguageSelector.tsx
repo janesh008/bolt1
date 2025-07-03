@@ -44,7 +44,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ onLanguageSelected 
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-1">
         {languages.map((language) => (
           <Button
             key={language.code}

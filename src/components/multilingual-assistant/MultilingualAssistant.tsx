@@ -40,7 +40,7 @@ const MultilingualAssistant: React.FC = () => {
   const [conversationUrl, setConversationUrl] = useState<string | null>(null);
   const [_conversationId, setConversationId] = useState<string | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
   const { user } = useAuth();
@@ -53,7 +53,7 @@ const MultilingualAssistant: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
           assistantRef.current && assistantRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
+        setShowLanguageSelector(false);
       }
     };
 
@@ -66,7 +66,7 @@ const MultilingualAssistant: React.FC = () => {
   const toggleAssistant = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
-      setIsDropdownOpen(false);
+      setShowLanguageSelector(false);
       setVideoError(null);
       setSelectedLanguage(null);
       setConversationUrl(null);
@@ -74,21 +74,24 @@ const MultilingualAssistant: React.FC = () => {
     }
   };
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
+  const toggleLanguageSelector = () => {
+    setShowLanguageSelector(!showLanguageSelector);
   };
 
   const toggleMinimize = () => {
     setIsMinimized(!isMinimized);
   };
 
-  const handleLanguageSelected = (language: Language) => {
-    setSelectedLanguage(language);
-    i18n.changeLanguage(language.code);
-    setIsDropdownOpen(false);
-    
-    // Generate welcome video based on language
-    generateWelcomeVideo(language.code);
+  const handleLanguageSelected = (language: string) => {
+    const selectedLang = languages.find(lang => lang.code === language);
+    if (selectedLang) {
+      setSelectedLanguage(selectedLang);
+      i18n.changeLanguage(language);
+      setShowLanguageSelector(false);
+      
+      // Generate welcome video based on language
+      generateWelcomeVideo(language);
+    }
   };
   
   const generateWelcomeVideo = async (language: string) => {
@@ -199,6 +202,13 @@ const MultilingualAssistant: React.FC = () => {
                 </h2>
                 <div className="flex items-center gap-1">
                   <button 
+                    onClick={toggleLanguageSelector}
+                    className="p-1 hover:bg-gold-500 rounded-full transition-colors"
+                    aria-label="Change language"
+                  >
+                    <Globe className="h-5 w-5" />
+                  </button>
+                  <button 
                     onClick={toggleMinimize}
                     className="p-1 hover:bg-gold-500 rounded-full transition-colors"
                     aria-label={isMinimized ? "Maximize" : "Minimize"}
@@ -234,7 +244,7 @@ const MultilingualAssistant: React.FC = () => {
                       {/* Language Dropdown */}
                       <div className="relative mt-4" ref={dropdownRef}>
                         <button
-                          onClick={toggleDropdown}
+                          onClick={toggleLanguageSelector}
                           className="w-full flex items-center justify-between p-3 border border-cream-200 rounded-md bg-white hover:border-gold-300 transition-colors"
                         >
                           <span className="text-charcoal-700">
@@ -247,18 +257,18 @@ const MultilingualAssistant: React.FC = () => {
                               'Choose your language'
                             )}
                           </span>
-                          <ChevronDown className={`h-4 w-4 text-charcoal-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                          <ChevronDown className={`h-4 w-4 text-charcoal-500 transition-transform ${showLanguageSelector ? 'rotate-180' : ''}`} />
                         </button>
                         
-                        {isDropdownOpen && (
+                        {showLanguageSelector && (
                           <div className="absolute z-10 mt-1 w-full bg-white border border-cream-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
                             {languages.map((language) => (
                               <button
                                 key={language.code}
-                                onClick={() => handleLanguageSelected(language)}
-                                className="w-full flex items-center p-3 hover:bg-cream-50 transition-colors text-left"
+                                onClick={() => handleLanguageSelected(language.code)}
+                                className="w-full flex items-center p-2 hover:bg-cream-50 transition-colors text-left"
                               >
-                                <span className="text-xl mr-3">{language.flag}</span>
+                                <span className="text-xl mr-2">{language.flag}</span>
                                 <div>
                                   <div className="font-medium text-charcoal-800">{language.name}</div>
                                   <div className="text-xs text-charcoal-500">{language.nativeName}</div>
