@@ -72,6 +72,62 @@ const MultilingualAssistant: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {                                                  // NEW
+    if (
+      conversationUrl &&
+      showVideo &&
+      isValidConversationUrl(conversationUrl) &&
+      videoContainerRef.current
+    ) {
+      // Show loader until the 'joined-meeting' event fires
+      setIsVideoLoading(true);
+
+      // Build the iframe with only mic‑mute visible
+      const call = DailyIframe.createFrame(videoContainerRef.current, {
+        iframeStyle: {
+          width: '100%',
+          height: '100%',
+          border: '0',
+        },
+        // Prebuilt UI flags — all extras off
+        showLeaveButton: false,
+        showFullscreenButton: false,
+        showLocalVideo: false,
+        showParticipantsBar: false,
+      });
+
+      dailyCallRef.current = call;
+
+      // Join the Tavus conversation room
+      call
+        .join({
+          url: conversationUrl,
+          startVideoOff: true,
+          startAudioOff: false,
+        })
+        .catch((err) => {
+          console.error('[TAVUS] Daily join error:', err);
+          setVideoError(t('assistant.errors.connectionError'));
+          setShowVideo(false);
+        });
+
+      // Stop loader once connected
+      call.on('joined-meeting', () => setIsVideoLoading(false));
+
+      // Handle any runtime errors from Daily
+      call.on('error', (e) => {
+        console.error('[TAVUS] Daily runtime error:', e);
+        setVideoError(t('assistant.errors.videoFailed'));
+        setShowVideo(false);
+      });
+
+      // Clean up when conversationUrl changes or component unmounts
+      return () => destroyDailyCall();
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationUrl, showVideo]);
+  
   const toggleAssistant = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
@@ -91,6 +147,7 @@ const MultilingualAssistant: React.FC = () => {
     setIsMinimized(!isMinimized);
   };
 
+  const handleClose = () => { setIsOpen(false); destroyDailyCall(); }; // NEW
   const handleLanguageSelected = (language: string) => {
     const selectedLang = languages.find(lang => lang.code === language);
     if (selectedLang) {
@@ -304,6 +361,7 @@ const MultilingualAssistant: React.FC = () => {
                             <button 
                               onClick={() => {
                                 setVideoError(null);
+                                setShowVideo(true);
                                 generateWelcomeVideo(selectedLanguage.code);
                               }}
                               className="mt-2 px-3 py-1 bg-gold-400 hover:bg-gold-500 text-white rounded-md text-xs"
