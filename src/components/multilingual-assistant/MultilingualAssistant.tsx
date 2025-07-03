@@ -20,6 +20,15 @@ interface Language {
   flag: string;
 }
 
+const TAVUS_LANGUAGE_MAP: Record<string, string> = {
+  en: 'english',
+  hi: 'hindi',
+  ta: 'tamil',
+  es: 'spanish',
+  fr: 'french',
+  ar: 'arabic',
+};
+
 const languages: Language[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
   { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
@@ -178,8 +187,8 @@ const MultilingualAssistant: React.FC = () => {
         conversational_context: `User interested in jewelry. Language: ${language}`,
         custom_greeting: `Hi ${userName}, welcome to our jewelry store. I'm here to help you find the perfect piece.`,
         properties: {
-            language: language || 'english',          // 👈 new line
-         },
+            language: TAVUS_LANGUAGE_MAP[language] || 'english',          // 👈 new line
+           },
       };
 
       if (personaId) {
