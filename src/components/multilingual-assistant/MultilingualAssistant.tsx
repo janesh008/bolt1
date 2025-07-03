@@ -177,6 +177,9 @@ const MultilingualAssistant: React.FC = () => {
         conversation_name: `Jewelry consultation with ${userName}`,
         conversational_context: `User interested in jewelry. Language: ${language}`,
         custom_greeting: `Hi ${userName}, welcome to our jewelry store. I'm here to help you find the perfect piece.`,
+        properties: {
+            language: TAVUS_LANGUAGE_MAP[language] || 'english',          // 👈 new line
+         },
       };
 
       if (personaId) {
