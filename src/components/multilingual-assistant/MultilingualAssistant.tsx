@@ -215,11 +215,6 @@ const MultilingualAssistant: React.FC = () => {
     }
   };
 
-  // Function to handle closing the assistant
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-
   return (
     <>
       {/* Floating button */}
