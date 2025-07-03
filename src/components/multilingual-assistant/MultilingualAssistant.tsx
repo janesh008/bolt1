@@ -11,6 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { isValidConversationUrl } from '../../utils/videoUtils';
+import DailyIframe, { DailyCall } from '@daily-co/daily-js';
 
 interface Language {
   code: string;
@@ -47,7 +48,15 @@ const MultilingualAssistant: React.FC = () => {
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const assistantRef = useRef<HTMLDivElement>(null);
+  const dailyCallRef = useRef<DailyCall | null>(null);  //new
 
+  const destroyDailyCall = () => {    // NEW
+    if (dailyCallRef.current) {
+      dailyCallRef.current.leave();
+      dailyCallRef.current.destroy();
+      dailyCallRef.current = null;
+    }
+  };
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
