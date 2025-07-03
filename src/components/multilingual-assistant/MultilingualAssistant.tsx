@@ -11,6 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { isValidConversationUrl } from '../../utils/videoUtils';
+import DailyIframe, { DailyCall } from '@daily-co/daily-js'; // NEW
 
 interface Language {
   code: string;
@@ -47,7 +48,15 @@ const MultilingualAssistant: React.FC = () => {
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const assistantRef = useRef<HTMLDivElement>(null);
+  const dailyCallRef       = useRef<DailyCall | null>(null);        // NEW
 
+  const destroyDailyCall = () => {                                   // NEW
+    if (dailyCallRef.current) {
+      dailyCallRef.current.leave();
+      dailyCallRef.current.destroy();
+      dailyCallRef.current = null;
+    }
+  };
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -63,6 +72,62 @@ const MultilingualAssistant: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {                                                  // NEW
+    if (
+      conversationUrl &&
+      showVideo &&
+      isValidConversationUrl(conversationUrl) &&
+      videoContainerRef.current
+    ) {
+      // Show loader until the 'joined-meeting' event fires
+      setIsVideoLoading(true);
+
+      // Build the iframe with only mic‑mute visible
+      const call = DailyIframe.createFrame(videoContainerRef.current, {
+        iframeStyle: {
+          width: '100%',
+          height: '100%',
+          border: '0',
+        },
+        // Prebuilt UI flags — all extras off
+        showLeaveButton: false,
+        showFullscreenButton: false,
+        showLocalVideo: false,
+        showParticipantsBar: false,
+      });
+
+      dailyCallRef.current = call;
+
+      // Join the Tavus conversation room
+      call
+        .join({
+          url: conversationUrl,
+          startVideoOff: true,
+          startAudioOff: false,
+        })
+        .catch((err) => {
+          console.error('[TAVUS] Daily join error:', err);
+          setVideoError(t('assistant.errors.connectionError'));
+          setShowVideo(false);
+        });
+
+      // Stop loader once connected
+      call.on('joined-meeting', () => setIsVideoLoading(false));
+
+      // Handle any runtime errors from Daily
+      call.on('error', (e) => {
+        console.error('[TAVUS] Daily runtime error:', e);
+        setVideoError(t('assistant.errors.videoFailed'));
+        setShowVideo(false);
+      });
+
+      // Clean up when conversationUrl changes or component unmounts
+      return () => destroyDailyCall();
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationUrl, showVideo]);
+  
   const toggleAssistant = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
