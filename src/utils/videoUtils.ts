@@ -1,76 +1,40 @@
 /**
- * Validates if a conversation URL is valid
- * @param url - The URL to validate
- * @returns True if the URL is valid, false otherwise
+ * Audio utility functions for the multilingual assistant
  */
-export const isValidConversationUrl = (url: string | null): boolean => {
-  if (!url) return false;
+
+/**
+ * Plays an audio file from a URL or base64 string
+ * @param audioSrc - The audio source (URL or base64 string)
+ * @param onEnded - Optional callback for when audio playback ends
+ * @returns The audio element
+ */
+export const playAudio = (audioSrc: string, onEnded?: () => void): HTMLAudioElement => {
+  const audio = new Audio(audioSrc);
   
-  try {
-    const urlObj = new URL(url);
-    // Check if it's a valid Tavus URL
-    return urlObj.hostname.includes('tavus.daily.co') || urlObj.hostname.includes('daily.co');
-  } catch (error) {
-    return false;
+  if (onEnded) {
+    audio.onended = onEnded;
   }
+  
+  audio.play().catch(error => {
+    console.error('Error playing audio:', error);
+  });
+  
+  return audio;
 };
 
 /**
- * Handles hiding user video while keeping AI video visible
- * @param iframeElement - The iframe element containing the Tavus video
+ * Converts a blob to a base64 string
+ * @param blob - The blob to convert
+ * @returns A promise that resolves to the base64 string
  */
-export const hideUserVideo = (iframeElement: HTMLIFrameElement | null): void => {
-  if (!iframeElement) return;
-  
-  try {
-    // Try to access the iframe content and apply CSS to hide user video
-    const iframeWindow = iframeElement.contentWindow;
-    if (!iframeWindow) return;
-    
-    // Create a style element to inject into the iframe
-    const styleElement = document.createElement('style');
-    styleElement.textContent = `
-      .user-video-container { 
-        display: none !important; 
-      }
-      .self-view-container { 
-        display: none !important; 
-      }
-      .local-participant { 
-        display: none !important; 
-      }
-    `;
-    
-    // Inject the style into the iframe
-    iframeWindow.document.head.appendChild(styleElement);
-    
-    console.log('User video hidden successfully');
-  } catch (error) {
-    console.error('Error hiding user video:', error);
-  }
-};
-
-/**
- * Applies language settings to the Tavus conversation
- * @param iframeElement - The iframe element containing the Tavus video
- * @param language - The language code to apply
- */
-export const applyLanguageSettings = (iframeElement: HTMLIFrameElement | null, language: string): void => {
-  if (!iframeElement) return;
-  
-  try {
-    // Try to access the iframe content and apply language settings
-    const iframeWindow = iframeElement.contentWindow;
-    if (!iframeWindow) return;
-    
-    // Post a message to the iframe to set the language
-    iframeWindow.postMessage({
-      type: 'SET_LANGUAGE',
-      language: language
-    }, '*');
-    
-    console.log(`Language set to ${language}`);
-  } catch (error) {
-    console.error('Error setting language:', error);
-  }
+export const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 };

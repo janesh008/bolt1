@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Video, 
   X, 
   Globe, 
   Minimize2, 
   Maximize2, 
-  ChevronDown 
+  ChevronDown,
+  MessageSquare,
+  Mic,
+  MicOff,
+  Send,
+  Loader2
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../context/AuthContext';
-import { isValidConversationUrl } from '../../utils/videoUtils';
-import DailyIframe, { DailyCall } from '@daily-co/daily-js'; // NEW
+import { supabase } from '../../lib/supabase';
+import Button from '../ui/Button';
 
 interface Language {
   code: string;
@@ -20,14 +23,12 @@ interface Language {
   flag: string;
 }
 
-const TAVUS_LANGUAGE_MAP: Record<string, string> = {
-  en: 'english',
-  hi: 'hindi',
-  ta: 'tamil',
-  es: 'spanish',
-  fr: 'french',
-  ar: 'arabic',
-};
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  audioUrl?: string;
+}
 
 const languages: Language[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
@@ -44,28 +45,32 @@ const languages: Language[] = [
 
 const MultilingualAssistant: React.FC = () => {
   const { t, i18n } = useTranslation();
+  // UI state
   const [isOpen, setIsOpen] = useState(false);
-  const [isVideoLoading, setIsVideoLoading] = useState(false);
-  const [showVideo, setShowVideo] = useState(true);
-  const [conversationUrl, setConversationUrl] = useState<string | null>(null);
-  const [_conversationId, setConversationId] = useState<string | null>(null);
-  const [videoError, setVideoError] = useState<string | null>(null);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
-  const { user } = useAuth();
-  const videoContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Chat state
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Speech recognition state
+  const [listening, setListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const recognition = useRef<SpeechRecognition | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(new Audio());
+  
+  // UI refs
   const dropdownRef = useRef<HTMLDivElement>(null);
   const assistantRef = useRef<HTMLDivElement>(null);
-  const dailyCallRef       = useRef<DailyCall | null>(null);        // NEW
-
-  const destroyDailyCall = () => {                                   // NEW
-    if (dailyCallRef.current) {
-      dailyCallRef.current.leave();
-      dailyCallRef.current.destroy();
-      dailyCallRef.current = null;
-    }
-  };
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Check if browser supports speech recognition
+  const browserSupportsSpeechRecognition = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+  
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -81,70 +86,57 @@ const MultilingualAssistant: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {                                                  // NEW
-    if (
-      conversationUrl &&
-      showVideo &&
-      isValidConversationUrl(conversationUrl) &&
-      videoContainerRef.current
-    ) {
-      // Show loader until the 'joined-meeting' event fires
-      setIsVideoLoading(true);
+  // Initialize speech recognition
+  useEffect(() => {
+    if (!browserSupportsSpeechRecognition) return;
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition.current = new SpeechRecognition();
+    recognition.current.continuous = false;
+    recognition.current.interimResults = false;
+    
+    recognition.current.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setTranscript(transcript);
+      setInput(transcript);
+    };
+    
+    recognition.current.onend = () => {
+      setListening(false);
+    };
+    
+    recognition.current.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setListening(false);
+      setError(`Speech recognition error: ${event.error}`);
+    };
+    
+    return () => {
+      if (recognition.current) {
+        recognition.current.onresult = null;
+        recognition.current.onend = null;
+        recognition.current.onerror = null;
+        if (listening) {
+          recognition.current.abort();
+        }
+      }
+    };
+  }, [browserSupportsSpeechRecognition]);
 
-      // Build the iframe with only mic‑mute visible
-      const call = DailyIframe.createFrame(videoContainerRef.current, {
-        iframeStyle: {
-          width: '100%',
-          height: '100%',
-          border: '0',
-        },
-        // Prebuilt UI flags — all extras off
-        showLeaveButton: false,
-        showFullscreenButton: false,
-        showLocalVideo: false,
-        showParticipantsBar: false,
-      });
-
-      dailyCallRef.current = call;
-
-      // Join the Tavus conversation room
-      call
-        .join({
-          url: conversationUrl,
-          startVideoOff: true,
-          startAudioOff: false,
-        })
-        .catch((err) => {
-          console.error('[TAVUS] Daily join error:', err);
-          setVideoError(t('assistant.errors.connectionError'));
-          setShowVideo(false);
-        });
-
-      // Stop loader once connected
-      call.on('joined-meeting', () => setIsVideoLoading(false));
-
-      // Handle any runtime errors from Daily
-      call.on('error', (e) => {
-        console.error('[TAVUS] Daily runtime error:', e);
-        setVideoError(t('assistant.errors.videoFailed'));
-        setShowVideo(false);
-      });
-
-      // Clean up when conversationUrl changes or component unmounts
-      return () => destroyDailyCall();
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationUrl, showVideo]);
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
   
   const toggleAssistant = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
       setShowLanguageSelector(false);
-      setVideoError(null);
       setSelectedLanguage(null);
-      setConversationUrl(null);
       setIsMinimized(false);
+      setMessages([]);
+      setInput('');
+      setError(null);
     }
   };
 
@@ -161,68 +153,113 @@ const MultilingualAssistant: React.FC = () => {
     if (selectedLang) {
       setSelectedLanguage(selectedLang);
       i18n.changeLanguage(language);
+      setMessages([]);
+      setInput('');
+      setError(null);
       setShowLanguageSelector(false);
       
-      // Generate welcome video based on language
-      generateWelcomeVideo(language);
+      // Add welcome message
+      const welcomeMessage = t('assistant.greeting', 'Hello! I\'m your personal jewelry assistant. How can I help you today?');
+      setMessages([{
+        role: 'assistant',
+        content: welcomeMessage,
+        timestamp: new Date()
+      }]);
     }
   };
   
-  const generateWelcomeVideo = async (language: string) => {
-    try {
-      setIsVideoLoading(true);
-
-      const tavusApiKey = '73204fbfdafc43519ba0044670341437' || import.meta.env.TAVUS_API_KEY
-      const replicaId = import.meta.env.TAVUS_REPLICA_ID || 'r6ae5b6efc9d';
-      const personaId = import.meta.env.TAVUS_PERSONA_ID;
-
-      const userName =
-        user?.full_name ||
-        user?.email?.split('@')[0] ||
-        'valued customer';
-
-      const requestBody: Record<string, any> = {
-        replica_id: replicaId,
-        conversation_name: `Jewelry consultation with ${userName}`,
-        conversational_context: `User interested in jewelry. Language: ${language}`,
-        custom_greeting: `Hi ${userName}, welcome to our jewelry store. I'm here to help you find the perfect piece.`,
-        properties: {
-            language: TAVUS_LANGUAGE_MAP[language] || 'english',          // 👈 new line
-           },
-      };
-
-      if (personaId) {
-        requestBody.persona_id = personaId;
+  const toggleMic = () => {
+    if (!browserSupportsSpeechRecognition) {
+      setError(t('assistant.errors.micNotSupported', 'Speech recognition is not supported in this browser'));
+      return;
+    }
+    
+    if (listening) {
+      if (recognition.current) {
+        recognition.current.abort();
       }
-
-      const response = await fetch('https://tavusapi.com/v2/conversations', {
+      setListening(false);
+    } else {
+      setTranscript('');
+      if (recognition.current) {
+        recognition.current.lang = selectedLanguage?.code || 'en';
+        recognition.current.start();
+      }
+      setListening(true);
+    }
+  };
+  
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
+    
+    // Add user message to chat
+    const userMessage: Message = {
+      role: 'user',
+      content: input,
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setTranscript('');
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      
+      // Call the assistant API
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/assistant`, {
         method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "x-api-key": tavusApiKey
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken || ''}`,
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          message: input,
+          history: messages,
+          language: selectedLanguage?.code || 'en'
+        }),
       });
-
-      const data = await response.json();
-
+      
       if (!response.ok) {
-        throw new Error(data?.error || 'Tavus API returned an error');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get response from assistant');
       }
-
-      if (data.conversation_url) {
-        setConversationUrl(data.conversation_url);
-        setConversationId(data.conversation_id);
-        setShowVideo(true);
-      } else {
-        throw new Error('No conversation URL returned from Tavus');
+      
+      const data = await response.json();
+      
+      // Add assistant message to chat
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: data.reply,
+        timestamp: new Date(),
+        audioUrl: data.audioBase64 ? `data:audio/mpeg;base64,${data.audioBase64}` : undefined
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
+      
+      // Play audio if available
+      if (data.audioBase64) {
+        playAudio(`data:audio/mpeg;base64,${data.audioBase64}`);
       }
-    } catch (err: any) {
-      console.error('[TAVUS] Error generating video:', err);
-      setVideoError(err?.message || 'Failed to generate Tavus video');
-      setShowVideo(false);
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      setError(error.message || 'Failed to get response');
     } finally {
-      setIsVideoLoading(false);
+      setIsLoading(false);
+    }
+  };
+  
+  const playAudio = (url: string) => {
+    if (audioRef.current) {
+      audioRef.current.src = url;
+      audioRef.current.play().catch(error => {
+        console.error('Error playing audio:', error);
+        setError(t('assistant.errors.audioFailed', 'Audio couldn\'t be played. Please check your sound settings.'));
+      });
     }
   };
 
@@ -237,9 +274,9 @@ const MultilingualAssistant: React.FC = () => {
       <button
         onClick={toggleAssistant}
         className="fixed bottom-6 right-6 z-50 p-4 bg-gold-400 hover:bg-gold-500 text-white rounded-full shadow-lg transition-all duration-300 flex items-center justify-center"
-        aria-label="Open AI Assistant"
+        aria-label="Open Support Agent"
       >
-        <Video className="h-6 w-6" />
+        <MessageSquare className="h-6 w-6" />
       </button>
       
       {/* Assistant Modal */}
@@ -256,11 +293,8 @@ const MultilingualAssistant: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-lg shadow-2xl overflow-hidden"
-              style={{ 
-                width: '300px', 
-                height: isMinimized ? '50px' : '300px'
-              }}
+              className="bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
+              style={{ width: '350px', height: isMinimized ? '50px' : '450px' }}
             >
               {/* Header */}
               <div className="bg-gold-400 text-white p-3 flex items-center justify-between">
@@ -304,7 +338,7 @@ const MultilingualAssistant: React.FC = () => {
               
               {/* Content area - only show if not minimized */}
               {!isMinimized && (
-                <div className="relative h-[calc(300px-50px)]">
+                <div className="flex-1 flex flex-col">
                   {/* Language selector */}
                   {!selectedLanguage && (
                     <div className="w-full h-full bg-cream-50 p-4">
@@ -358,69 +392,136 @@ const MultilingualAssistant: React.FC = () => {
                     </div>
                   )}
                   
-                  {/* Video display */}
-                  {selectedLanguage && (
-                    <div 
-                      ref={videoContainerRef}
-                      className="w-full h-full bg-black"
-                    >
-                      {showVideo ? (
-                        videoError ? (
-                          <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
-                            <Video className="h-10 w-10 text-red-500 opacity-50 mb-2" />
-                            <p className="text-white text-xs mb-2">{t('assistant.errors.videoFailed')}</p>
-                            <button 
-                              onClick={() => {
-                                setVideoError(null);
-                                generateWelcomeVideo(selectedLanguage.code);
-                              }}
-                              className="mt-2 px-3 py-1 bg-gold-400 hover:bg-gold-500 text-white rounded-md text-xs"
+                  {/* Chat interface */}
+                  {selectedLanguage && messages.length > 0 && (
+                    <div className="flex-1 flex flex-col">
+                      {/* Messages area */}
+                      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                        {messages.map((message, index) => (
+                          <div 
+                            key={index} 
+                            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div 
+                              className={`max-w-[90%] rounded-lg p-4 ${
+                                message.role === 'user' 
+                                  ? 'bg-gold-100 text-charcoal-800' 
+                                  : 'bg-white shadow-soft border border-cream-200'
+                              }`}
                             >
-                              {t('common.retry')}
-                            </button>
-                          </div>
-                        ) : isVideoLoading ? (
-                          <div className="w-full h-full flex flex-col items-center justify-center">
-                            <div className="w-10 h-10 border-4 border-gold-200 border-t-gold-500 rounded-full animate-spin mb-2"></div>
-                            <p className="text-white text-xs">{t('common.loading')}</p>
-                          </div>
-                        ) : conversationUrl && isValidConversationUrl(conversationUrl) ? (
-                          <iframe
-                            src={`${conversationUrl}?startVideoOff=true&startAudioOff=false`}
-                            className="w-full h-full border-0"
-                            allow="microphone; autoplay; clipboard-write; encrypted-media; picture-in-picture"
-                            allowFullScreen
-                            onError={() => {
-                              console.error("iframe error event");
-                              setVideoError(t('assistant.errors.videoFailed'));
-                              setShowVideo(false);
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <div className="text-center">
-                              <Video className="h-10 w-10 text-gray-700 opacity-30 mx-auto mb-2" />
-                              <p className="text-gray-500 text-xs">{t('assistant.errors.connectionError')}</p>
+                              <p className="whitespace-pre-wrap">{message.content}</p>
+                              
+                              {message.audioUrl && message.role === 'assistant' && (
+                                <button
+                                  onClick={() => playAudio(message.audioUrl!)}
+                                  className="mt-2 text-gold-500 hover:text-gold-600 transition-colors flex items-center text-sm"
+                                >
+                                  🔊 {t('Play audio')}
+                                </button>
+                              )}
+                              
+                              <div className="text-xs text-right mt-2 text-charcoal-400">
+                                {new Date(message.timestamp).toLocaleTimeString([], { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit' 
+                                })}
+                              </div>
                             </div>
                           </div>
-                        )
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center">
-                            <Video className="h-10 w-10 text-gray-700 opacity-30 mx-auto mb-2" />
-                            <p className="text-gray-500 text-xs">{t('assistant.errors.videoFailed')}</p>
-                            <button 
-                              onClick={() => {
-                                setShowVideo(true);
-                                generateWelcomeVideo(selectedLanguage.code);
-                              }}
-                              className="mt-2 px-3 py-1 bg-gold-400 hover:bg-gold-500 text-white rounded-md text-xs"
-                            >
-                              {t('assistant.actions.startChat')}
-                            </button>
+                        ))}
+                        
+                        {isLoading && (
+                          <div className="flex justify-start">
+                            <div className="bg-white shadow-sm border border-cream-200 rounded-lg p-3">
+                              <div className="flex space-x-2">
+                                <div className="w-2 h-2 bg-gold-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                <div className="w-2 h-2 bg-gold-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                <div className="w-2 h-2 bg-gold-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                              </div>
+                            </div>
                           </div>
+                        )}
+                        
+                        <div ref={messagesEndRef} />
+                      </div>
+                      
+                      {/* Input area */}
+                      <div className="border-t border-cream-200 p-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={toggleMic}
+                            className={`p-2 rounded-full ${
+                              listening 
+                                ? 'bg-red-100 text-red-600' 
+                                : 'bg-cream-100 text-charcoal-600 hover:bg-cream-200'
+                            } transition-colors`}
+                            disabled={!browserSupportsSpeechRecognition}
+                            title={browserSupportsSpeechRecognition ? t('assistant.actions.toggleMic', 'Toggle microphone') : t('assistant.errors.micNotSupported', 'Browser does not support speech recognition')}
+                          >
+                            {listening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                          </button>
+                          
+                          <div className="relative flex-1">
+                            <textarea
+                              value={input}
+                              onChange={(e) => setInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault();
+                                  handleSendMessage();
+                                }
+                              }}
+                              placeholder={t('Type your message...', 'Type your message...')}
+                              className="w-full px-4 py-3 pr-12 border border-cream-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-400 resize-none"
+                              rows={1}
+                              disabled={isLoading}
+                            />
+                            {listening && (
+                              <div className="absolute right-3 top-3 flex items-center">
+                                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <Button
+                            onClick={handleSendMessage}
+                            disabled={!input.trim() || isLoading}
+                            isLoading={isLoading}
+                            className="bg-gold-400 hover:bg-gold-500 text-white"
+                          >
+                            <Send className="h-5 w-5" />
+                          </Button>
                         </div>
-                      )}
+                        
+                        {listening && (
+                          <div className="mt-2 text-xs text-charcoal-500">
+                            {t('assistant.listening', 'Listening...')} {transcript ? `"${transcript}"` : ''}
+                          </div>
+                        )}
+                        
+                        {error && (
+                          <div className="mt-2 text-xs text-red-500">
+                            {error}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Initial welcome screen when language is selected but no messages yet */}
+                  {selectedLanguage && messages.length === 0 && (
+                    <div className="flex-1 flex items-center justify-center p-6 bg-cream-50">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <MessageSquare className="h-8 w-8 text-gold-400" />
+                        </div>
+                        <h3 className="text-lg font-medium text-charcoal-800 mb-2">
+                          {t('assistant.greeting', 'Hello! I\'m your personal jewelry assistant. How can I help you today?')}
+                        </h3>
+                        <p className="text-sm text-charcoal-500">
+                          {t('Ask me about jewelry, styles, or recommendations.')}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -429,6 +530,9 @@ const MultilingualAssistant: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Hidden audio element for playing responses */}
+      <audio ref={audioRef} style={{ display: 'none' }} />
     </>
   );
 };
