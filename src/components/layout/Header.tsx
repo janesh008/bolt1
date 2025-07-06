@@ -102,15 +102,6 @@ const Header = () => {
               <User className="h-5 w-5" />
             </Link>
           )}
-
-          <Link 
-            to="https://bolt.new/" 
-            className="text-gold-400"
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
-            Powered By Bolt.new
-          </Link>
         </div>
       </div>
       
